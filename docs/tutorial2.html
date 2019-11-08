@@ -1,0 +1,843 @@
+<html>
+    <head><title>LimpetGE Tutorial Part 2 - Making the game</title></head>
+    <style>
+    td {
+        vertical-align: top;
+    }
+    td.subsect {
+        font-weight: bold;
+    }
+
+    div.example {
+        font-family: monospace;
+        background-color: #f0f0f0;
+        white-space: pre;
+    }
+
+    div.example2 {
+        font-family: monospace;
+        background-color: #f0f0ff;
+        white-space: pre;
+    }
+    div.indent {
+        padding: 5px 20px 5px 20px;
+        margin: 5px 0px 5px 0px;
+        border-size: 1px;
+        border-color: black;
+        border-style: solid;
+    }
+    span.new {
+        font-weight: bold;
+        color: #008000;
+    }
+    span.old {
+        color: #ff0000;
+        text-decoration: line-through;
+    }
+
+    </style>
+
+    <script type="text/javascript" src="tutorial2.js"></script>
+    <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+    <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+    <body onload=do_onload();>
+
+<div style="text-align:center;"><img src="../libs/limpetlogo.png" alt="LimpetGE Logo" /></div>
+<h1>LimpetGE Titorial Part 2 - Making the game</h1>
+<div>The LimpetGE first tutorial.  Creation of a simple first-person game.</div>
+<div>Part 2 - Making the first actual game.</div>
+
+<h3>Part 2 - Making The Game</h3>
+
+<p>In <a href="tutorial1.html">part one</a> of this tutorial we created a LimpetGE script that worked.  Now to convert it into the game.
+  The game consists of making your way to the end of a corridor wihout being "squished" by spheres oing the other way.
+  We have created the corridor, now for the spheres.</p>
+
+<h4>The Sphere Structure definition</h4>
+<p>The sphere structures is a bit simpler than the "Corridor" definition, however, as we do not want all spheres the same, we are creating four sphere structures.
+Each one will be used to create spheres of their specific color:</p>
+<div class="example">function sphereStructure()
+{
+    // Have spheres different colors, so create four structures
+    // one for each color used
+
+    var colors = [
+        [1.0, 0.5, 0.5, 1.0], // red
+        [0.5, 1.0, 0.5, 1.0], // green
+        [0.5, 0.5, 1.0, 1.0], // blue
+        [1.0, 1.0, 0.0, 1.0], // yellow
+    ];
+
+    var structs = [];
+
+    // The spheres are 2 meters in radius, or 4 meters in diameter
+
+    for(var i = 0; i &lt; 4; i++) {
+        var stru = new LStructureDef(ShaderSimple, {color: colors[i], collision: LDYNAMIC, distance: 2.0});
+        stru.addSphere({radius: 2.0});
+        structs.push(stru);
+    }
+    return structs;
+}
+</div>
+<p>There are some differences from the corridor. First of all, rather than create a color "template", we are coloring each sphere a different
+   color.</p>
+
+<div class="example">    var colors = [
+        [1.0, 0.5, 0.5, 1.0], // red
+        [0.5, 1.0, 0.5, 1.0], // green
+        [0.5, 0.5, 1.0, 1.0], // blue
+        [1.0, 1.0, 0.0, 1.0], // yellow
+    ];
+</div>
+<p>An array of four colors.  However we are not creating that to create a texture collage as in the corridor, but each one to create s specific sphere structure.</p>
+
+<div class="example">    var structs = [];
+
+    for(var i = 0; i &lt; 4; i++) {
+        var stru = new LStructureDef(ShaderSimple, {color: colors[i], collision: LDYNAMIC, distance: 2.0});
+        stru.addSphere({radius: 2.0});
+        structs.push(stru);
+    }
+</div>
+<p>The above creates an "array" of structures in the "structs" variable.  Looking at:</p>
+
+<div class="example">        var stru = new LStructureDef(ShaderSimple, {color: colors[i], collision: LDYNAMIC, distance: 2.0});
+        stru.addSphere({radius: 2.0});
+</div>
+
+<p>In the "new LStructureDef(....)" constructor, the arguments are:</p>
+<ol>
+    <li>ShaderSimple - The shader</li>
+    <li>Object of named arguments...
+        <ul>
+            <li>color:  Note, this is not the same as the previous "colors:" as in the "Corridor" structure (singular now).  Rather than takes an array of colors, it takes a single one.  This creates
+                  a texture of one pixel, and that will be used to coat all surfaces displayed - which in the Sphere's case is only one anyway.</li>
+            <li>collision: Assigned the global value of LDYNAMIC, this means that these objects will be included in the Dynamic Collision Detection algorithms, as opposed to the Static ones.
+                    Explained later.</li>
+        </ul>
+    </li>
+</ol>
+
+<p>Four structure definitions are created here, and the function returns an array consisting of them.</p>
+
+<h3>Notes on Static and Dynamic Collision Detection</h3>
+
+<p>Collision detection processing is performed in the main game engine with resource available to it, unlike graphics rendering which is
+   done on processors in the graphics card.  The resource available in the engine for LimpetGE is javascript, and in effect a single
+   thread of it.  Therefore collision detection cannot use too many cycles up.</p>
+
+<p>LimpetGE performs collision detection using sparse arrays.  The scene is divided up into, say, one meter sized cubes, or in the case of this game,
+   five meter sized cubes, and what can be collided with is placed, and if neccessary tracked, in these.  The collision tests take any object,
+   that may have moved, be it in these arrays or not, and performing an algorithm to see if that object has "collided" with any in the arrays.</p>
+
+<p>The first type of object here is "Static" ones.  These use the "AABB" method, that is there is a "block" of a width, height and length, that if
+   a moving object wonders into, or near it, it has "collided" with it.  These in LimpetGE can be large, but need to be static.  Once placed they
+   cannot be moved.  The "lScene.lSetup()" routine creates the entries in the sparse array for these.  Although they cannot be moved, they can
+   be switched "off" by either making them invisible, or setting the "obj.ignore" property for them to boolean "true", then setting it to "false"
+   to re-enable it.  The "Static" collision types are useful for walls, doors, floors, ceilings etc.</p>
+
+<p>Static types are created by defining "collision: LSTATIC" in the "args" argument of the "LStructureDef" class constructor.  Then, while creating
+   the components on that, a collision "block" is created that fits around that component.  This can be changed by:</p>
+<ul>
+    <li>Specifying the "corners" entry in the "args" argument of the "structure.add...(...)" method, such as "corners: [-1, -2, -3], [4, 5, 6]]" .
+        This will overide the block created by using one specified by that entry.  It as an array of two arrays, each of those representing
+        oposite corners of the "block" to use.  Note - the "position" entry does not effect these.</li>
+    <li>Specifying "corners: null" in the "args" argument.  This disables the creation of a collision block for that component.</li>
+</ul>
+
+<p>The other type, "Dynamic" objects, use the "distance" method to detect collisions.  That is if a moving object gets to less than a certain
+   distance to the object's center a collision has occured.  This in effect makes that object spherical.  The advantage to these is that
+   they can move during the game, or can be created dynamically while the game is played.  These are useful for NPCs, bullets, flying things and
+   the like.</p>
+
+<p>These are created by specifying the "collision: LDYNAMIC" in a entry in the "args" argument of the "LStructureDef" constructor.  You also
+   specify a "distance: 1.23" there too, where 1.23 can be any number representing the radius around the object in which it is said
+   to have been collided with.</p>
+
+<h3>Back to the game - Random number gernerators</h3>
+
+<p>Random numbers are used in the game.  There are a couple of LimpetGE classes that deal with these.  The "Squish" game uses both:</p>
+
+<div class="example">var g_prngd = new LPRNGD(Math.random() * 10000);
+var g_prng = new LPRNG(Math.random() * 10000);
+</div>
+
+<p>The "LPRNG" class instance creates a series of random number integers in a given scope, and the "LPRNGD" creates one for doubles.
+   They work by calling the "next(scope)" on the instance.  For instance:</p>
+<ul>
+    <li>g_prng.next(4) - Creates a random ineger where 0 &gt;= number &gt; 4 - Or an integer between 0 and 3 inclusive</li>
+    <li>g_prngd.next(2.5) - Creates a random double where 0 &gt;= number &gt; 2.5 - Or a double between 0 and 2.49999999999 (etc) inclusive</li>
+</ul>
+
+
+<h4>The Sphere Object</h4>
+
+<p>The Sphere class is daunting at first, but I will go through it...</p>.
+
+<div class="example" id="ex3"></div>
+
+<h4> The Sphere Constructor</h4>
+
+<div class="example">function Sphere(color)
+{
+    this.obj = new LWObject(g_structures.Sphere[color], this);
+    this.obj.mkvisible(false);
+    lScene.lPlace(this.obj, mat4.create());
+    this.velocity = 0;  // To be created in "makesphere"
+
+    // For celebrating
+    this.endx = g_prngd.next(20) - 10;
+    this.endy = g_prngd.next(20) - 10;
+    this.endz = g_prngd.next(20) - 10;
+}
+</div>
+
+<p>The constructor takes an argument "color", which in this case is an integer between 0 and 3.  This will decide which of the sphere structures will
+   be used to create the sphere, which controls the color of it.</p>
+
+<p>A "new LWObject(....)" is created and assigned to the "obj" property.  This takes the arguments:</p>
+<ol>
+    <li>The appropriate Sphere structure for the color</li>
+    <li>The "control" object of the sphere, which is "this" object.</li>
+</ol>
+
+<p>Next the "obj.mkvisible(false)" function makes the object invisible.  We want spheres to appear where and when the game demands rather than when it is created.  Therefore they are created invisible.</p>
+<p>Needless to sqy, "obj.mkvisible(true)" makes it visible again.</p>
+<p>The "lScene.lPlace()" places it in the top level of the game hierarchy.  As it is not visible yet, we use place it at the origin by using the identity transformation matrix ("mat4.create()")</p>
+<p>The velocity of the sphere is stored in the "velocity", and is set when the sphere is to appear.</p>
+<p>On success of the level, the player is treated to a show of the spheres flying in all directions.  The "endx", "endy", and "endz" properties represent the speed this sphere will go in each
+   dimension when this occurs.</p>
+
+<h4>Instigating Spheres</h4>
+
+<p>In order for a sphere is to "appear", A "start" method is created:</p>
+
+<div class="example">    start: function()
+    {
+        this.velocity = 5.0 + g_prngd.next(5.0);    // Set velocity between 5 and 10
+
+        /*
+         * Move to - X = laterally somewhere random in the corridor, not touching the walls
+         *           Y = Center of sphere 1 
+         *           Z = Start of run
+         */
+        var x = 19 - g_prngd.next(38);  // Get a number between -19 and 19
+        if(x &gt; 18) x = 18;  // Cannot be grater than 18
+        if(x &lt; -18) x = -18;  // or less than -18
+        this.obj.moveHere(x, 0,  -110);
+
+        // Make sure it is not hitting anything, If it is move back 2.1
+        // Wash rinse repeat...
+
+        var collision = false;
+        function _see(cob)
+        {
+            collision = true;
+        }
+        for(;;) {
+            this.obj.warp();    // Warp here - no ray tracing
+            collision = false;
+            lScene.lCAllDynamicPointDetect(this.obj, 2.0, _see);
+            if(collision) {
+                this.obj.moveAbs(0, 0, -2.1);
+            } else {
+                break;
+            }
+        }
+
+        // Has already warped here in for loop, if have not need to do this
+        // otherwise ray tracing occurs from where it last was!.
+
+        this.obj.mkvisible(true);
+        this.obj.procpos();
+    },
+</div>
+
+<p>When "starting" or "instigating" the sphere, it first randomly sets the "velocity" property between 5.0 and 10.0</p>
+<p>It then moves the object to the en of the corridor, randomly placing it laterally, so it is not touching the side walls, though a slightly grater chance it is at the edge of the corridor.
+   This is called by the game objects "obj.moveHere(x, y, z)"
+   method.  This, on this object, sets it to the scene co-ordinates (x, y, z).</p>
+<p>Note - it in fact sets it relative to it's initial position relative to it's parent.  For objects placed using the "lScene.lPlace(...)" method
+   this is the origin, so for spheres it is the scene's X, Y, Z coordinates.</p>
+<p>After placing it at the top of the corridor, it needs to make sure it is not colliding with anything.  Or more exactly, make sure it has not appeared
+   in the same place as another one.  To do that it performs a collision test.</p>
+<p>It first sets a "collision" variable to "false", then a closure function that sets it to "true".</p>
+<p>Then a loop is performes. Which:</p>
+<ol>
+    <li>Performs a "warp" on the object.  LimpetGE uses ray tracing, what the "obj.warp()" method does is set the base position for
+        ray tracing tot he current one.  If this is not done it would "ray trace" from the origin (or wherever the sphere last "died").  This is not what is
+        required.</li>
+    <li>Ensure the collision is "false"</li>
+    <li>Perform the collision test using the "lScene.lCAllDynamicPointDetect(...)".  The arguments for thsi are:
+        <ol>
+            <li>this.obj - The object to perform the test on</li>
+            <li>2.0 - The "distance" the object is from the central point.  This is the radius of the sphere.</li>
+            <li>The (closure) function to call if there is a collision.</li>
+        </ol>
+    </li>
+    <li>If there is a collision, then move the sphere another 2.1 meters away and re-perform the test.   If not quit the loop.</li>
+    <li>The "obj.moveAbs(x, y, z)" moves an object by the appropriate amount relative to the origin.  It is like "obj.move(...)"
+        except it moves rlative to the origin rather than the object itself.</li>
+</ol>
+<p>The "obj.mkvisible(true)" method makes the thing visible.</p>
+<p>The "obj.procpos()" method processes the position in the hierarchy.  It needs to be called for nay object after it has been moved, but before
+   it is drawn.  It is called by the programmer because that is the best way to optimise that functionality.</p>
+            
+        
+<h4>Moving Spheres</h4>
+
+<p>Spheres are dynamic and they move. To control this the "move" method is created, and performed on each sphere on each frame:</p>
+
+<div class="example">    move: function(delta)
+    {
+
+        if(!this.obj.isvisible) return;
+
+        /*
+         * Adjust the velocity to that of the sphere
+         */
+
+        delta *= this.velocity;
+
+        /*
+         * Moving, spheres roll, so cannot use the "move" or "moveFlat" methods
+         * as they move in the direction the object is pointing, which can be 
+         * anywhere as it rolls.
+         * A quick and dirty way to "fix" this is to use the "moveAbs" method
+         * which moves relative to the scene (or the origin).  As we are only
+         * moving one way (down Z axis, positive) we can get away with that here.
+         * A more "correct" solution, that allows proper rolling, is in the next tutorial.
+         */
+
+        this.obj.moveAbs(0, 0, delta);
+
+        /*
+         * divide by 2 * Pi * radius so it rolls half the speed it is travelling
+         */
+
+        this.obj.rotate(delta / 2, 0, 0);
+
+        /*
+         * In LimpetGE it is really the object that has moved responsibility
+         * to see if it has hit anything...
+         *  Here, spheres can either hit the camera or another sphere
+         */
+
+        var hitsphere = null;
+        function _see(cob) {
+            if(cob.control instanceof LCamera) {
+                lScene.ishit = true;        // Hit camera - Game over
+            } else if (cob.control instanceof Sphere) {
+                hitsphere = cob.control;
+            }
+        }
+        lScene.lCAllPointDetect(this.obj, 2.0, _see);
+
+        if(hitsphere) {
+            // First move back
+            this.obj.moveAbs(0, 0, -delta);
+            this.obj.rotate(-delta / 2, 0, 0);
+
+            // Then swap velocity
+            if(this.velocity &gt; hitsphere.velocity) {
+                var temp = this.velocity;
+                this.velocity = hitsphere.velocity;
+                hitsphere.velocity = temp;
+            }
+        }
+    },
+</div>
+
+<p>The "sphere.move(....)" method takes an argument, "delta".  This is the value passed to the "lScene.lLoop(...)" method for the frame, which is where
+   this is called from.</p>
+<p>The fist thing done is to see if the sphere is visible.  The is done by seeing if the "obj.isvisible" property is the boolean "true" (rather than "false" for invisible).
+   if it is not, it quits.  Nothing needs to be done</p>
+<p>It then adjusts "delta" so it matches that particular sphere's velocity.  Thi means it will move by that in this method.</p>
+<p>It then moves the sphere up the Z axis, at the appropriate velocity using the "obj.moveAbs(...)" method which we covered in the "sphere.start()" method.</p>
+
+<p>As these are spheres, they roll, so next we rotate the sphere around the X axis by the appropriate amount.  Although you cannot see this for solid colored spheres, you
+   will be able to when textures are in place on the spheres.  The rotation is done by the "obj.rotate(x, y, z)" which rotates the object around the "Z" axis, then the "Y" then the "X" axis
+   (in that order) by the appropriate number of radians.  Note the rotation is done in the reverse order to which the arguments are supplied.</p>
+
+<p>The sphere has just moved.  It is now it's responsibility to see if it has hit anything. The following deals with that...</p>
+
+<div class="example">        var hitsphere = null;
+        function _see(cob) {
+            if(cob.control instanceof LCamera) {
+                lScene.ishit = true;        // Hit camera - Game over
+            } else if (cob.control instanceof Sphere) {
+                hitsphere = cob.control;
+            }
+        }
+        lScene.lCAllPointDetect(this.obj, 2.0, _see);
+
+        if(hitsphere) {
+            // First move back
+            this.obj.moveAbs(0, 0, -delta * this.velocity);
+            this.obj.rotate(-(delta * this.velocity) / 2, 0, 0);
+
+            // Then swap velocity
+            if(this.velocity &gt; hitsphere.velocity) {
+                var temp = this.velocity;
+                this.velocity = hitsphere.velocity;
+                hitsphere.velocity = temp;
+            }
+        }
+</div>
+
+<p>First the variable "histsphere" is set to null.  The crux of what happens next is the "lScene.lCAllPointDetect(....)" method.  This runs the Collision Detection algorithms
+   for both the dynamic and static sparse arrays.  The argumnts are:</p>
+<ol>
+    <li>this.obj - The game object to detect collisions for, or the one that has just moved, which is the current sphere's object.</li>
+    <li>2.0 - The distance for the detection.  This is the radius of the sphere in this case</li>.
+    <li>_see - The closure function (above) which is called whenever a collision occurs.</li>
+</ol>
+
+<p>Within the closure function itself, the argument it takes is the object that has been collided with.  If it is the camera (the control of the object is an instance of LCamera),
+   then the "lScene.ishit" property is set to true.  This implies the camera has been hit, so the player has been squished.  The "lScene.lLoop(...)" method will pick
+   that up and detect the player has been "squished".</p>
+
+<p>If on the other hand the object is a sphere (the control of the object hit is an instance of the class "Sphere"),
+   that sphere's game object is stored in the "hitsphere" variable.  After the collision test has completed, if a sphere has been hit,
+   the current sphere is "moved back" so they remain separate, and bearing in mind the spheres move in one direction a sphere can
+   only collide with another one from "behind", velocities are compared and if it is going faster than the one it hit, the velocities are swapped,
+   making the one in front faster, and the current one slower.</p>
+
+
+<h4>Ending Spheres</h4>
+
+<p>The method:</p>
+
+<div class="example">    die: function()
+    {
+        this.obj.mkvisible(false);
+    },
+</div>
+
+<p>If a sphere reaches the "beginning" of the corridor, it has served it's purpose, and "dies".  This is handled by the "sphere.die()" routine.  All it does
+   is make the sphere invisible by using the "this.obj.mkvisible(false)" method.  that is all it needs to do.</p>
+
+<h3>Changes to the g_play****() global functions</h3>
+
+<p>To include the spheres, and levels, in the game, additions need to be made.  First, I will go through additions to the
+   "g_playgame()" and "g_playlevel" functions. (New code in <span class="new">green bold</span>)</p>
+
+<div class="example">function g_playgame()
+<span class="new">var g_level = 0;</span>
+
+{
+    lInit();
+
+    // Retrieve and place tructure definitions where they can
+    // be accessed later
+
+    g_structures.Corridor = corridorStructure();
+    <span class="new">g_structures.Sphere = sphereStructure();</span>
+
+    g_playlevel()
+}
+
+function g_playlevel()
+{
+    // Create a new scene.
+    // Collision sparse array cell size needs to be &gt; 4 here as spheres are 2 wide, and what it collides into has a size too
+    // Say a person is 60 CM wide and thick
+
+    new Scene({lCSize: 5.0, lLDynamic: true, lLDistance: 0.3});
+
+    lScene.lDefaultMessage = "W: Forward, S: Back, <: Left, >: Right"
+
+    // Set up lightings required
+    lScene.ambientLight = vec3.fromValues(0.3, 0.3, 0.3);
+    lScene.directionalLightColor = vec3.fromValues(1.0, 1.0, 1.0);
+
+    // Create the wall and ceiling
+    new Corridor();
+
+    <span class="new">// Create sphere objects
+    for(var i = 0; i &lt; 200; i++)
+        lScene.spheres.push(new Sphere(i % 4));
+</span>
+    lCamera.moveHere(0, 0, 98);
+
+    lScene.lSetup();
+<span class="new">
+    lScene.lSetTitle("Level: " + (g_level + 1).toString());
+</span>
+    lScene.lMain();
+}
+</div>
+
+<p>As levels are included in the game, the level number needs to be stored somewhere, and it is stored in the "g_level" global variable.  As stated, I like to
+place these near the top of the file. </p>
+
+<p>In the "g_playgame()" function, I need to create and store these in a similar manner to I precoessed the corridor structure.  This
+   is done by executing the function "sphereStructures()" and store the returning structure definition ("LStructureDef" instance), or in this case the array of
+   structures, in the global "g_structures" object.</p>
+
+<p>The reason why "g_playlevel()" is separate to "g_playgame()" is that the time consuming "lInit()" function, and the creation of structures happen once, but
+   a new "Scene" is created for each level.  The first level is called when the game is first run (from the "g_playgame()" function called on the
+   HTML "BODY" tag "onload" attribute, and subsequently from the "lScene.restart()" property function explained below.</p>
+
+<p>After the "Scene" has been created, the sphere objects are.  When they are created they take an argument, between 0 to 3 inclusive.  This is the structure that sphere uses
+   to create the game object, which here determines the color.  They are also created invisible, and therefore not included in the collision
+   algorithms. When they are "activated" they are made visible, placing them in the collision array. Then when finished with made invisible again.
+   Although LimpetGE does support "in-game" creation of dynamic game objects, there is no way of performing "in-game" removal.
+   The best you can do is make them invisible.  The reason for this is that they are referenced from the hierarchy tree and the rendering list,
+   and it would take a fair bit of resource to dynamically remove them.</p>
+
+<p>For that reason all spheres are created at the start, and "switched on" (made visible) and "switched off" (made invisible) when required, thus
+   enabling thousands of spheres to roll passed the player without cluttering the game object arrays and objects.</p>
+
+<p>The "lScene.lSetTitle(...)" sets the title at the top of the screen the supplied argument.  This is used in this game to display what level
+   the player is on.</p>
+
+<h3>Changes to the Scene</h3>
+
+<p>To include the spheres in the game, additions need to be made the the "Scene" class.  First, additions to the "lScene" constructor: (new code in <span class="new">green bold</span>)</p>
+
+<div class="example">function Scene(args)
+{
+    LBase.call(this, args);
+<span class="new">
+    this.spheres = [];      // The spheres
+    this.sidx = 0;          // phere index
+
+    this.ishit = false;
+
+    this.nextsphere = 0.0;
+</span>
+    // Set up the keys
+    this.kForward = lInput.press(87);   // Key W
+    this.kBack = lInput.press(83);      // key S
+    this.kRight = lInput.press(190);    // key  &gt; or .
+    this.kLeft = lInput.press(188);     // key  &lt; or ,
+
+    lInput.usekeys();
+<span class="new">
+    this.lRestart = function()
+    {
+        if(!this.ishit) {
+            g_level += 1;
+        }
+
+        g_playlevel(g_level);
+    };
+
+    this.endtime = 5.0;
+    this.isend = false;</span>
+}
+</div>
+
+<p>Going through the <span class="new">new code</span>:</p>
+
+<p>The "lScene.spheres" property contain an array, that will hold all the spheres objects.</p>
+<p>The "lScene.sidx" property holds an index to the above, to decide which is "instigated" next (see below)</p>
+<p>The "lScene.ishit" is set to true if the player gets squished.  Already covered in the "sphere.move(...)" method.</p>
+<p>The "lScene.nextsphere" is the number of seconds (usually less than 1) when the next sphere is instigated.</p>
+<p>The "lScene.restart" is a property that holds a function (not a method as it is not on the javascript objects prototype).  
+   It sstores the function that is performed when the game ends by the "lScene.lLoop(...)" method returning boolan "false".
+   The function sets up here dos the following:</p>
+<ol>
+    <li>test to see if the player has been squished</li>
+    <li>If not, increase the level.</li>
+    <li>Restart the the game at the appropriate level.</li>
+</ol>
+<p>The "lScene.endtime" is set to 5.0, this is the number of seconds left to display the celebration or commiseration animation when the game ends.</p>
+<p>The "this.isend" property is initialised to the boolean "false", and set to "true" when the game ends</p>
+
+<h4>Additions to the "lScene.lLoop(...) method</h4>
+
+<p>These additions are: </p>
+
+<div class="example">    lLoop: function(delta)
+    {
+<span class="new">        // Have we ended - do end animations
+        if(this.isend)
+        {
+            if(this.ishit)
+                return this.dieing(delta)
+            else
+                return this.celebrating(delta);
+        }
+
+        // Possibility of new sphere appearing  - Average 1 a second
+        if(this.nextsphere &lt;= 0) {
+            this.makesphere();
+            this.nextsphere = g_prngd.next(10 / (10 + g_level)); // Start average 1 every half second, increase as levels go up
+        } else {
+            this.nextsphere -= delta;   // Wait for next sphere
+        }
+</span>
+        // Move the camera
+
+        var x = 0;
+        var z = 0;
+        // Using the "val" property more efficient then "ison()" method
+        if(this.kForward.val)  z  -= delta * 5;                 // How fast we run forward
+        if(this.kBack.val)  z += delta * 2.5;                // Run backwards half speed
+        if(this.kLeft.val)  x -= delta * 2.5;                 // Same sideways, but slow down forward
+        if(this.kRight.val)  x += delta * 2.5;                
+        if(x != 0) z *= 0.7;
+
+        lCamera.moveFlat(x, 0, z);
+
+        // Need to check if the camera has hit anything
+        var hasHitWall = false;
+        function _seecam(cob)
+        {
+            if(cob.control instanceof Corridor) // Hits a wall
+                hasHitWall = true;
+<span class="new">        // Have we run into a sphere?
+            else if(cob.control instanceof Sphere) {
+                lScene.ishit = true;        // "this" will not work in an ebedded function
+            }</span>
+        }
+        this.lCAllPointDetect(lCamera, 0.3, _seecam);
+
+        // Has it hit a wall?
+        if(hasHitWall) lCamera.move(-x, 0, 0);
+        // Cannot go too far back
+        if(lCamera.z &gt;= 100) lCamera.move(0, 0, -z);
+<span class="new">
+        //  Move the spheres
+        for(var i = 0; i &lt; 200; i++)
+            this.spheres[i].move(delta);
+
+        // See if the game has ended
+        // Have been squished
+        if(this.ishit) {
+            this.die();
+        }
+        // Have reached end
+        if(lCamera.z &lt;= -100) {</span>
+            <span class="old">return false;</span>
+<span class="new">            this.celebrate();
+        }
+</span>
+        // Continue game
+        return true;
+    },
+</div>
+
+<p>Again, focusing on the <span class="new">new code</span>.</p>
+
+<div class="example">
+<span class="new">        // Have we ended - do end animations
+        if(this.isend)
+        {
+            if(this.ishit)
+                return this.dieing(delta)
+            else
+                return this.celebrating(delta);
+        }
+
+        // Possibility of new sphere appearing  - Average 1 a second
+        if(this.nextsphere &lt;= 0) {
+            this.makesphere();
+            this.nextsphere = g_prngd.next(10 / (10 + g_level)); // Start average 1 every half second, increase as levels go up
+        } else {
+            this.nextsphere -= delta;   // Wait for next sphere
+        }
+</span></div>
+
+<p>The "lScene.isend" is a boolean that is set to "true" if the game ends, successfully for the player or not.
+   If this is set, and the game is still running, it means we are in the five second celebration or
+  commiseration animations at the end.  Which one is determined by the "lScene.ishit" property, which is set
+  if the player has been squished.</p>
+<p>If "lScene.isend" is set just the animations are done.  The function returns there and the rest of the loop
+   is not executed.</p>
+<div class="example"><span class="new">         // Possibility of new sphere appearing  - Average 1 a second
+        if(this.nextsphere &lt;= 0) {
+            this.makesphere();
+            this.nextsphere = g_prngd.next(10 / (10 + g_level)); // Start average 1 every half second, increase as levels go up
+        } else {
+            this.nextsphere -= delta;   // Wait for next sphere
+        }
+</span></div>
+
+<p>New spheres need to appear at the end of the corridor as the game progresses.  This snippet deals with that.  The "lScene.nextsphere"
+   property contains the time in seconds (usually less than one) until the next sphere is to appear.  If it is greater than zero this
+  decrements, if it has reached zero it makes a sphere appear using the "lScene.makesphere()" property, then resets the timer.
+  This is between zero and one second, getting more rapid as the level (stored in the global variable "g_level") increases.</p>
+
+<p>In the "_seecam" "closure" function for collision detection:</p>
+<div class="example"><span class="new">        // Have we run into a sphere?
+            else if(cob.control instanceof Sphere) {
+                lScene.ishit = true;        // "this" will not work in an ebedded function
+</span></div>
+
+<p>This sees if the player has run into a sphere, and if so, set the "lScene.ishit" property to "true".  This
+   is picked up in the loop later to indicate the player has been squished.</p>
+
+<div class="example">
+<span class="new">         //  Move the spheres
+        for(var i = 0; i &lt; 200; i++)
+            this.spheres[i].move(delta);</span>
+</div>
+<p>The spheres need to move.  There can be up to two hundred of them (see below).  This is done by calling the "sphere.move(...)"
+   method on each sphere in turn.</p>
+
+<div class="example"><span class="new">        // See if the game has ended
+        // Have been squished
+        if(this.ishit) {
+            this.die();
+        }
+        // Have reached end
+        if(lCamera.z &lt;= -100) {</span>
+            <span class="old">return false;</span>
+<span class="new">            this.celebrate();
+        }
+</span></div>
+
+<p>What to do if the game finished?  Celebrate if successful, or die if squished.  Both the methods set the "lScene.isend" property
+   to "true".</p>
+
+<h3>Additional methods to the "Scene" class</h3>
+
+<p>There are more methods created on the "Scene" class, that are called by the "lLoop" method now.</p>
+
+<h3>The "lScene.makesphere()" method</h3>
+
+<p>This handles creation of a new sphere:</p>
+<div class="example"><span class="new">    `makesphere: function()
+    {
+        // Use the next sphere in list, regardless if it is still live
+
+        this.spheres[this.sidx].start();
+        this.sidx += 1;
+        if(this.sidx &gt;= 200) this.sidx = 0;
+    },</span>
+</div>
+
+<p>This method simply takes the next "sphere" in the array of spheres, indexes by the "lScene.sidx".  It then makes that "live"
+   using the "sphere.start()" method, then increases the "sidx" property, resetting it to zero if it gets to 200.</p>
+<p>This means that if a sphere has a slow velocity, then it may be "restarted" before it reaches the end of the corridor.
+   If that happens the sphere will simply disappear from where it was.  This is relatively rare thogh, and does not
+   have a big impact on the game, and the code and resource required for that - which would increase cycles between frames -
+   makes it non-advantageous to fix.</p>
+
+<h3>The "lScene.die()" method.</h3>
+
+<p>The "lScene.die()" method is called when the player is "squished":</p>
+
+<div class="example"><span class="new">   die: function()
+    {
+        this.lMessage("Squished!");
+        this.directionalLightColor = vec3.fromValues(1.0, 0.0, 0.0);
+        this.isend = true;
+    },
+</span></div>
+
+<p>The "lScene.lMessage(...) displays a message at the top of the screen.  The arguments for this are:</p>
+<ol>
+    <li>message - The message to display</li>
+    <li>color - The HTML color to display it in.  If omitted, this is "red"</li>
+</ol>
+<p>The game uses this mechanism to tell the player what has happened,</p>
+<p>The next thing it does is turn the light red. This is the sunk=light, so everything will appear red.</p>
+<p>The final thing is set the "lScene.isend" property to "true", which, in the above "lScene.lLoop(...)" method,
+   srops the game play and displays the end animations instead.</p>
+
+
+<h3>The "lScene.dieing(...)" method.</h3>
+
+<p>This is called after the player is squished, and controls the "commiseration" animation.  This consists of everything
+   stopping, going red, and dimming to blackness over the next five seconds:</p>
+
+<div class="example"><span class="new">    dieing: function(delta)
+    {
+        this.endtime -= delta;
+        if(this.endtime &lt;= 0) return false;
+        
+        this.directionalLightColor = vec3.fromValues(this.endtime / 5.0, 0.0, 0.0);
+        this.ambientLight = vec3.fromValues(0.3 * this.endtime / 5.0, 0.3 * this.endtime / 5.0, 0.3 * this.endtime / 5.0);
+        return true;
+    },</span>
+</div>
+
+<p> When called by the "lScene.lLoop(...)" method shown above it is called using "return this.dieing(delta);". In other words,
+    what this returns the "lScene.lLoop(...)" method returns, and if that returns "true" the game continues, and if "false"
+    the game ends.</p>
+<p>The first thing this method does is detriment the "lScene.endtime" function.  The is set to 5.0 in the constructor.  If this ends up
+   being zero the game finishes.  The effect of this is to end the game five seconds while repeatedly calling this.</p>
+
+<p>If incomplete, the "directionalLighColor" (sunlight) and the "ambientLight" (light in the shadow) is reduced depending
+   how much time is keft in the "lScene.endtime" property, remembering that the "directionalLightColor" has been turned red at this
+   point.</p>
+
+
+<h3>The "lScene.celebrate()" method.</h3>
+
+<p>This is called when the player "Makes it" by reaching the end of the corridor:</p>
+
+<div class="example"><span class="new">    celebrate: function()
+    {
+        // Move to space and display all spheres
+        this.lMessage("Made it!", "lightgreen");
+        this.isend = true;
+
+        lCamera.moveHere(0, 0, -200);
+
+        for(var i = 0; i &lt; 200; i++) {
+            var sphere = this.spheres[i];
+            sphere.obj.moveHere(sphere.endx * 2, sphere.endy * 2, sphere.endz - 250);
+            sphere.obj.mkvisible(true);
+            sphere.obj.procpos();
+        }
+    },</span>
+</div>
+
+<p>This method first uses the "lScene.lMessage(...)" method to tell the player of the success, and does so in the "lightgreen"
+   color instead of the default "red".  It then sets the "lScene.isend" property to "true" so the animations are called.</p>
+
+<p>The celebration animation consists in an "explosion" of all spheres going in all directions.  This is set up here.  First
+   the camera is moved outside the corridor so it cannot be seen, then all the spheres are mmade visible, and placed in
+   front of the camera using their "sphere.endx", "sphere.endy" and "sphere.endz" properties.  These were created
+   for each sphere in the "Sphere" class's constructor using a random number between 10.0 and 20.0.  This has the effect of 
+   displaying the spheres randomly in front of the camera.</p>
+
+<p>The "obj.mkvisible(true)" is required here because the spheres may be invisible at this point, and they all need to be visible
+   for the "celebration" animation.</p>
+
+<p>the "obj.procpos()" also required because that needs to process the position of the spheres for the LimpetGE rendering.</p>
+
+<h3>The "lScene.celebrating(...)" method.</h3>
+
+<p>The "celebrating" animation consists of the spheres shooting out in all directions in a kind of sphere "explosion":</p>
+
+<div class="example"><span class="new">    celebrating: function(delta)
+    {
+        this.endtime -= delta;
+        if(this.endtime &lt;= 0) return false;
+        for(var i = 0; i &lt; 200; i++) {
+            var sphere = this.spheres[i];
+            sphere.obj.move(sphere.endx * delta, sphere.endy * delta, sphere.endz * delta);
+            sphere.obj.procpos();
+        }
+        return true;
+    },</span>
+</div>
+
+<p>The mechanism for timing this (to 5.0 seconds) is the same as the "lScene.dieing(...)" method above.</p>
+
+<p>The animation is controlled by moving the object, using the "obj.move(x, y, z)" method, by the afore mentioned
+   "sphere.endx", "sphere.endy" and "sphere.endz" velocities.  The "obj.move(x, y, z)" method moves
+   the object relative to it's own space by the amount supplied along each axis.</p>
+
+<p>The "obj.procpos()" is required to process the position of the sphere prior to rendering.</p>
+
+
+<h4>Conclusion</h4>
+
+<p>That is it.  If you have managed to do all that you have created your first game.</p>
+
+<p><a href="../examples/squish/squish1.js">The full script to date can be viewed here</a>.  It is an elementary game, but still a game!
+    <a href="../examples/squish1.html">Here is a link to an HTML page where you can play it!</a>.</p>
+
+<p>Continue to <a href="tutorial3.html">Part three of the tutorial</a>.
+
+
+</body>
+</html>

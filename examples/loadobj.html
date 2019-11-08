@@ -1,0 +1,57 @@
+<html><head><title>Load Object Test</title></head>
+<link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+<link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+<script type="text/javascript" src="../libs/gl-matrix.js"></script>
+<script type="text/javascript" src="../libs/limpetge.js"></script>
+<script type="text/javascript" src="loadobj/shader_loadobj.js"></script>
+<script type="text/javascript" src="loadobj/loadobj.js"></script>
+<style>
+div.head {
+    font-size: 30;
+}
+button.mbut {
+    position:absolute;
+    width:50px;
+    height:50px;
+    font-size:25;
+}
+    
+</style>
+<body onload="g_loadassets()">
+    <div id="mgame" style="display:none;">
+        <div style="position: relative;">
+            <canvas id="limpetge_canvas" width=1000 height=600 style="background-color: black;"></canvas>
+            <div id="top" style="position: absolute; top:0;left:0;font-weight:bold;font-size:30;color:cyan;text-shadow:2px 2px black;"><span id="tmessage"></span></div>
+            <div id="mobileform" style="position:absolute;top:0;left:0;z-index:1;display:none">
+                <form name="buttons" target='#' method='get' onsubmit="return false";>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="mform" style="display:block;">
+        <form name="mform" target="#" onsubmit="return false;">
+            <div class="head">The Load Object Test</div>
+            <hr />
+            <div class="description">Keys are:</div>
+            <div>
+                <table>
+                    <tr><td class="ikey">&lt;</td><td>Yaw left</td></tr>
+                    <tr><td class="ikey">&gt;</td><td>Yaw right</td></tr>
+                    <tr><td class="ikey">W</td><td>Forward</td></tr>
+                    <tr><td class="ikey">S</td><td>Back</td></tr>
+                </table>
+	    </div>
+            <hr />
+            <div class="description">Options and controls</div>
+            <div>
+                <table>
+                    <tr><td></td><td><input type="button" value="Play" id="playbutton" onclick="return g_playgame();" disabled="disabled"/>
+                        <span id="loading">Asets loading, please wait...</span></td></tr>
+                    
+                </table>
+            </div>
+            <hr />
+        </form>
+    </div>
+</body>
+</html>

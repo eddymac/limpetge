@@ -1,0 +1,730 @@
+<html>
+    <head><title>LimpetGE Tutorial Part 3 - Refining the game</title></head>
+    <style>
+    td {
+        vertical-align: top;
+    }
+    td.subsect {
+        font-weight: bold;
+    }
+
+    div.example {
+        font-family: monospace;
+        background-color: #f0f0f0;
+        white-space: pre;
+    }
+
+    div.example2 {
+        font-family: monospace;
+        background-color: #f0f0ff;
+        white-space: pre;
+    }
+    div.indent {
+        padding: 5px 20px 5px 20px;
+        margin: 5px 0px 5px 0px;
+        border-size: 1px;
+        border-color: black;
+        border-style: solid;
+    }
+    span.highlight {
+        font-weight: bold;
+        color: #000000;
+        background-color: #ffff80;
+    }
+    span.new {
+        font-weight: bold;
+        color: #008000;
+    }
+    span.old {
+        color: #ff0000;
+        text-decoration: line-through;
+    }
+
+    </style>
+
+    <script type="text/javascript" src="tutorial2.js"></script>
+    <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+    <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+    <body onload=do_onload();>
+
+<div style="text-align:center;"><img src="../libs/limpetlogo.png" alt="LimpetGE Logo" /></div>
+<h1>LimpetGE Titorial Part 3 - Refining the look of the game</h1>
+<div>The LimpetGE first tutorial.  Creation of a simple first-person game.</div>
+<div>Part 3 - Refining the look</div>
+
+<h3>Part 2 - Refining the look of the game</h3>
+
+<p>In <a href="tutorial2.html">part two</a> of this tutorial we ended with a playable game, this tutorial oes into
+  improving, or at least changing, the look of it.</p>
+
+<h4>Sphere Rolling</h4>
+<p>The game already rolls the spheres, but at the moment we cannot see that as they are all of a solid color.  First we will change that by using a texture.
+   To do that, we need a texture for the sphere.  I will use this one:</p>
+
+<div><img src="bsphere.jpg" alt="Sphere texture" /></div>
+
+<p>When applied to a sphere, this will "wrap" itself round he sphere, shrinking the top and bottom so that it fits. The sphere
+   will end up looking like a beach ball:</p>
+
+<div><img src="rensphere.png" alt="Rendered Sphere" /></div>
+
+<p>To do this, the "sphereStructure(....)" function could be something like:</p>
+
+<div class="example">
+function sphereStructure()
+{
+    <span class="old">// Have sphers multi colored, so create three structures</span>
+    <span class="old">var colors = [</span>
+        <span class="old">[1.0, 0.5, 0.5, 1.0], // red</span>
+        <span class="old">[0.5, 1.0, 0.5, 1.0], // green</span>
+        <span class="old">[0.5, 0.5, 1.0, 1.0], // blue</span>
+        <span class="old">[1.0, 1.0, 0.0, 1.0], // yellow</span>
+    <span class="old">];</span>
+
+    var structs = [];
+
+    /*
+     * The spheres, as they are, are 2 meters in radius, or 4 meters in diameter
+     */
+
+    for(var i = 0; i < 4; i++) {
+        <span class="old">var stru = new LStructureDef(ShaderSimple, {color: colors[i], collision: LDYNAMIC, distance: 2.0});</span>
+        <span class="old">stru.addSphere({radius: 2.0});</span>
+        <span class="new">var stru = new LStructureDef(ShaderSimple, {texture: "squish/bsphere.jpg", collision: LDYNAMIC, distance: 2.0});
+        stru.addSphere({
+                 position: lFromXYZPYR(0, 0, 0, 0, 0, Math.PI * i / 4), // Rotate a little z axis to make spheres more "random"
+                 radius: 2.0,
+            });</span>
+        structs.push(stru);
+    }
+    return structs;
+}
+</div>
+
+<p>Rather than create four sphere structures of spheres with solid colors, this creates four with the texture showed above, rotated clockwise by varying amounts.</p>
+
+<p>In creating the "LStructureDef" instance, rather than define a "color" in the "args" arguments, I define a "texture", the value being the URL of the texture collage to use,
+   which in the sphere's case, which only has one surface, is the entire image.</p>
+
+<p>The "lFromXYZPYR(...)" function is a helper function, it generates a tranformation matrix ("mat4") that has gone through the transformations:</p:
+<ol>
+    <li>X - Translate along the X axis</li>
+    <li>Y - Translate along the Y axis</li>
+    <li>Z - Translate along the Z axis</li>
+    <li>P - Pitch - rotate around the X axis</li>
+    <li>Y - Yaw - rotate around the Y axis</li>
+    <li>R - Roll - rotate around the Z axis</li>
+</ol>
+
+<p>Note: it performs this as though the object is translated, then relative to itself, it rolls, pitches then yaws (which is not the order the arguments are supplied).</p>
+
+<p>The rest of the code is the same, except I changed the sphere creation argument name from "color" to "angle" in the "Sphere" class function:
+</p>
+
+<div class="example"><span class="old">function Sphere(angle)</span>
+<span class="new">function Sphere(angle)</span>
+{
+    <span class="old">this.obj = new LWObject(g_structures.Sphere[angle], this);</span>
+    <span class="new">this.obj = new LWObject(g_structures.Sphere[angle], this);</span>
+    this.obj.mkvisible(false);
+    lScene.lPlace(this.obj, mat4.create());
+    this.velocity = 0;  // To be created in "makesphere"
+
+    // For celebrating
+    this.endx = g_prngd.next(20) - 10;
+    this.endy = g_prngd.next(20) - 10;
+    this.endz = g_prngd.next(20) - 10;
+}
+</div>
+
+<p>This makes the spheres roll...</p>
+
+<p><a href="../examples/squish/squish2.js">The full script to date can be viewed here</a>.  Now you can see the spheres roll towards you.
+    <a href="../examples/squish2.html">Here is a link to an HTML page where you can play it!</a>.</p>
+
+<p>
+
+<h3>Refactoring The Spheres</h3>
+
+<p>Although the spheres look better now (IMHO), there is more that can be done, and which I want to show you.  The first is to give the sphere a better entrance, the other is
+to improve the "look" of it.</p>
+
+<p>To give it a better entrance, we will have the sphere "drop" into the corridor, rather than just appear.<p>
+
+<p>The other is to give the sphere a (fake) shadow.</p>
+
+<p>LimpetGE at this time does not support "proper" shadows,  however, it is relatively easy to draw a partially transparent black disk under each sphere, though to do so you will need:</p>
+<ol>
+    <li>Another shader added to the game</li>
+    <li>Re-factoring the sphere structure and objects</li>
+</ol>
+
+<h4>Adding another shader</h4>
+
+<p>This is very much like adding the first shader.  You need to:</p>
+<ol>
+    <li>Edit the "shader_squish.js" file you created before.</li>
+    <li>Just below where you inserted the "shaders/simple.js" file (which is just before the "lShader_objects" definition), copy in the contents of the "shaders/solid.js" file.</li>
+    <li><div>In the "lShaders_objects" array, add the "ShaderSolid" reference:</div>
+        <div class="example">const lShader_objects = [
+    ShaderSimple,
+    <span class="new">ShaderSolid,</span>
+];
+</div></li>
+</ol>
+<p>and that is it.</p>
+
+<h4>New "sphereStructure()" function</h4>
+
+<p>The "sphereStructure()" needs to be changed from what you have just done to:</p>
+
+<div class="example">function sphereStructure()
+{
+    <span class="old">var structs = [];</span>
+
+    /*
+     * The spheres, as they are, are 2 meters in radius, or 4 meters in diameter
+     */
+
+    <span class="old">for(var i = 0; i &lt; 4; i++) {</span>
+        <span class="old">var stru = new LStructureDef(ShaderSimple, {texture: "squish/bsphere.jpg", collision: LDYNAMIC, distance: 2.0});</span>
+
+        <span class="old">stru.addSphere({</span>
+                 <span class="old">position: lFromXYZPYR(0, 0, 0, 0, 0, Math.PI * i / 4), // Rotate a little z axis to make spheres more "random"</span>
+                 <span class="old">radius: 2.0,</span>
+            <span class="old">});</span>
+        <span class="old">structs.push(stru);</span>
+    <span class="old">}</span>
+    <span class="old">return structs;</span>
+    <span class="new">var mainstruct = new LGroupDef({collision: LDYNAMIC, distance: 2.0});
+    var anglestruct = new LGroupDef();
+    var ballstruct = new LStructureDef(ShaderSimple, {texture: "squish/bsphere.jpg"});
+    ballstruct.addSphere({radius: 2.0});
+    var shadowstruct = new LStructureDef(ShaderSolid, {color: [0.0, 0.0, 0.0, 0.7]});
+    shadowstruct.addCylinder({position: lFromXYZPYR(0, -2.0, 0, LR90, 0, 0), radius: 2.0, depth: 0.002, hold: [LI_FRONT, LI_SIDE]})
+    return [mainstruct, anglestruct, ballstruct, shadowstruct];</span>
+}
+</div>
+
+<p>Refatoring indeed.  The single LStructureDef has been replaced with four separate definitions, which will be used to create a game object hierarchy for each sphere.</p>
+
+<p>The "LGroupDef" class is a structure with no components, however all other features are the same.</p>
+
+<p>The one of these paced in "mainstruct" will be used to create the top level object.  The main one that is moved and be involved in collision detection.</p>
+
+<p>The "LGroupDef" instance placed in "anglestruct" will be used to create a sort of "gimball", so the shpere can be rotated in any direction prior to
+   rolling it towards the player.</p>
+
+<p>The "LstructureDef" instance that is assigned to "ballstruct" is the sphere itself.</p>
+
+<p>The "LStructureDef" instance assigned to "shadowstuct" is the dark circle that will be placed under the sphere.  The "ShaderSolid" shader is used.  As it is in
+   the "lShader_objects" array at the end it can be used for (partially) transparent objects.  Also, the shader itself is not effected by the properties
+   "lScene.directionalLightColor" (sunlight) or the "lScene.ambientLight" (light in the shadow), it simply displays the color or texture as is.</p>
+
+<p>The "structure.addCylinder(....)" method adds a cylinder,  that has a radius around the Z axis, and a depth plus and minus from the origin.  So it creates one
+   as though you are looking "end on".  So the above creates a cylinder with a 2 meter  radius, 2 millimeters thick.  The "position" argument moves the object down 2 meters (so
+   it is on the floor) then rotates it so it is like a "plate" rather than a "wheel".  The "hold" argument tells LimpetGE just to render the top of these objects.</p>
+
+<p>The hierarchy of the Sphere game objects will be:
+
+<ul>
+    <li>mainstruct - The main game object used for movement and collision detection
+        <ul>
+            <li>anglestruct - A type of virtual "gimball" to rotate sphere any which way prior to it rolling towards the player
+                <ul>
+                    <li>ballstruct - The sphere itself</li>
+                </ul>
+            </li>
+            <li>shadowstruct - The structure for the "shadow" underneath the sphere</li>
+        </ul>
+    </li>
+</ul>
+                
+
+
+<h4>The Sphere constructor</h4>
+
+<p>The "Sphere" class constructor is modified to:</p>
+
+<div class="example"><span class="old">function Sphere(angle)</span>
+<span class="new">function Sphere()</span>
+{
+    <span class="old">this.obj = new LWObject(g_structures.Sphere[angle], this);</span>
+    <span class="new">this.obj = new LWObject(g_structures.Sphere[0], this);
+    this.angle = new LObject(g_structures.Sphere[1], this);
+    this.ball = new LObject(g_structures.Sphere[2], this);
+    this.shadow = new LObject(g_structures.Sphere[3], this);</span>
+    lScene.lPlace(this.obj, mat4.create());
+    <span class="new">this.obj.addChild(this.angle, mat4.create());
+    this.angle.addChild(this.ball, lFromXYZPYR(0, 0, 0, g_prngd.next(Math.PI), g_prngd.next(Math.PI), g_prngd.next(Math.PI)));
+    this.obj.addChild(this.shadow, mat4.create());</span>
+
+    this.obj.mkvisible(false);
+    this.velocity = 0;  // To be created in "makesphere"
+
+    // For celebrating
+    this.endx = g_prngd.next(20) - 10;
+    this.endy = g_prngd.next(20) - 10;
+    this.endz = g_prngd.next(20) - 10;
+}
+</div>
+
+<p>First, the difference between the "LWObject" and the "LObject" classes.  The "LWObject" can only be added to the "Scene" at the top level of
+   the game object hierarchy using "lScene.lPlace(...)".  A "LObject" game object can be added onto any other object further "down" the hierarchy
+   using the "addChild(...)" method.  "LObject" game objects can also be added to "lScene", but "LWObject" game objects cannot be added onto
+   other game objects.  The reason for this is that LimpetGE can perform far more efficient code for the same functionality
+   if it knows the object is top level.</p>
+
+<p>In the above, a new game object is created for each of the sphere's structures, and then assembled into it's tree or hierarchy.  A game
+   object is added onto the "leaf" of another game object by using the "addChild(...)" method of the parnt.  This takes two arguments:
+<ol>
+    <li>The game object to add</li>
+    <li>The position relative to the parent's center to add it as a "mat4" transformation matrix.</li>
+</ol>
+
+<p>This method is used to assemble the objects into the hierarchy described above.  The sphere itself is added onto it's parent (the virtual "gimball") at a random
+   angle (along all three axis).</p>
+
+<h4>Changes to the sphere positioning</h4>
+
+<p>In order to make it look as though the sphere "drops" in, we will "start" it 10 meters above eye level and have it fall prior to rolling towards the player.
+   Changes to the "sphere.start()" method to make this happen are:</p>
+
+<div class="example">    start: function()
+    {
+        this.velocity = 5.0 + g_prngd.next(5.0);    // Set velocity between 5 and 10
+
+        /*
+         * Move to - X = laterally somewhere random in the corridor, not touching the walls
+         *           Y = 10 above
+         *           Z = Start of run
+         */
+        var x = 19 - g_prngd.next(38);  // Get a number between -19 and 19
+        if(x > 18) x = 18;  // Cannot be grater than 18
+        if(x &lt; -18) x = -18;  // or less than -18
+        <span class="old">this.obj.moveHere(x, 0,  -110);</span>
+        <span class="new">this.obj.moveHere(x, 10,  -110);</span>
+
+        // Make sure it is not hitting anything, If it is move back 2.1
+        // Wash rinse repeat...
+
+        var collision = false;
+        function _see(cob)
+        {
+            collision = true;
+        }
+        for(;;) {
+            this.obj.warp();    // Warp here - no ray tracing
+            collision = false;
+            lScene.lCAllDynamicPointDetect(this.obj, 2.0, _see);
+            if(collision) {
+                <span class="old">this.obj.moveAbs(0, 0, -2.1);</span>
+                <span class="new">this.obj.moveFlat(0, 2.1, 0);</span>
+            } else {
+                break;
+            }
+        }
+
+        // Move the object up by 10
+        // It will fall at velocity of 20, and min velocity forward is 5
+        // Therefore half second to fall, move forward 2.5 as well
+
+
+        // Has already warped here in for loop, if have not need to do this
+        // otherwise ray tracing occurs from where it last was!.
+
+        this.obj.mkvisible(true);
+        this.obj.procpos();
+    },
+</div>
+
+<p>The difference here is that:</p>
+<ul>
+    <li>"this.obj.moveHere(x, 10,  -110)" - This places the sphere 10 meters up</li>
+    <li>"this.obj.moveAbs(0, 2.1, 0)" - In the event it materialises a sphere in the same place as another, it moves the sphere 2.1
+        meters up than than 2.1 meters back.</li>
+</ul>
+
+<p>The "obj.moveAbs(...)" method has been changed to "obj.moveFlat(...)" method.  This is not strictly necessary in this case. the "obj.moveAbs(...)" moves the object
+   relative to the Scene's origin, whereas "obj.moveFlat(...)" moves the object relative to the "flat" direction it is pointing, that is he amount it has
+   been rotated around the "Y" axis.  This would be useful if the game ever grows into a version where the spheres to not all travel in the same direction.</p>
+
+<h4>The sphere movement</h4>
+
+
+<p>The method now looks like:</p>
+
+<div class="example">move: function(delta)
+    {
+
+        if(!this.obj.isvisible) return;
+
+        /*
+         * Adjust the velocity to that of the sphere
+         */
+
+        delta *= this.velocity;
+
+        <span class="new">// Move possibly 2 ways
+
+        var y = 0;
+
+        if(this.obj.y > 0) {
+            var y = delta * 3;
+            if(this.obj.y > y) {
+                delta = 0;
+            } else {
+                delta  -= y / 3;
+                y = this.obj.y;
+            }
+        }</span>
+
+        /*
+         * Moving, spheres roll, so cannot use the "move" or "moveFlat" methods
+         * as they move in the direction the object is pointing, which can be 
+         * anywhere as it rolls.
+         * A quick and dirty way to "fix" this is to use the "moveAbs" method
+         * which moves relative to the scene (or the origin).  As we are only
+         * moving one way (down Z axis, positive) we can get away with that here.
+         * A more "correct" solution, that llows proper rolling, is in the next tutorial.
+         */
+
+        <span class="old">this.obj.moveAbs(0, 0, delta);</span>
+        <span class="new">this.obj.moveAbs(0, -y, delta);</span>
+
+
+        /*
+         * Since we mentioned it, lets roll this.
+         * You cannot see that if a single color, but put a texture on the sphere...
+         *
+         * divide by 2 * Pi * radius so it rolls the speed it is travelling
+         */
+
+        <span class="old">this.obj.rotate(delta / 2, 0, 0);</span>
+        <span class="new">this.angle.rotate(delta / 2, 0, 0);</span>
+
+        /*
+         * In LimpetGE it is really the object that has moved responsibility
+         * to see if it has hit anything...
+         *  Here, spheres can either hit the camera or another sphere
+         */
+
+        var hitsphere = null;
+        function _see(cob) {
+            if(cob.control instanceof LCamera) {
+                lScene.ishit = true;        // Hit camera - Game over
+            } else if (cob.control instanceof Sphere) {
+                hitsphere = cob.control;
+            }
+        }
+        lScene.lCAllPointDetect(this.obj, 2.0, _see);
+
+        if(hitsphere) {
+            // First move back
+            <span class="old">this.obj.moveAbs(0, 0, -delta);</span>
+            <span class="new">this.obj.moveAbs(0, y, -delta);</span>
+            this.angle.rotate(-delta / 2, 0, 0);
+
+            // Then swap velocity
+            if(this.velocity &gt; hitsphere.velocity) {
+                var temp = this.velocity;
+                this.velocity = hitsphere.velocity;
+                hitsphere.velocity = temp;
+            }
+        }
+
+        // If we are off the edge, die
+
+        this.obj.procpos();
+
+        if(this.obj.z &gt; 220) this.die();
+    },
+</div>
+
+<p>To cater for the vertical drop at the start, the above method looks at the height the object is located - which
+   is in "this.obj.y".  If it is above zero the object will instead fall at three times it's horizontally velocity which
+   is stored in the "y" variable above.  There is code there that if "delta" is larger than necessary to complete the
+   sphere's drop it will use the remaining amount to travel towards the player.</p>
+
+<p>The "move-backs" also need to take into the vertical movements.</p>
+
+<p>The "moveFlat(...) and "moveHere(...)" methods are applied onto the top level game object, and all object
+   descendants of that are moved by the same amount.  It is though all objects are placed in a box, and the box
+   is moved.</p>
+
+<p>As for the rotation, the "virtual gimball" containing the sphere is "rolled" as the sphere moves towards the player.  This,
+   with the manner the sphere objects were created and assembled, gives the impression of the spheres being
+   dropped randomly and rolling towards you, with a shadow underneath it.</p>
+
+<h4>A couple of associated changed</h4>
+
+<p>To fully implement the above, a couple of changes are required.</p>
+
+<p>The first, the "Sphere" objects are not created with an argument any more, so in the "g_playlevel()" function:</p>
+
+<div class="example">    // Create sphere objects
+    for(var i = 0; i &lt; 200; i++)
+        <span class="old">lScene.spheres.push(new Sphere(angle));</span>
+        <span clas="new">lScene.spheres.push(new Sphere());</span>
+</div>
+
+<p>The second is that now the spheres are "dropping in" rather than "appearing", it looks bad if they go through the ceiling itself. So, the ceiling has been
+   shortened in the "corridorStructure()" function:</p>
+
+
+<div class="example">    // Ceiling is three meters above eye level
+    // Taking this out of collision detection (corners: null) as all happens when Y is 0 anyway.
+    <span class="old">struct.addBlock({position: lFromXYZ(0, 3.1, 0), size: [20, 0.1, 120], texturecontrols: lIndArray([[LI_BOTTOM, cyan]]), corners: null});</span>
+    <span class="new">struct.addBlock({position: lFromXYZ(0, 3.1, 12), size: [20, 0.1, 114], texturecontrols: lIndArray([[LI_BOTTOM, cyan]]), corners: null});</span>
+</div>
+
+<p>The above effect shortens the ceiling from being 240 meters long to 228 meters long (12 meters shorter), and moves it back 12 meters, meaning it ends 12 meters before the
+   floor does.  This leaves a gap at the end for the spheres to fall into.</p>
+
+
+<p><a href="../examples/squish/squish3.js">The full script to date can be viewed here</a>.  Now you can see the spheres roll towards you.
+    <a href="../examples/squish3.html">Here is a link to an HTML page where you can play it!</a>.</p>
+
+<h3>Tarting up the corridor</h3>
+
+<p>A final aspect of the tutorial, some aspects of making the corridor a bit more interesting.</p>
+
+<p>All the changes to this are mostly in the "corridorStructure()" function, and some in the "Corridor" class constructor, and one or two scattered in the "Scene" class.</p>
+
+<p>The  "corridorStructure()" has been changed to the following.  So many additions have been done I have not used the usual highlighting, and I woill not go through
+   it line by line, but highlighted what I consider the more interesting bits.</p>
+
+<div class="example">function corridorStructure()
+{
+    // Walls form a corridor, with the ends left out.
+    var colors = [
+        [3.0, 0.2, 0.1, 1.0],   // red-brown
+        [0.8, 1.0, 1.0, 1.0],   // cyan
+        [0.0, 0.3, 0.0, 1.0],   // darkish green
+        [1.0, 1.0, 1.0, 1.0],   // White for lines
+        [0.5, 0.1, 0.1, 1.0],   // Dark brown
+        [0.15, 0.03, 0.03, 1.0],   // Shadow brown  // Dark brown * 0.3 (Ambient light)
+        [0.1, 0.1, 0.0, 1.0],   // Dark tree
+        [0.4, 0.5, 0.5, 1.0],   // Dark cyan
+    ]
+
+    var brown = lTextureColor(8, 0);
+    var cyan = lTextureColor(8, 1);
+    var green = lTextureColor(8, 2);
+    var white = lTextureColor(8, 3);
+    var darkbrown = lTextureColor(8, 4);
+    var shadowbrown = lTextureColor(8, 5);
+    var darkgreen = lTextureColor(8, 6);
+    var shadowcyan = lTextureColor(8, 7);
+
+    // Unit is a meter
+    // Person is 2 meters high (to eye level)
+    // Floor is 2 meter below, Ceiling 3 meter above
+    // Floor is 40 meters wide
+    // Corridor is 400 meters long
+
+
+    var struct = new LStructureDef(ShaderSimple, {colors: colors, collision: LSTATIC});
+
+    // Also will require to draw things in shadow.
+    // Will use "ShaderSolid" here.  Although this is really for transparent shadows, can be used
+    // here too as nothing transparent is displayed in front of it
+
+    <span class="highlight">var shadow = new LStructureDef(ShaderSolid, {colors: colors});</span>
+
+    // Walls
+    // The center needs to be positioned +- 20 meters either side, 0.5 meters above "eye level" (y = 0.0)
+    // "size" is from center for addBlock, so it is actually double.
+    // Make allowances for thickness of walls.
+    // 
+
+    // Have this as a window
+    struct.addBlock({position: lFromXYZ(-20.1, -0.75, 0), size: [.1, 1.25, 120], texturecontrols: lIndArray([[LI_RIGHT, brown]])});
+    struct.addBlock({position: lFromXYZ(-20.1, 2.75, 0), size: [.1, 0.25, 120], texturecontrols: lIndArray([[LI_RIGHT, brown], [LI_BOTTOM, brown]]), corners: null});
+
+    struct.addBlock({position: lFromXYZ(20.1, -0.75, 0), size: [.1, 1.25, 120], texturecontrols: lIndArray([[LI_LEFT, brown]])});
+    struct.addBlock({position: lFromXYZ(20.1, 2.75, 0), size: [.1, 0.25, 120], texturecontrols: lIndArray([[LI_LEFT, brown], [LI_BOTTOM, brown]]), corners: null});
+
+
+    // Floor needs to be 2 meters below eye level
+    // Taking this out of collision detection (corners: null) as all happens when Y is 0 anyway.
+    struct.addBlock({position: lFromXYZ(0, -2.1, 0), size: [20, 0.1, 120], texturecontrols: lIndArray([[LI_TOP, green]]), corners: null});
+
+    // Ceiling is three meters above eye level
+    // Taking this out of collision detection (corners: null) as all happens when Y is 0 anyway.
+    struct.addBlock({position: lFromXYZ(0, 3.1, 12), size: [20, 0.1, 114], texturecontrols: lIndArray([[LI_BOTTOM, cyan]]), corners: null});
+    // And a bit beyond where the balls come in
+    struct.addBlock({position: lFromXYZ(0, 3.1, -116), size: [20, 0.1, 4], texturecontrols: lIndArray([[LI_BOTTOM, cyan]]), corners: null});
+
+    // Put an end in, up to 2.5M high
+    struct.addBlock({
+             position: lFromXYZ(0, -0.75, -120),    // Center 120 meters in frnyt of origin, .75 meters below "eye level"
+             size: [20, 1.25, .1],                // Across the back, 2,5M high, 20 CM thick
+             texturecontrols: lIndArray([[LI_FRONT, brown]]), // Color it brown
+              corners: null // No collision detection
+        });
+
+    // Half meter "band" at top
+    struct.addBlock({
+             position: lFromXYZ(0, 2.75, -120),    // Center 120 meters in frnyt of origin, 2.75 meters above "eye level"
+             size: [20, 0.25, .1],                // Across the back, .5 M high 20 CMM thick
+             texturecontrols: lIndArray([[LI_FRONT, brown], [LI_BOTTOM, brown]]), // Color it brown
+              corners: null // No collision detection
+        });
+
+    // 0.5 Meter window separators every 10 M (starting at ends)
+
+    for(var i = -20; i &lt;= 20; i += 10) {
+        // Filler between 2.5 to 4.5 meters high
+        struct.addBlock({
+                position: lFromXYZ(i, 0.5, -120),    // Post position, 120 meters in front of origin, 3.5 meters above "eye level"
+                size: [0.25, 2.5, .15],                // Where the post needs to be, the back, 2 M high 20 CM thick
+                texturecontrols: lIndArray([[LI_FRONT, darkbrown], [LI_LEFT, darkbrown], [LI_RIGHT, darkbrown]]), // Color it brown
+                corners: null // No collision detection
+        });
+    }
+
+
+    for(var i = -120; i &lt;= 120; i += 10) {
+        if(i != -100)  // Not for finish line
+            struct.addBlock({position: lFromXYZ(0, -2.0, i), size: [20, 0.001, 0.1], texturecontrols: lIndArray([[LI_TOP, white]]), corners: null});
+
+        struct.addBlock({
+            position: lFromXYZ(-20.1, 0.5, i),    // Post position, 120 meters in front of origin, 3.5 meters above "eye level"
+            size: [0.15, 2.5, .15],                // Where the post needs to be, the back, 2 M high 20 CM thick
+            texturecontrols: lIndArray([[LI_FRONT, darkbrown], [LI_RIGHT, darkbrown]]), // Color it brown
+            corners: null // No collision detection
+        });
+
+        // Right hand side posts more complex.  The bits "behind" the wall are in shadow, so ue the shadow structure
+        // for that
+
+        // First - the bit in the light
+
+        struct.addBlock({
+            position: lFromXYZ(20.1, 1.5, i),    // Post position, 120 meters in front of origin, 3.5 meters above "eye level"
+            size: [0.15, 1, .15],                // Where the post needs to be, the back, 2 M high 20 CM thick
+            texturecontrols: lIndArray([[LI_FRONT, darkbrown], [LI_LEFT, darkbrown]]), // Color it brown
+            corners: null // No collision detection
+        });
+
+        <span class="highlight">// Now for the bits at top and bottom in the shade</span>
+
+        shadow.addBlock({
+                position: lFromXYZ(20.1, 2.75, i),    // Post position, 120 meters in front of origin, 3.5 meters above "eye level"
+                size: [0.15, .25, 0.15],                // Where the post needs to be, the back, 2 M high 20 CM thick
+                texturecontrols: lIndArray([[LI_FRONT, shadowbrown], [LI_LEFT, shadowbrown]]), // Color it brown
+                corners: null // No collision detection
+        });
+        shadow.addBlock({
+                position: lFromXYZ(20.1, -0.75, i),    // Post position, 120 meters in front of origin, 3.5 meters above "eye level"
+                size: [0.15, 1.25, 0.15],                // Where the post needs to be, the back, 2 M high 20 CM thick
+                texturecontrols: lIndArray([[LI_FRONT, shadowbrown], [LI_LEFT, shadowbrown]]), // Color it brown
+                corners: null // No collision detection
+        });
+        //}
+    }
+    struct.addBlock({position: lFromXYZ(0, -2.0, -101), size: [20, 0.001, 1], texturecontrols: lIndArray([[LI_TOP, white]]), corners: null});
+
+    // Let us add a whole lot of cylinders outside
+
+    for(var i = 0; i &lt; 100; i++) {
+        var x = g_prngd.next(10) - 35;
+        var z = g_prngd.next(250) - 150;
+        struct.addCylinder({position: lFromXYZPYR(x, 10, z, LR90, 0, 0), radius: g_prngd.next(.5) + 1, depth: 10, texturecontrols: lIndArray([[LI_SIDE, darkgreen]])});
+        struct.addCylinder({position: lFromXYZPYR(-x, 10, z, LR90, 0, 0), radius: g_prngd.next(.5) + 1, depth: 10, texturecontrols: lIndArray([[LI_SIDE, darkgreen]])});
+    }
+
+    // Backgroubnd cylinders at the end
+    for(var i = 0; i &lt; 20; i++) {
+        var x = g_prngd.next(40) - 20;
+        var z = g_prngd.next(10) - 140;
+        struct.addCylinder({position: lFromXYZPYR(x, 50, z, LR90, 0, 0), radius: g_prngd.next(.5) + 1, depth: 50, texturecontrols: lIndArray([[LI_SIDE, darkgreen]])});
+    }
+
+
+    // Put something on the ceiling.  A few slightly lighter squares to pretend they are kinda skylights  Use the "solid" (shadow structure) for this.
+
+    for(var z = -95; z &lt;= 95; z += 10) {
+        for(x = -15; x &lt;= 15; x += 10) {
+            <span class="highlight">shadow.addBlock({position: lFromXYZ(x, 3.1, z), size: [1, .2, 1], texturecontrols: lIndArray([[LI_BOTTOM, shadowcyan]])});</span>
+        }
+    }
+
+    return [struct, shadow];
+}
+
+</div>
+
+<p>The first thing to notice is that I have used more colors in this.</p>
+
+<p>The next is the first highlighted line.  I have created another "lStructureDef" instance for the corridor, this time using the "ShaderSolid" shader.  This is because
+   the "directionalLightColor" is coming from it's default direction, that is from a vector of (1, 1, 1) - (or "square root of 3 of those to be more exact).  That is,
+   in this game, from behind the player's right shoulder.</p>.
+
+<p>As this "tarting up" involves drawing small posts that protrude into the corridor.  Some of these will be in the shade.  As their is no "proper" shadows in
+   LimpetGE, if the "ShaderSimple" is used here it will seem as though these are in the "sunlight".  Here a cheat is used to sort of fix that, those objects
+   that are rendered in the shade are rendered using the "ShaderSolid" shader, which is unaffected by "sunlight", using the appropriate dark color.</p>
+
+<p>A similar problem occurs using the "fake skylights" in the ceiling.  Here the "ShaderSolid" shader is used for the opposite reason.  Any "skylight"
+   square placed their using "ShaderSimple" woul simply be too dark.</p>
+
+<p>I will not go through all the structure above. It creates windows at the side (or at least missing rectangles from the walls), something to see out of them, 
+   and so on.</p>
+
+<p>At the end of the "corridorStructure()" function I need to return both "LStuctureDef" instances now, and the "Corridor" class constructor needs to create
+   an object based on each of them now.</p>
+
+<div class="example">function Corridor()
+{
+    <span class="old">this.obj = new LWObject(g_structures.Corridor, this);</span>
+    <span class="new">this.obj = new LWObject(g_structures.Corridor[0], this);
+    this.solids = new LWObject(g_structures.Corridor[1], this);</span>
+    lScene.lPlace(this.obj, mat4.create());
+    <span class="new">lScene.lPlace(this.solids, mat4.create());</span>
+}
+</div>
+
+
+
+<p>The other change to this is in the "scene.die()" method of the scene class. The way the dying animation is done is it turns the "directionalLightColor" (sunlight) red,
+   and dimms it and the "ambientColor" (color in the shade).  However, the "ShaderSolid" is unaffected by these, and slightly spoils the effect.  To make it less
+   noticeable I simply make the "ShaderSolid" structure's object invisible at the start of the animation.</p>
+
+<p>I also need to change the "g_playlevel()" function to store a reference of the corridor object so the program can easily access it.</p>
+
+<p>In the "g_playlevel()" function:</p>
+
+<div class="example">    // Create the wall and ceiling.  <span class="new">Need to access it in "die" now</span>
+    <span class="old">new Corridor();</span>
+    <span class="new">lScene.corridor = new Corridor();</span>
+</div>
+
+<p>In the "Scene" class, the "scene.die()" methid is:</p>
+
+<div class="example">    die: function()
+    {
+        <span class="new">// First, "solid" shader objects ignore light, so for the correct effect,
+        // make the wall structure shadoes invisible
+        this.corridor.solids.mkvisible(false);</span>
+        this.lMessage("Squished!");
+        this.directionalLightColor = vec3.fromValues(1.0, 0.0, 0.0);
+        this.isend = true;
+    },
+</div>
+   
+
+<p><a href="../examples/squish/squish4.js">The full script to date can be viewed here</a>.  Now you can see the spheres roll towards you.
+    <a href="../examples/squish4.html">Here is a link to an HTML page where you can play it!</a>.</p>
+
+<p>
+
+
+
+<h4>Conclusion</h4>
+
+<p>More refinement and fun can be had with this.  A reference to the functionality if LimpetGE is in the <a href="reference.html">Reference Manual</a>.  Enjoy.</p>
+
+
+</body>
+</html>

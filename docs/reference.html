@@ -1,0 +1,1340 @@
+<html>
+    <head><title>LimpetGE Reference</title></head>
+    <style>
+    td {
+        vertical-align: top;
+    }
+    td.subsect {
+        font-weight: bold;
+    }
+    div.example {
+        font-family: monospace;
+        background-color: #f0f0f0;
+        white-space: pre;
+    }
+
+    div.example2 {
+        font-family: monospace;
+        background-color: #f0f0ff;
+        white-space: pre;
+    }
+    div.indent {
+        padding: 5px 20px 5px 20px;
+        margin: 5px 0px 5px 0px;
+        border-size: 1px;
+        border-color: black;
+        border-style: solid;
+    }
+
+    </style>
+    <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+    <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+    <body>
+
+<div style="text-align:center;"><img src="../libs/limpetlogo.png" alt="LimpetGE Logo" /></div>
+<h1>LimpetGE Reference Manual</h1>
+<div>The LimpetGE reference manual.  An attempt to list all the API in the LimpetGE library.  However, this does
+     not include the shaders, that has its own section.</div>
+
+<h3>Pre-Requisites</h3>
+<p>The LimpetGE library make use of the <a href="http://glmatrix.net">glMatrix</a> script, a copy of this is provided with
+   the distribution files.  Basic knowledge of what matrix maths does is assumed.</p>
+        
+<h3>Global Variables</h3>
+<table>
+
+<tr><td>Global variable</td><td>Value</td><td>Description</td></tr>
+<tr><td class="subsect" colspan=3>Some generic constants</td></tr>
+<tr><td>LCANVAS_ID</td><td>"limpetge_canvas"</td><td>The HTML ID of the canvas used for WebGL</td></tr>
+<tr><td>LMESTIME</td><td>5</td><td>Length of time (in seconds) messages should appear for</td></tr>
+
+<tr><td class="subsect" colspan=3>Shortcuts for ordinals when placing objects</td></tr>
+<tr><td>LR90</td><td>Math.PI / 2</td><td>90 degrees in radians</td></tr>
+<tr><td>LR180</td><td>Math.PI</td><td>180 degrees in radians</td></tr>
+<tr><td>LR270</td><td>Math.PI * 3 / 2</td><td>270 degrees in radians</td></tr>
+<tr><td>LR360</td><td>Math.PI * 2</td><td>360 degrees in radians</td></tr>
+
+<tr><td class="subsect" colspan=3>When adding entities to structures, the following can be used for controlling textures etc.</td></tr>
+<tr><td>LI_FRONT</td><td>0</td><td>The identifier for the front of the structure component</td></tr>
+<tr><td>LI_BACK</td><td>1</td><td>The identifier for the back of the structure component</td></tr>
+
+<tr><td>LI_SIDE</td><td>2</td><td>The identifier for the side of the structure component (cylinders) or the first side in polygons.</td></tr>
+
+<tr><td>LI_TOP</td><td>2</td><td>The identifier for the top of the block structure component</td></tr>
+<tr><td>LI_RIGHT</td><td>3</td><td>The identifier for the right of the block structure component</td></tr>
+<tr><td>LI_BOTTOM</td><td>4</td><td>The identifier for the bottom of the block structure component</td></tr>
+<tr><td>LI_LEFT</td><td>5</td><td>The identifier for the left of the block structure component</td></tr>
+
+
+<tr><td class="subsect" colspan=3>The collision detection methodology to be used for the objects of structures</td></tr>
+<tr><td>LSTATIC</td><td>1</td><td>Indicator the objects of the structure should use the static collision mechanism</td></tr>
+<tr><td>LDYNAMIC</td><td>2</td><td>Indicator the objects of the structure should use the dynamic collision mechanism</td></tr>
+<tr><td>LNONE</td><td>0</td><td>Indicator the objects of the structure should use no collision mechanism</td></tr>
+
+<tr><td class="subsect" colspan=3>Size of mobile/tablet buttons, where applicable</td></tr>
+<tr><td>LBUT_WIDTH</td><td>50</td><td>The width of buttons for mobile apps</td></tr>
+<tr><td>LBUT_HEIGHT</td><td>50</td><td>The height of buttons for mobile apps</td></tr>
+
+<tr><td class="subsect" colspan=3>Asset download control</td></tr>
+<tr><td>LASSET_THREADS</td><td>5</td><td>Number of assets to download at a time</td></tr>
+<tr><td>LASSET_RETRIES</td><td>5</td><td>Number of times to retry failed downloads</td></tr>
+
+<tr><td>lGl</td><td></td><td>The WebGL context</td</td><td></td>The Camera object</td></tr>
+<tr><td>lCamera</td><td></td>The Camera object</td></tr>
+<tr><td>lScene</td><td></td><td>The "Scene" object</td></tr>
+<tr><td>lSScene</td><td></td><td>A static object containing the relative directional vector</td></tr>
+</table>
+
+<div>
+<hr />
+<h2>Audio Classes</h2>
+<div>This is a rapper around the HTML5 Audio class.</div>
+<hr />
+<table>
+    <tr><td>new LAudios(source, number)</td><td colspan=2>Create a new audios object</td></tr>
+    <tr><td></td><td>Source</td><td>A string representing source of the audio (mp3, wav, etc)  Ir can also be a LimpetGE asset.</td></tr>
+    <tr><td></td><td>Number</td><td>Number of instances, or max number of times the sound can be simultaneously played</td></tr>
+    <tr><td>lAudios.play()</td><td colspan=2>Play the sound</td></tr>
+</table>
+<hr />
+<table>
+    <tr><td>new LAudioLoop(source)</td><td colspan=2>Create a new audio loop object</td></tr>
+    <tr><td></td><td>Source</td><td>A string representing source of the audio (mp3, wav, etc) It can also be a LimpetGE asset for that.</td></tr>
+    <tr><td>lAudioLoop.play()</td><td colspan=2>Plays/un-pauses sound, increasing stack if already playing.  The sound will "loop" when it gets to the end.</td></tr>
+    <tr><td>lAudioLoop.pause()</td><td colspan=2>Decreases stack, Pauses/Stops the sound if stack is zero.</td></tr>
+    <tr><td>lAudioLoop.stop()</td><td colspan=2>Pauses the sound and sets the stack to zero.</td></tr>
+</table>
+<hr />
+<div>The lInit() function</div>
+<div>This initialises the lGl WebGL context, it also compiles the shaders.  Needs to be called more or less first thing in the "onload" function.</div>
+<hr />
+<div>The lClear() function</div>
+<div>This clears everything except the lGl context.  Including all structures.</div>
+<hr />
+<div>The lStructureSetup() function</div>
+<div>Sets up the structure data, especially assembling the buffers for the shaders.  It needs to be called after all static structures are created.  It is in fact done automatically
+     when creating a "new Scene" (derived from "LBase"), so it need not be specifically called.
+     It is documented here for legacy.</div>
+<hr />
+<h3>The LBase class</h3>
+<p>This class needs to be the "base" for the "Scene" class, or more specifically, the "Scene" class needs to derive this.</p>
+<p>All methods and properties follow the LimpetGE naming convention (follows the regex: "_?[lL][A-Z][A-Za-z0-9_]+"), so programmers can put any method/property in the "Scene" class
+   so long as the names do not match that.</p>
+<p>Implementing code should look something like....</p>
+<pre>
+function Scene(args)
+{
+    LBase.call(this, args);
+
+    // Then for example, 
+
+    this.hurt = 0.0;
+    this.ambientLight =  vec3.fromValues(0.3, 0.3, 0.3);
+    this.directionalLightColor = vec3.fromValues(1.0, 1.0, 1.0);
+    this.runme = true;
+    this.life = 100;
+    this.bescape = false;
+    ...
+    ...
+
+}
+
+Scene.prototype = Object.assign(Object.create(LBase.prototype), {
+    constructor: Scene,
+    lLoop: function(delta)
+    {
+        ....
+        ....
+    ....
+    ....
+    ....
+});
+</pre>
+<hr />
+
+<table>
+    <tr><td class="subsect" colspan=3>Initialisation and setting up methods.</td></tr>
+    <tr><td>new Scene(....)</td><td colspan=2>"Scene" will be programmer written class that inherits from "LBase".  When this is created it places a 
+                                              reference to the object in the global variable "lScene".</td></tr>
+    <tr><td>LBase.call(this, args)</td><td colspan=2>In constructor of "Scene" </td></tr>
+    <tr><td></td><td>args</td><td>A "dictionary" of optional named arguments, consisting of:</td></tr>
+    <tr><td></td><td>args.lDirectionalVector</td><td>A "vec3" type giving the source directional of the directional lighting.</td></tr>
+    <tr><td></td><td>args.lCFrom</td><td>A "vec3" coordinates giving the most bottom left back point of the scene.</td></tr>
+    <tr><td></td><td>args.lCTo</td><td>A "vec3" coordinates giving the most top right front point of the scene.</td></tr>
+    <tr><td></td><td></td><td>the LCFrom and LCTo arguments should represent two opposing corners of a cube within which the scene needs to be.  It is used as the basis
+               of the sparse array for collision detecting, so it does not matter if it is too big.</td></tr>
+    <tr><td></td><td>args.lCSize</td><td>The "size" of the collision array cubes.  Should not be smaller than the largest collision detection distance..</td></tr>
+    <tr><td></td><td>args.lCIncrement</td><td>The "size" of the ray tracing increment.  Should not be smaller than the smallest collision distance.</td></tr>
+    <tr><td></td><td>args.lLControl</td><td>The control object for the camera.  Defaults to the camera object itself (lCamera).</td></tr>
+    <tr><td></td><td>args.lLDynamic</td><td>If set to "true" makes the camera a dynamic object</td></tr>
+    <tr><td></td><td>args.lLDistance</td><td>The spherical size of the camera if a dynamic object.</td></tr>
+    <tr><td></td><td>args.lLAngle</td><td>The angle for the camera perspective.  Defaults to 45 degrees.</td></tr>
+    <tr><td></td><td>args.lLNear</td><td>The near clip plane for the camera.  Defaults to 0.1.</td></tr>
+    <tr><td></td><td>args.lLFar</td><td>The far clip plane for the camera.  Defaults to 2000.</td></tr>
+    <tr><td>lScene.lInit()</td><td colspan=2>An optional virtual method called when "lScene" is created.  Not used much as you may as well put things like that in the constructor
+                                            of the "Scene" class.</td></tr>
+    <tr><td>lScene.lSwitch()</td><td colspan=2>Switch to this scene if multiple ones in use.</td></tr>
+
+    <tr><td class="subsect" colspan=3>LObject placement and processing methods.</td></tr>
+
+    <tr><td>lScene.lAddChild(object, position)</td><td colspan=2>Adds an object onto the "root" of the object tree.</td></tr>
+    <tr><td></td><td>object</td><td>The "LObject" or "LWObject" instance to add.</td></tr>
+    <tr><td></td><td>position</td><td>A "mat4" instance.  Where to add it onto the scene.</td></tr>
+    <tr><td>lScene.lPlace(object, position)</td><td colspan=2>This performs an "lAddChild" at the origin, then moves the object to "position" supplied.</td></tr>
+    <tr><td></td><td>object</td><td>The "LObject" or "LWObject" instance to add.</td></tr>
+    <tr><td></td><td>position</td><td>A "mat4" instance.  Where to move it to once added.</td></tr>
+    <tr><td>lScene.lSetup()</td><td colspan=2>Sets up the scene after all static objects has been added.  Especially sets up the "Static Collision" sparse array.</td></tr>
+
+    <tr><td class="subsect" colspan=3>Running the actual game.</td></tr>
+
+    <tr><td>lScene.lPos()</td><td colspan=2>Processes the positions for all objects in the scene.  It does a tree walk of all objects.</td></tr>
+    <tr><td>lScene.lMessage(message, color)</td><td colspan=2>Displays a message for 5 (LMESTIME) seconds.</td></tr>
+    <tr><td></td><td>message</td><td>The message to display.</td></tr>
+    <tr><td></td><td>color</td><td>Optional, the font color to display the message.  It needs to be a string containing an HTML5 color.  Defaults to "red".</td></tr>
+    <tr><td>lScene.lSetTitle(title)</td><td colspan=2>The title to display.</td></tr>
+    <tr><td></td><td>title</td><td>The title to display.</td></tr>
+    <tr><td>lScene.lMain()</td><td colspan=2>This runs the thing.  The programmer calls this when the "scene" is set up to run the game.</td></tr>
+    <tr><td>lScene.lLoop(delta)</td><td colspan=2>This is a virtual method on "LBase".  It is called on each frame (javascript's requestAnimationFrame).</td></tr>
+    <tr><td></td><td>delta</td><td>A float representing the time in seconds (not milliseconds) since the previous iteration.</td></tr>
+    <tr><td></td><td colspan=2>This needs to return the boolean "true" to continue the game, or "false" to terminate it.</td></tr>
+
+    <tr><td class="subsect" colspan=3>Static objects collision detection methods.</td></tr>
+    <tr><td>lScene.lCAddStaticArea(from, to, object)</td><td colspan=2>Used to add a static area for the "Static Collision Detection" mechanism.
+                   This is not normally called by the programmer as the object creation mechanism does this for "normal" objects when using the "collision: LSTATIC"
+                   option when creating the structure.
+                   However, you can add virtual objects ("LVirtObject" instances) to the static area as well if required".</td></tr>
+    <tr><td></td><td>from</td><td>The bottom left back corner of the "block" to add.</td></tr>
+    <tr><td></td><td>to</td><td>The top right front corner of the "block" to add.</td></tr>
+    <tr><td></td><td>object</td><td>The "LVirtObject" object to add.</td></tr>
+    <tr><td>lScene.lCStaticPointDetect(object, distance)</td><td colspan=2>Implements the static collision detection mechanism for the "object".
+                   This performs a ray tracing check for the object, using the last time a detection was performed on this object, or the last time
+                    "lObject.warp()" was called as a base.
+    <tr><td></td><td>object</td><td>The object to perform the check.</td></tr>
+    <tr><td></td><td>distance</td><td>A "block" buffer (not sphere) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td colspan=2>This returns the object reference of the first thing it has "collided" with, or null if it does not.</td></tr>
+    <tr><td>lScene.lCAllStaticPointDetect(object, distance, callback)</td><td colspan=2>This is similar to "lCStaticPointDetect" except it does not return anything.
+                   Instead, it calls the "callback" function, with the object it has collided with as the argument.
+    <tr><td></td><td>object</td><td>The object to perform the check.</td></tr>
+    <tr><td></td><td>distance</td><td>A "block" buffer (not sphere) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td>callback</td><td>The callback function to perform if a collision occurs, using the object as the argument to the callback.</td></tr>
+    <tr><td>lScene.lCStaticPDC(x, y, z, distance)</td><td colspan=2>Implements the static collision detection mechanism for any point of coordinates (x, y, z).
+                   This does not include ray tracing.  This is not normally used by the programmer.
+    <tr><td></td><td>x</td><td>The "x" coordinate.</td></tr>
+    <tr><td></td><td>y</td><td>The "y" coordinate.</td></tr>
+    <tr><td></td><td>z</td><td>The "z" coordinate.</td></tr>
+    <tr><td></td><td>distance</td><td>A "block" buffer (not sphere) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td colspan=2>This returns the object reference of the first thing it has "collided" with, or null if it does not.</td></tr>
+    <tr><td>lScene.lCAllStaticPDC(x, y, z, distance, callback)</td><td colspan=2>As lCAllStaticPoint Detect is to lCStaticPointDetect, this is to lCStaticPDC.
+    <tr><td></td><td>x</td><td>The "x" coordinate.</td></tr>
+    <tr><td></td><td>y</td><td>The "y" coordinate.</td></tr>
+    <tr><td></td><td>z</td><td>The "z" coordinate.</td></tr>
+    <tr><td></td><td>distance</td><td>A "block" buffer (not sphere) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td>callback</td><td>The callback function to perform if a collision occurs, using the object as the argument to the callback.</td></tr>
+    
+    <tr><td class="subsect" colspan=3>Dynamic objects collision detection methods.</td></tr>
+    <tr><td>lScene.lCAdd(object)</td><td colspan=2>Adds an object to the Dynamic Collision sparse array.  Only really (and rarely) used for virtual objects, as normal ones are added
+            automatically when using the "collision: LDYNAMIC" option on the structure definition.</td></tr>
+    <tr><td></td><td>object</td><td>The object to add.</td></tr>
+    <tr><td>lScene.lCRemove(object)</td><td colspan=2>Removes an object from the Dynamic Collision sparse array.</td></tr>
+    <tr><td></td><td>object</td><td>The object to remove.</td></tr>
+    <tr><td>lScene.lCMove(object)</td><td colspan=2>Moves the location of an object within the Dynamic Detection sparse array.  This is done automatically when "lObject.procpos()" or
+                      "lScene.lPos()" is called, so the programmer only needs to do this for virtual objects.
+    <tr><td></td><td>object</td><td>The object to move.</td></tr>
+    <tr><td>lScene.lCDynamicPointDetect(object, distance)</td><td colspan=2>Implements the dynamic collision detection mechanism for the "object".
+                   This performs a ray tracing check for the object, using the last time a detection was performed on this object, or the last time
+                    "lObject.warp()" was called as a base.
+    <tr><td></td><td>object</td><td>The object to perform the check.</td></tr>
+    <tr><td></td><td>distance</td><td>A "sphere" buffer (not block) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td colspan=2>This returns the object reference of the first thing it has "collided" with, or null if it does not.</td></tr>
+    <tr><td>lScene.lCAllDynamicPointDetect(object, distance, callback)</td><td colspan=2>This is similar to "lCDynamicPointDetect" except it does not return anything.
+                   Instead, it calls the "callback" function, with the object it has collided with as the argument.
+    <tr><td></td><td>object</td><td>The object to perform the check.</td></tr>
+    <tr><td></td><td>distance</td><td>A "sphere" buffer (not block) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td>callback</td><td>The callback function to perform if a collision occurs, using the object as the argument to the callback.</td></tr>
+    <tr><td>lScene.lCDynamicPDC(x, y, z, distance)</td><td colspan=2>Implements the dynamic collision detection mechanism for any point of coordinates (x, y, z).
+                   This does not include ray tracing.  This is not normally used by the programmer.
+    <tr><td></td><td>x</td><td>The "x" coordinate.</td></tr>
+    <tr><td></td><td>y</td><td>The "y" coordinate.</td></tr>
+    <tr><td></td><td>z</td><td>The "z" coordinate.</td></tr>
+    <tr><td></td><td>distance</td><td>A "sphere" buffer (not block) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td colspan=2>This returns the object reference of the first thing it has "collided" with, or null if it does not.</td></tr>
+    <tr><td>lScene.lCAllDynamicPDC(x, y, z, distance, callback)</td><td colspan=2>As lCAllDynamicPoint Detect is to lCDynamicPointDetect, this is to lCDynamicPDC.
+    <tr><td></td><td>x</td><td>The "x" coordinate.</td></tr>
+    <tr><td></td><td>y</td><td>The "y" coordinate.</td></tr>
+    <tr><td></td><td>z</td><td>The "z" coordinate.</td></tr>
+    <tr><td></td><td>distance</td><td>A "sphere" buffer (not block) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td>callback</td><td>The callback function to perform if a collision occurs, using the object as the argument to the callback.</td></tr>
+    <tr><td class="subsect" colspan=3>Combined objects collision detection methods.</td></tr>
+    <tr><td>lScene.lPointDetect(object, distance)</td><td colspan=2>Combines "lCStaticPointDetect" and "lCDynamicPointDetect".
+                   This performs a ray tracing check for the object, using the last time a detection was performed on this object, or the last time
+                    "lObject.warp()" was called as a base.
+    <tr><td></td><td>object</td><td>The object to perform the check.</td></tr>
+    <tr><td></td><td>distance</td><td>A buffer (block for static, sphere for dynamic) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td colspan=2>This returns the object reference of the first thing it has "collided" with, or null if it does not.</td></tr>
+    <tr><td>lScene.lCAllPointDetect(object, distance, callback)</td><td colspan=2>Combines "lCAllStaticPointDetect" and "lCAllDynamicPointDetect".
+                   This performs a ray tracing check for the object, using the last time a detection was performed on this object, or the last time
+                    "lObject.warp()" was called as a base.
+    <tr><td></td><td>object</td><td>The object to perform the check.</td></tr>
+    <tr><td></td><td>distance</td><td>A buffer (block for static, sphere for dynamic) around the object's point to act as a "buffer" (or "padding").</td></tr>
+    <tr><td></td><td>callback</td><td>The callback function to perform if a collision occurs, using the object as the argument to the callback.</td></tr>
+    <tr><td class="subsect" colspan=3>Object properties.</td></tr>
+    <tr><td>lChildren</td><td colspan=2>An array that contains the top-level objects.  Not normally directly accessed by the programmer.</td></tr>
+    <tr><td>lRestart</td><td colspan=2>This property contains a function.  It is not a method as it is not (and should not be) on the "LBase" or "Scene" prototypes.
+               It executes when the game finishes.  The function takes no arguments.</td></tr>
+    <tr><td>lCamera</td><td colspan=2">The camera object.  The current camera object is also referenced in the global "lCamera" variable, however
+                this copy is useful if there is more than one "scene" around.</td></tr>
+    <tr><td>lDefaultMessage</td><td colspan=2">The message to display if no other is.  The default for this is "Press ? for help".</td></tr>
+</table>
+
+<hr />
+
+<h3>LCamera class</h3>
+<p>An instance of the "LCamera" class is created when the "Scene" (derived from "LBase") class is, and a copy of the reference
+is placed in the global "lCamera" variable - as well as the property "lCamera" on the scene object.</p>
+<p>When created, it uses the same "args" argument as when the "LBase" constructor is called.</p>
+<p>This also uses a similar interface to the "LObject"/"LWObject"/"LVirtObject" classes, so the camera can be used as a base for collision detection,
+   and/or included in the Dynamic sparse array.</p>
+   
+<p>Regarding movements and rotations.  There are in effect two modes...</.>
+<ul>
+<li>3D mode"</li>
+<li>Flat mode</li>
+</ul>
+<p>In "3D mode" movement can occur any which way, like a spaceship.  Methods for this are:</p>
+<ul>
+<li>obj.move(...)</li>
+<li>obj.rotate(...)</li>
+<li>obj.rotateHere(...)</li>
+</ul>
+<p>In "Flat mode" movement occurs as though travelling over a floor, with a definite "up". Methods for this are:</p>
+<ul>
+<li>obj.moveFlat(...)</li>
+<li>obj.rotateFlat(...)</li>
+<li>obj.rotateFlatHere(...)</li>
+</ul>
+<p>The other movement and rotational methods can be used for either.</p>
+<table>
+    <tr><td class="subsect" colspan=3>Setting up and general operation.</td></tr>
+    <tr><td>new LCamera(args)</td><td colspan=2>This creates a new camera object, it also places a reference of that in the global variable "lCamera".  
+                                              This is called automatically when a new "Scene" is created, using the same "args" object passed to the "LBase" constructor.</td></tr>
+    <tr><td></td><td>args</td><td>A "dictionary" of optional named arguments, consisting of:</td></tr>
+    <tr><td></td><td>args.lLControl</td><td>The control object for the camera.  Defaults to the camera object itself (lCamera).</td></tr>
+    <tr><td></td><td>args.lLDynamic</td><td>If set to "true" makes the camera a dynamic object</td></tr>
+    <tr><td></td><td>args.lLDistance</td><td>The spherical size of the camera if a dynamic object.</td></tr>
+    <tr><td></td><td>args.lLAngle</td><td>The angle for the camera perspective.  Defaults to 45 degrees.</td></tr>
+    <tr><td></td><td>args.lLNear</td><td>The near clip plane for the camera.  Defaults to 0.1.</td></tr>
+    <tr><td></td><td>args.lLFar</td><td>The far clip plane for the camera.  Defaults to 2000.</td></tr>
+    <tr><td>lCamera.save()</td><td colspan=2>Saves key parts of the camera's properties in an object and returns it.</td></tr>
+    <tr><td></td><td colspan=2>Returns an object containing saved data..</td></tr>
+    <tr><td>lCamera.restore(saved)</td><td colspan=2>Restores what was saved in the "save" method.</td></tr>
+    <tr><td></td><td>saved</td><td>What was returned in the "save" method.</td></tr>
+    <tr><td>lCamera.setperspective(args)</td><td colspan=2>Sets the perspective of the camera.  Called in the constructor using the "args" supplied there..</td></tr>
+    <tr><td></td><td>args</td><td>If "args" is omitted the previous one when this function was called is used.  A "dictionary" of optional named arguments.  This consists of:</td></tr>
+    <tr><td></td><td>args.lLAngle</td><td>The angle for the camera perspective.  Defaults to 45 degrees.</td></tr>
+    <tr><td></td><td>args.lLNear</td><td>The near clip plane for the camera.  Defaults to 0.1.</td></tr>
+    <tr><td></td><td>args.lLFar</td><td>The far clip plane for the camera.  Defaults to 2000.</td></tr>
+    <tr><td>lCamera.getview()</td><td colspan=2>Retrieves the current view (mat4) of the camera, used in shaders.  Combines the position of the camera 
+            combined with the projection.</td></tr>
+    <tr><td></td><td colspan=2>Returns the transformation matrix to use (mat4).</td></tr>
+
+    <tr><td class="subsect" colspan=3>Rotation methods</td></tr>
+    <tr><td>lCamera.rotate(rx, ry, rz)</td><td colspan=2>Rotates the camera around the x, y and z axis (in that order) by the supplied amount, relative to the camera's direction.</td></tr>
+    <tr><td></td><td>rx</td><td>The amount in radians to rotate around the x axis.</td></tr>
+    <tr><td></td><td>ry</td><td>The amount in radians to rotate around the y axis.</td></tr>
+    <tr><td></td><td>rz</td><td>The amount in radians to rotate around the z axis.</td></tr>
+    <tr><td>lCamera.rotateFlat(rx, ry)</td><td colspan=2>Rotates the camera around the origin's y axis  by the appropriate amount, then "up" or "down" around the camera's X axis, which is parallel
+                            to the scene's X and Z axis - ensuring it does not go "up" or "down" by more than 90 degrees.</td></tr>
+    <tr><td></td><td>rx</td><td>The amount in radians to rotate around the camera's x axis.</td></tr>
+    <tr><td></td><td>ry</td><td>The amount in radians to rotate around the scene's y axis.</td></tr>
+    <tr><td>lCamera.rotateFlatHere(rx, ry)</td><td colspan=2>Rotates the camera around the origin's y axis  by an absolute amount from the origin,
+            then "up" or "down" around the camera's X axis again by an absolute amount again from the origin, which is parallel
+                            to the scene's X and Z axis - ensuring it does not go "up" or "down" by more than 90 degrees.<br />
+            lCamera.rotateFlat(rx, ry) === lCamera.rotate(lCamera.rx + rx, lCamera.ry + ry)</td></tr>
+    <tr><td></td><td>rx</td><td>The amount in radians to rotate around the camera's x axis.</td></tr>
+    <tr><td></td><td>ry</td><td>The amount in radians to rotate around the scene's y axis.</td></tr>
+
+    <tr><td class="subsect" colspan=3>Movement methods</td></tr>
+    <tr><td>lCamera.move(x, y, z)</td><td colspan=2>Moves the camera along its x, y and z axis</td></tr>
+    <tr><td></td><td>x</td><td>The amount to move it along its x axis.</td></tr>
+    <tr><td></td><td>y</td><td>The amount to move it along its y axis.</td></tr>
+    <tr><td></td><td>z</td><td>The amount to move it along its z axis.</td></tr>
+    <tr><td>lCamera.moveFlat(x, y, z)</td><td colspan=2>Moves the camera along the origin's X and Z axis accordingly,
+            taking into consideration the camera's Y rotation, and up or down by the Y amount. </td></tr>
+    <tr><td></td><td>x</td><td>The camera's flat x coordinate to move by.</td></tr>
+    <tr><td></td><td>y</td><td>The amount to move "up" or "down" along the Y axis.</td></tr>
+    <tr><td></td><td>z</td><td>The camera's flat z coordinate to move by.</td></tr>
+    <tr><td>lCamera.moveHere(x, y, z)</td><td colspan=2>Moves the camera to the scenes (x, y, z) coordinates</td></tr>
+    <tr><td></td><td>x</td><td>The x coordinate to move to.</td></tr>
+    <tr><td></td><td>y</td><td>The y coordinate to move to.</td></tr>
+    <tr><td></td><td>z</td><td>The z coordinate to move to.</td></tr>
+    <tr><td>lCamera.moveAbs(x, y, z)</td><td colspan=2>Moves the camera by the scenes (x, y, z) coordinates.<br />
+            lCamera.moveAbs(x, y, z) === lCamera.moveHere(lCamera.x + x, lCamera.y + y, lCamera.z + z)</td></tr>
+    <tr><td></td><td>x</td><td>The scene's x coordinate to move by.</td></tr>
+    <tr><td></td><td>y</td><td>The scene's y coordinate to move by.</td></tr>
+    <tr><td></td><td>z</td><td>The scene's z coordinate to move by.</td></tr>
+
+    <tr><td class="subsect" colspan=3>Collision detection methods</td></tr>
+    <tr><td>lCamera.warp()</td><td colspan=2>Updates the "base" coordinates used for ray tracing to current position for collision detecting.</td></tr>
+    <tr><td>lCamera.getSceneXYZ()</td><td colspan=2>Retrieves the current coordinates as a "vec4" - with "w" equal to 1.0.
+            Internally used, same as [lCamera.x, lCamera.y, lCamera.z, 1.0].</td></tr>
+    <tr><td></td><td colspan=2>Returns the current coordinates as a "vec4": [x, y, z, 1.0].</td></tr>
+    <tr><td>lCamera.getDistance(x, y, z, distance)</td><td colspan=2>Retrieves the distance fom the supplied (x, y, z) coordinates, and subtracts the distance supplied.
+            Internally used, the programmer will have little use for this.</td></tr>
+    <tr><td></td><td>x</td><td>The x coordinate to reference.</td></tr>
+    <tr><td></td><td>y</td><td>The y coordinate to reference.</td></tr>
+    <tr><td></td><td>z</td><td>The z coordinate to reference.</td></tr>
+    <tr><td></td><td>distance</td><td>The distance to subtract.</td></tr>
+    <tr><td></td><td colspan=2>Returns the appropriate distance, which is less than or equal zero for a collision.</td></tr>
+    <tr><td>lCamera.procpos()</td><td colspan=2>Needs to be called after moving if the camera is in the dynamic sparse array.  No harm in calling it anyway if not.</td></tr>
+
+    <tr><td class="subsect" colspan=3>Object properties that may be relevant.</td></tr>
+    <tr><td>x</td><td colspan=2>The current X coordinates</td><tr>
+    <tr><td>y</td><td colspan=2>The current Y coordinates</td><tr>
+    <tr><td>z</td><td colspan=2>The current Z coordinates</td><tr>
+    <tr><td>rx</td><td colspan=2>The current rotational amount in radians around the camera's X axis.  Only applicable if "rotateFlat" methodology is used</td><tr>
+    <tr><td>ry</td><td colspan=2>The current rotational amount in radians around the scene's Y axis.  Only applicable if "rotateFlat" methodology is used</td><tr>
+    <tr><td>ox</td><td colspan=2>The current X coordinate base for ray tracing in collision detection</td><tr>
+    <tr><td>oy</td><td colspan=2>The current Y coordinate base for ray tracing in collision detection</td><tr>
+    <tr><td>oz</td><td colspan=2>The current Z coordinate base for ray tracing in collision detection</td><tr>
+    <tr><td>quat</td><td colspan=2>The "quat" of the rotational direction of the camera inverted.</td><tr>
+    <tr><td>position</td><td colspan=2>The scene position and direction of the camera as represented by a transformation matrix (mat4).  This is inverted.</td><tr>
+    <tr><td>projection</td><td colspan=2>The projection transformation matrix ("mat4").</td><tr>
+    <tr><td>currview</td><td colspan=2>The current transformation matrix of the camera incorporating the projection ("mat4").</td><tr>
+    <tr><td>key</td><td colspan=2>A unique object number for the camera.</td><tr>
+    <tr><td>distance</td><td colspan=2>The distance used for dynamic collision detection, set using the "lLDistance" property of the "args" argument when initialised.  Can be updated if necessary.</td><tr>
+    <tr><td>ignore</td><td colspan=2>Updateable boolean property.
+                    The needs to be set to "true" if the camera is in the dynamic collision sparse array and needs to be ignored for the detection, then set back to "false" afterwards.</td><tr>
+    <tr><td>control</td><td colspan=2>The "control" object as defined by the "args.lLControl" setting when the object was created.</td></tr>
+</table>
+
+<hr />
+
+<h3>LGroupDef class</h3>
+<p>A "group" is an object with no structure.  That is it can have children, dynamic or static collision functionality and so on, but nothing gets drawn by it itself.</p>
+<p>This class is the structure base for the object.  Implemented as....</p>
+<pre>
+var grpdef = new LGroupDef();
+var game_object = new LObject(grpdef, whatever);
+</pre>
+<table>
+    <tr><td>new GroupDef(args)</td><td colspan=2>This creates a new static group.</td></tr>
+    <tr><td></td><td>args</td><td>A Javascript object containing some optional named parameters.</td></tr>
+    <tr><td></td><td>args.collision</td><td><div>Controls if this object is to be included in a Collision Sparse Array.  It can be one of the following:</div>
+                    <ul>
+                    <li>LNONE - The default.  Not included in any collision detection sparse array.</li>
+                    <li>LSTATIC - Included in the static collision detection sparse array.</li>
+                    <li>LDYNAMIC - Included in the dynamic collision detection sparse array.</li>
+                    </ul></td></tr>
+    <tr><td></td><td>args.corners</td><td>Used for "static" collision type groups only.
+            An array of two "vec3" type arrays representing the bottom left back and top right front corners of a block.<br />
+            Eg: [[-1, -2, -3], [4, 5, 6]]</td></tr>
+    <tr><td></td><td>args.distance</td><td>The spherical distance of the collision realm of the object if included in the dynamic collision detection sparse array.</td></tr>
+</table>
+<hr />
+
+<h3>LStructureDef class</h3>
+<p>The structure definition is where the "building" of objects occurs.  Building happens by creating a number of "shapes" using one of the add....(...) methods.</p>
+   these being placed at a certain place by using a "position" argument.</p>
+<p> The "add...(....)" method takes a single argument which is a Javascript object consisting of named variables.  Ones that are not applicable to that particular shape
+    are ignored.</p>
+<p>These named arguments are consistent throughout the methods, so I will document those in a separate section,</p>
+
+<table>
+    <tr><td class="subsect" colspan=3>Constructor</td></tr>
+    <tr><td>new LStructureDef(shader, args)</td><td colspan=2>This creates a new structure definition.</td></tr>
+    <tr><td></td><td>shader</td><td>The LimetGE shader javascript object to use from the "shader library".</td></tr>
+    <tr><td></td><td>args</td><td>A javascript object containing some optional named arguments.</td></tr>
+    <tr><td></td><td>args.collision</td><td><div>This is:</div>
+                <ul>
+                <li>LNONE - The default.  Not included in any collision detection sparse array.</li>
+                <li>LSTATIC - Included in the static collision detection sparse array.</li>
+                <li>LDYNAMIC - Included in the dynamic collision detection sparse array.</li>
+                </ul></td></tr>
+    <tr><td></td><td>args.distance</td><td>The spherical distance (radius) to use when included in the dynamic collision detection sparse array.</td></tr>
+    <tr><td></td><td>args.***SHADER_ARGS***</td><td>The args argument is passed to the shader's doInitBuffer method, so those would depend on the appropriate shader, however,
+                   the following is reasonably consistent.</td></tr>
+    <tr><td></td><td>args.texture</td><td>The URL of a jpg/png/gif whatever file that represents a collage of the texture to use in the structure.  It can also be a LimpetGE asset of that.  See separate section for that</td></tr>
+    <tr><td></td><td>args.rawtexture</td><td>The loaded texture rather than the URL.</td></tr>
+    <tr><td></td><td>args.color</td><td>A "vec4" array representing the color.  This is [Red, Green, Blue, Alpha] values, each being a float between 0 and 1.0</td></tr>
+    <tr><td></td><td>args.colors</td><td>An array of "vec4" arrays representing the colors used.  Each entry is [Red, Green, Blue, Alpha] values, each being a float between 0 and 1.0</td></tr>
+    
+
+
+    <tr><td class="subsect" colspan=3>Adding shapes (see separate section of documentation as well)</td></tr>
+
+    <tr><td>structure.addBlock(args)</td><td colspan=2>Adds a block. Valid named arguments are:       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "size".</td></tr>
+    <tr><td>structure.addBlockPatch(args)</td><td colspan=2>Adds a block patch, or a rectangle. Valid named arguments are:
+    <tr><td>structure.addCylinder(args)</td><td colspan=2>Adds a cylinder. Valid named arguments are: "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "radius", "segments".</td></tr>
+    <tr><td>structure.addSphere(args)</td><td colspan=2>Adds a sphere. Valid named arguments are:      "position", "texturecontrol", "corners", "collsize", "radius".</td></tr>
+    <tr><td>structure.addPolygon(args)</td><td colspan=2>Adds a polygon block. Valid named arguments are:
+                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "coords".</td></tr>
+    <tr><td>structure.addTriangle(args)</td><td colspan=2>Adds a triangle block. Valid named arguments are:
+                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "coords".</td></tr>
+    <tr><td>structure.addWTriangle(args)</td><td colspan=2>Adds a "wonky triangle" block. Valid named arguments are:
+                                                                                                       "position", "texturecontrol", "texturecontrols", "corners", "collsize", "depth", "coords".</td></tr>
+    <tr><td>structure.addTrianglePatch(args)</td><td colspan=2>Adds a triangle patch (2D). Valid named arguments are:
+                                                                                                       "position", "texturecontrol", "hold", "corners", "collsize", "coords".</td></tr>
+    <tr><td>structure.addBezierPatch(args)</td><td colspan=2>Adds a Bezier patch (2D). Valid named arguments are:
+                                                                                                       "position", "texturecontrol", "corners", "collsize", "coords", "xsegments", "ysegments".</td></tr>
+    <tr><td>structure.addBezierBlock(args)</td><td colspan=2>Adds a triangle block. Valid named arguments are:
+                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "coords", "depth", "xsegments", "ysegments".</td></tr>
+    <tr><td>structure.addImport(args)</td><td colspan=2>Adds an imported asset, covered in separate section. Valid named arguments are:
+                                                                                                       "position", "texturecontrol", "corners", "collsize".</td></tr>
+    <tr><td class="subsect" colspan=3>Corner methods.</td></tr>
+    <tr><td>structure.useCorners(corners, args)</td><td colspan=2>Adds "corners" for inclusion in the static collision detection sparse array, if applicable.</td></tr>
+    <tr><td></td><td>corners</td><td>An array (or object) consisting of a list of "vec3" coordinates of corners.  Usually two items (bottom-left-back and top-right-front), but can be more.
+                                              The "corners" it uses is the smallest cartesian block to fit all points.</td></tr>
+    <tr><td></td><td>args</td><td>A javascript object consisting of a number of named optional arguments.</td></tr>
+    <tr><td></td><td>args.collsize</td><td>The cubical size the corner block to divided into if object is to be rotated in a non cartesian manor.</td></tr>
+    <tr><td></td><td>args.corners</td><td>If this is supplied it overrides the first argument of the method.</td></tr>
+    <tr><td>structure.consolidateCorners()</td><td colspan=2>When called, it consolidates all corner "blocks" defined in the structure up to that point into one big block (that fits all).</td></tr>
+    
+</table>
+
+<p>As for the "add....(....)" method arguments: <p>
+<table>
+    <tr><td>position</td><td>A transformation matrix ("mat4") that is applied to the component after creation, to place it in the appropriate place 
+                             of the object.  This defaults to the identity transformation matrix (no effect).</td></tr>
+    <tr><td>texturecontrols</td><td>A list of "LTextureControl" instances, (or "LTextureColor" instances) that define which texture (or color) to use in the collage of textures (provided to the shader)
+                        in the "args.texture" (args.colors) argument supplied in the constructor.  This defaults to using the entire texture.  There is a separate section for this as well.</td></tr>
+    <tr><td>texturecontrol</td><td>Mutually exclusive to the "texturecontrols" argument.  This is a single instance of the above, and it is applied to all textures of the component.</td></tr>
+    <tr><td>hold</td><td><div>A list of "LI_***" global variables for which parts NOT to draw.  This can be:</div>
+            <ul>
+            <li>LI_FRONT - Do not draw front</li>
+            <li>LI_BACK - Do not draw back</li>
+            <li>LI_SIDE - Do not draw side (of the cylinder)</li>
+            <li>LI_SIDE + number - Do not draw "nth" side of a polygon (starting at 0)</li>
+            <li>LI_TOP - Do not draw top of blocks</li>
+            <li>LI_LEFT - Do not draw left of blocks</li>
+            <li>LI_BOTTOM - Do not draw bottom of blocks</li>
+            <li>LI_RIGHT - Do not draw right of blocks</li></td></tr>
+    <tr><td>corners</td><td><div>This only applies to those that are added to the static collision detection sparse array.</div>
+                    <ul>
+                    <li>If this is omitted then calculate the smallest corner block that is possible.</li>
+                    <li>If this is "null" then do not include corners from this component.</li>
+                    <li>If this is a list of "vec3" coordinates then use that.  Note - the "args.position" matrix are not applied to this in this case.</li>
+                    </ul></td></tr>
+    <tr><td>collsize</td><td>The size of "sub-blocks" the corner blocks is to be divided into in the event of non-cartesian rotation</td></tr>
+    <tr><td>size</td><td>Only applies to the "addBlock" method.  This is a "vec3" coordinate.  The block created has the opposite corners of that coordinates, and the negative of that.</td></tr>
+    <tr><td>coords</td><td>Some kind of array of [x, y] coordinates or [x, y, z] coordinates (depending on the specific method) to build the component. Described below.</td></tr>
+    <tr><td>depth</td><td>If this is defined it is the depth of the component along the "z" axis.  The exception to that is the "addBezierBlock" method,
+                    where it is the depth that is perpendicular to the bezier "curved plane(s)".</td></tr>
+    <tr><td>radius</td><td>For "round" type components this is the radius of the circular part.</td></tr>
+    <tr><td>segments</td><td>For "round" type components this is the number of polygons that go around the circumference.  Defaults to something sensible</td></tr>
+    <tr><td>xsegments</td><td>For Bezier shapes, the number of polygons that go "left to right" in the matrix provided.</td></tr>
+    <tr><td>ysegments</td><td>For Bezier shapes, the number of polygons that go "top to bottom" in the matrix provided.</td></tr>
+</table>
+
+<p>The specific "add....(...)" methods. These can be moved/rotated using the "position" argument to an appropriate place on the structure.</p>
+<p>The "CULL_FACE" option in the OpenGL routines are enabled, so things cannot be seen from "inside" blocks, or from the "back" for patches.  Also there are problems if you do not go "anti-clockwise"
+   when you should.</p>
+
+<table>
+    <tr><td>addBlock</td><td>This creates a "block", the size being a "vec3" coordinate of one opposite corner, the negative of this being the other.
+                Therefore the "size" provided is in fact half the size of the componenet created.</td></tr>
+    <tr><td>addBlockPatch</td><td>This creates a "rectangle", where "z" value is zero, viewable looking from positive to negative down the "z" axis.
+            The size being a [x, y] coordinate of one opposite corner, the negative of this being the other.</td></tr>
+    <tr><td>addCylinder</td><td>This creates a cylinder with the Z axis being the center line.  The radius is that, and the depth is how far positive and negative it goes along
+            the "z" axis (so the depth provided is half the componenet depth).</td></tr>
+    <tr><td>addPolygon</td><td>This creates a polygon block. The coordinates are an array of [x, y] coordinate arrays, going in a counter-clockwise direction.
+                                The origin should be inside the polygon.  The "depth" is how far the block
+                               extends positive and negative along the z axis.  Only convex polygons are supported.</td></tr>
+    <tr><td>addTriangle</td><td>This behaves like a three sided polygon bock, except does it more efficiently.</td></tr>
+    <tr><td>addWTriangle</td><td>Add "Wonky" triangle block.  Like "addTriangle" (add triangle block) except here the each entry in the coordinates array (in coords) also have a "Z" coordinate,
+                            and the triangle block is "sheared" along the Z axis accordingly.</td></tr>
+    <tr><td>addTrianglePatch</td><td>Like "addTriangle" (add triangle block) except in 2D.  There is no "depth" and the triangle is placed where z = 0.  Also this cannot be seen from
+                the "back" (negative Z value to positive).</td></tr>
+    <tr><td>addBezierPatch</td><td>A "Bezier" patch, a "curved 2D component".  Adds a bezier patch, although defined as "2D", it is more like a "corrugated/warped sheet",
+                    though like the "triangle patch" it cannot be seen from behind.  The "coords" entry is in fact a matrix of "vec3" type coordinates that create
+                    the points to create the Bezier Sheet.  This is described below.
+    <tr><td>addBezierBlock</td><td>A "Bezier" block, a "curved 3D component".  Uses same method as "addBezierPatch", but to create a central virtual "sheet".  A block is crated by
+                taking the "depth" value, and creating two more sheets in front of and behind, by the depth, perpendicular to the sheet.  The "sides" of the block are
+                then "filled in".</td></tr>
+</table>
+
+<div>The Bezier Coordinates</div>
+
+<p>This will not go into the mathematics and generic mechanics of Bezier patches, there is enough resource on the web for that,
+   it just goes into the LimpetGE implementation of this.</p>
+
+<p>The coordinates entry looks something like the following:</p>
+
+<pre>
+    coords: [
+        [[0.2,   0.0, 0.0], [0.2,    0.15, 0.0], [0.15,  0.3,  0.0], [0.0,   0.3,  0.0]],
+        [[0.2, -0.15, 0.0], [0.2,    0.0, -0.3], [0.0,   0.3, -0.3], [-0.15, 0.3,  0.0]],
+        [[0.15, -0.3, 0.0], [0.0,   -0.3, -0.5], [-0.2,  0.0, -0.5], [-0.2,  0.15, 0.0]],
+        [[0.0,  -0.3, 0.0], [-0.15, -0.3,  0.0], [-0.2, -0.15, 0.0], [-0.2,  0.0,  0.0]],
+    ],
+</pre>
+
+<p>In other words, an array of "lines", and each line being an array of "coordinates", each coordinate being a "vec3" array.</p>
+<p>The system works by:</p>
+<ol>
+    <li>Creating "Bezier lines" using the coordinates on each of the "lines arrays"</li>
+    <li>Creating a number of points, as reresented by the "xsegments" argument (defaults to 16) along these "lines" equi-distant from each other, (creating a default total of 17 lines).</li>
+    <li>This number of "perpendicular-ish" "sub bezier lines" are creating using the appropriate "nth" point of each point.</li>
+    <li>These "sub-lines" are then also divided by a number represented by the "ysegments" argument (again, defaults to 16), creating a number of "sub-points" along each line,
+        (creating a default total of 289 "sub points": 17 x 17).</li>
+    <li>These "sub points" form a "mesh" that is used as a base to create the polygons for the Bezier patch.</li>
+</ol>
+<p>The upshot of which, is that the four "corners" of the above array are (usually) the only coordinates points that the sheets actually "map" to (or
+    is "pinned" to).  The rest of the coordinates control the "curvature" of the sheet.</p>
+<p>For "Bezier Blocks", regarding the "hold" and "textureconrols" parameters, the LI_TOP, LI_LEFT, LI_BOTTOM and LI_RIGHT controls represent
+   the appropriate "side" as represented by the above array.</p>
+<p>The "coords" array must have a width of at least two, and a height of at least two.  Also there needs to be the same number of coordinates in each line.  With those two criteria in mind,
+   the array can be of any size.</p>
+
+</table>
+
+<hr />
+
+<h3>LObject class</h3>
+<p>The main object class for the game.  An object is a distinct "thing" in the scene, that can move independently of other objects if dynamic.</p>
+<p>This class was not designed to be "derived", however, there is nothing stopping the programmer from doing so.  Care should be taken that there is no "name" clashes as
+   the normal "LimpetGE" naming conventions do not apply to the methods and properties.</p>
+<p>Regarding movements and rotations.  There are in effect two modes...</.>
+<ul>
+<li>3D mode"</li>
+<li>Flat mode</li>
+</ul>
+<p>In "3D mode" movement can occur any which way, like a spaceship.  Methods for this are:</p>
+<ul>
+<li>obj.move(...)</li>
+<li>obj.rotate(...)</li>
+<li>obj.rotateHere(...)</li>
+<li>obj.moveMat(...)</li>
+</ul>
+<p>In "Flat mode" movement occurs as though travelling over a floor, with a definite "up". Methods for this are:</p>
+<ul>
+<li>obj.moveFlat(...)</li>
+<li>obj.rotateFlat(...)</li>
+<li>obj.rotateFlatHere(...)</li>
+</ul>
+<p>The other movement and rotational methods can be used for either.</p>
+<table>
+    <tr><td class="subsect" colspan=3>Setting up and general operation.</td></tr>
+    <tr><td>new LObject(structure, control)</td><td colspan=2>This creates a new game object.  An object is based on a "structure definition".</td></tr>
+    <tr><td></td><td>structure</td><td>The structure to base the object on.  This can be an instance of "LStructureDef" or "LGroupDef".</td></tr>
+    <tr><td></td><td>control</td><td>An arbitary javascript object that is passed to the shader "draw" routine, and can be used in collision detection.</td></tr>
+    <tr><td>obj.save()</td><td colspan=2>Saves key parts of the game object's properties in an object and returns it.</td></tr>
+    <tr><td></td><td colspan=2>Returns a javascript object containing saved data.</td></tr>
+    <tr><td>obj.restore(saved)</td><td colspan=2>Restores what was saved in the "save" method.</td></tr>
+    <tr><td></td><td>saved</td><td>What was returned in the "save" method.</td></tr>
+
+    <tr><td>obj.mkvisible(visible)</td><td colspan=2>makes the game object, and it's children, visible or invisible.</td></tr>
+    <tr><td></td><td>visible</td><td>A boolean value, "true" makes the game object and it's children visible, "false" invisible..</td></tr>
+
+    <tr><td class="subsect" colspan=3>Rotation methods</td></tr>
+    <tr><td>obj.rotate(rx, ry, rz)</td><td colspan=2>Rotates the game object around the x, y and z axis (in that order) by the supplied amount, relative to the game object's direction.</td></tr>
+    <tr><td></td><td>rx</td><td>The amount in radians to rotate around the x axis.</td></tr>
+    <tr><td></td><td>ry</td><td>The amount in radians to rotate around the y axis.</td></tr>
+    <tr><td></td><td>rz</td><td>The amount in radians to rotate around the z axis.</td></tr>
+    <tr><td>obj.rotateFlat(rx, ry)</td><td colspan=2>Rotates the game object around the origin's y axis  by the appropriate amount, then "up" or "down" around the game object's X axis, which is parallel
+                            to the scene's X and Z axis - ensuring it does not go "up" or "down" by more than 90 degrees.</td></tr>
+    <tr><td></td><td>rx</td><td>The amount in radians to rotate around the game object's x axis.</td></tr>
+    <tr><td></td><td>ry</td><td>The amount in radians to rotate around the scene's y axis.</td></tr>
+    <tr><td>obj.rotateFlatHere(rx, ry)</td><td colspan=2>Rotates the game object around the origin's y axis  by an absolute amount from the origin,
+            then "up" or "down" around the game object's X axis again by an absolute amount again from the origin, which is parallel
+                            to the scene's X and Z axis - ensuring it does not go "up" or "down" by more than 90 degrees.<br />
+            obj.rotateFlat(rx, ry) === obj.rotate(obj.rx + rx, obj.ry + ry)</td></tr>
+    <tr><td></td><td>rx</td><td>The amount in radians to rotate around the game object's x axis.</td></tr>
+    <tr><td></td><td>ry</td><td>The amount in radians to rotate around the scene's y axis.</td></tr>
+
+    <tr><td class="subsect" colspan=3>Movement methods</td></tr>
+    <tr><td>obj.move(x, y, z)</td><td colspan=2>Moves the game object along its x, y and z axis</td></tr>
+    <tr><td></td><td>x</td><td>The amount to move it along its x axis.</td></tr>
+    <tr><td></td><td>y</td><td>The amount to move it along its y axis.</td></tr>
+    <tr><td></td><td>z</td><td>The amount to move it along its z axis.</td></tr>
+    <tr><td>obj.moveFlat(x, y, z)</td><td colspan=2>Moves the game object along the origin's X and Z axis accordingly,
+            taking into consideration the game object's Y rotation, and up or down by the Y amount. </td></tr>
+    <tr><td></td><td>x</td><td>The game object's flat x coordinate to move by.</td></tr>
+    <tr><td></td><td>y</td><td>The amount to move "up" or "down" along the Y axis.</td></tr>
+    <tr><td></td><td>z</td><td>The game object's flat z coordinate to move by.</td></tr>
+    <tr><td>obj.moveHere(x, y, z)</td><td colspan=2>Moves the game object to the scenes (x, y, z) coordinates</td></tr>
+    <tr><td></td><td>x</td><td>The x coordinate to move to.</td></tr>
+    <tr><td></td><td>y</td><td>The y coordinate to move to.</td></tr>
+    <tr><td></td><td>z</td><td>The z coordinate to move to.</td></tr>
+    <tr><td>obj.moveAbs(x, y, z)</td><td colspan=2>Moves the game object by the scenes (x, y, z) coordinates.</td></tr>
+    <tr><td></td><td>x</td><td>The scene's x coordinate to move by.</td></tr>
+    <tr><td></td><td>y</td><td>The scene's y coordinate to move by.</td></tr>
+    <tr><td></td><td>z</td><td>The scene's z coordinate to move by.</td></tr>
+    <tr><td>obj.moveMat(matrix)</td><td colspan=2>Moves the game object by the supplied transformation matrix.</td></tr>
+    <tr><td></td><td>matrix</td><td>The transformation matrix.</td></tr>
+
+    <tr><td class="subsect" colspan=3>Collision detection methods</td></tr>
+    <tr><td>obj.warp()</td><td colspan=2>Sets the base position for ray tracing collision detection to the current position.  The "obj.procpos()" method should be called before calling this.</td></tr>
+    <tr><td>obj.setOld(argobj)</td><td colspan=2>Sets the base position for ray tracing collision detection to the current position of the argument object</td></tr>
+    <tr><td></td><td>argobj</td><td>A game object to set "this" base position to.</td></tr>
+    <tr><td>obj.getSceneXYZ()</td><td colspan=2>Retrieves the current scene coordinates s a "vec4" - with "w" equal to 1.0.  </td></tr>
+    <tr><td></td><td colspan=2>Returns the current coordinates as a "vec4": [x, y, z, 1.0].</td></tr>
+    <tr><td>obj.procpos()</td><td colspan=2>Processes the current position of the object and it's children, updating the dynamic collision detection sparse array
+                    if neccessary.  This needs to be called after movement(s)/rotation(s) and before the next render.</td></tr>
+    <tr><td>obj.setDistance(distance)</td><td colspan=2>Sets the spherical "distance" or "radius" for dynamic game objects.</td></tr>
+    <tr><td></td><td>distance</td><td>The appropriate distance.</td></tr>
+    <tr><td>obj.getDistance(x, y, z, distance)</td><td colspan=2>Retrieves the distance from the supplied (x, y, z) coordinates, and subtracts the distance supplied.
+            Internally used, the programmer will have little use for this.</td></tr>
+    <tr><td></td><td>x</td><td>The x coordinate to reference.</td></tr>
+    <tr><td></td><td>y</td><td>The y coordinate to reference.</td></tr>
+    <tr><td></td><td>z</td><td>The z coordinate to reference.</td></tr>
+    <tr><td></td><td>distance</td><td>The distance to subtract.</td></tr>
+    <tr><td></td><td colspan=2>Returns the appropriate distance, which is less than or equal zero for a collision.</td></tr>
+
+    
+    <tr><td class="subsect" colspan=3>Game object tree methods</td></tr>
+    <tr><td>obj.addChild(object, position)</td><td colspan=2>Adds an object onto the current game object.</td></tr>
+    <tr><td></td><td>object</td><td>The "LObject" instance to add.</td></tr>
+    <tr><td></td><td>position</td><td>A "mat4" instance.  Where to add it relative to the current object.</td></tr>
+    <tr><td>obj.remove()</td><td colspan=2>Removes this game object from the parent.  Note - this is the "child" in "obj.addChild(...) or lScene.lAddChild(...).</td></tr>
+
+    <tr><td class="subsect" colspan=3>Object properties</td></tr>
+    <tr><td>children</td><td colspan=2>An array that contains the child game objects.  Not normally directly accessed by the programmer.</td></tr>
+    <tr><td>x</td><td colspan=2>The current relative X coordinates</td><tr>
+    <tr><td>y</td><td colspan=2>The current relative Y coordinates</td><tr>
+    <tr><td>z</td><td colspan=2>The current relative Z coordinates</td><tr>
+    <tr><td>rx</td><td colspan=2>The current rotational amount in radians around the game object's initial X axis.  Only applicable if "rotateFlat" methodology is used</td><tr>
+    <tr><td>ry</td><td colspan=2>The current rotational amount in radians around the scene's initial Y axis.  Only applicable if "rotateFlat" methodology is used</td><tr>
+    <tr><td>ox</td><td colspan=2>The current scene X coordinate base for ray tracing in collision detection</td><tr>
+    <tr><td>oy</td><td colspan=2>The current scene Y coordinate base for ray tracing in collision detection</td><tr>
+    <tr><td>oz</td><td colspan=2>The current scene Z coordinate base for ray tracing in collision detection</td><tr>
+    <tr><td>quat</td><td colspan=2>The "quat" of the rotational direction of the game object.</td><tr>
+    <tr><td>baseposition</td><td colspan=2>The scene position of, in effect, the parent game object (or the identity matrix if top level).  This is a transformation matrix (mat4).</td><tr>
+    <tr><td>initialPosition</td><td colspan=2>The transformation matrix used in the "addChild(....)" method when adding this game object (mat4).</td><tr>
+    <tr><td>position</td><td colspan=2>The current scene position and direction of the game object as a transformation matrix (mat4).</td><tr>
+    <tr><td>key</td><td colspan=2>A unique object number for the game object.</td><tr>
+    <tr><td>distance</td><td colspan=2>The distance used for dynamic collision detection.  Can be updated if necessary.</td><tr>
+    <tr><td>ignore</td><td colspan=2>Updatable boolean property.
+                    The needs to be set to "true" if the game object is in the dynamic collision sparse array and needs to be ignored for the detection, then set back to "false" afterwards.</td><tr>
+    <tr><td>isvisible</td><td colspan=2>Non updatable boolean property, use the "mkvisible(...)" method to do that.
+                    Is "true" if the object is visible, "false" otherwise.</td><tr>
+    <tr><td>control</td><td colspan=2>The "control" object used when the object was created.</td></tr>
+</table>
+
+<hr />
+<h3>LWObject class</h3>
+<p>This supports the same methods and properties as the LObject class.  In fact, it is derived from it.  However it is optomised so that
+   it can only be added at the top level on lScene using the "lPlace(....)" method.  Things will go wrong if an LWObject instance is used otherwise.</p>
+<hr />
+
+<h3>LVirtObject class</h3>
+<p>The Virtual Object.  This has no structure, and is not included in the game object tree.  However it can be used for
+ extra dynamic collision functionality.  For instance, it is useful to determine if something can go somewhere
+ without moving it, or to create a temporary area to see if something, possibly specific, moves there.</p>
+<p>These can "move", and perform ray tracing, like a normal object if required.</p>
+
+<table>
+    <tr><td>new LVirtObject(conrol, x, y, z, distance)</td><td colspan=2>Create a new virtual object</td></tr>
+    <tr><td></td><td>control</td><td>A javascript object that is assigned to the control property</td></tr>
+    <tr><td></td><td>x</td><td>The scene X coordinate where to create this</td></tr>
+    <tr><td></td><td>y</td><td>The scene Y coordinate where to create this</td></tr>
+    <tr><td></td><td>z</td><td>The scene Z coordinate where to create this</td></tr>
+    <tr><td></td><td>distance</td><td>The spherical distance if to be included in the dynamic collision detection sparse array.</td></tr>
+    <tr><td>vobj.save()</td><td colspan=2>Create an object containing data if the state of this object is to be "saved".</td></tr>
+    <tr><td></td><td colspan=2>Returns the data in a crated object</td></tr>
+    <tr><td>vobj.restore(saved)</td><td colspan=2>Restores what has been "saved".</td></tr>
+    <tr><td></td><td>saved</td><td>What was returned when executing the "vobj.save()" function.</td></tr>
+    <tr><td>vobj.setPosition(x, y, z)</td><td colspan=2>Sets the position to a particular point, also the base position for ray tracing .</td></tr>
+    <tr><td></td><td>x</td><td>The scene X coordinate where to go to</td></tr>
+    <tr><td></td><td>y</td><td>The scene Y coordinate where to go to</td></tr>
+    <tr><td></td><td>z</td><td>The scene Z coordinate where to go to</td></tr>
+    <tr><td>vobj.getDistance(x, y, z, distance)</td><td colspan=2>Retrieves the distance from the supplied (x, y, z) coordinates, and subtracts the distance supplied.
+            Internally used, the programmer will have little use for this.</td></tr>
+    <tr><td></td><td>x</td><td>The x coordinate to reference.</td></tr>
+    <tr><td></td><td>y</td><td>The y coordinate to reference.</td></tr>
+    <tr><td></td><td>z</td><td>The z coordinate to reference.</td></tr>
+    <tr><td></td><td>distance</td><td>The distance to subtract.</td></tr>
+    <tr><td></td><td colspan=2>Returns the appropriate distance, which is less than or equal zero for a collision.</td></tr>
+    <tr><td>vobj.mkvisible(visible)</td><td colspan=2>Makes the game object, and it's children, visible or invisible.</td></tr>
+    <tr><td></td><td>visible</td><td>A boolean value, "true" makes the game object visible, "false" invisible..</td></tr>
+    <tr><td>vobj.copy(obj)</td><td colspan=2>Copies the scene coordinates and the ray tracing base position of the game object ("LObject", "LWObject" or "LVirtObject" type).</td></tr>
+    <tr><td>vobj.getSceneXYZ()</td><td colspan=2>Retrieves the current scene coordinates s a "vec4" - with "w" equal to 1.0.  </td></tr>
+    <tr><td></td><td colspan=2>Returns the current coordinates as a "vec4": [x, y, z, 1.0].</td></tr>
+    <tr><td>vobj.warp()</td><td colspan=2>Updates the "base" coordinates used for ray tracing to current position for collision detecting.</td></tr>
+    <tr><td>vobj.relative(obj, x, y, z)</td><td colspan=2>Sets the position to a particular point relative to another object.  Applies the same relative positioning on the ray tracing base point.</td></tr>
+    <tr><td></td><td>obj</td><td>The object to apply this to.  Can be a "LObject", "LWObject" or "LVirtObject" type.</td></tr>
+    <tr><td></td><td>x</td><td>The value to increment the X coordinate value</td></tr>
+    <tr><td></td><td>y</td><td>The value to increment the Y coordinate value</td></tr>
+    <tr><td></td><td>z</td><td>The value to increment the Z coordinate value</td></tr>
+    <tr><td>vobj.moveHere(x, y, z)</td><td colspan=2>Moves the virtual object to the scenes (x, y, z) coordinates</td></tr>
+    <tr><td></td><td>x</td><td>The x coordinate to move to.</td></tr>
+    <tr><td></td><td>y</td><td>The y coordinate to move to.</td></tr>
+    <tr><td></td><td>z</td><td>The z coordinate to move to.</td></tr>
+    <tr><td>obj.moveAbs(x, y, z)</td><td colspan=2>Moves the virtual object by the scenes (x, y, z) coordinates.</td></tr>
+    <tr><td></td><td>x</td><td>The scene's x coordinate to move by.</td></tr>
+    <tr><td></td><td>y</td><td>The scene's y coordinate to move by.</td></tr>
+    <tr><td></td><td>z</td><td>The scene's z coordinate to move by.</td></tr>
+</table>
+
+<hr />
+
+<h3>LStaticGroup class</h3>
+<p>This class instances can be included in the game object tree, but themselves have no structures, or game objects, associated with them.
+   They simply pass respective calls to their children.</p>
+<table>
+    <tr><td>new LStaticGroup()</td><td colspan=2>This creates a new static group.</td></tr>
+    <tr><td>stat.addChild(object, position)</td><td colspan=2>Adds an object onto the current game object.</td></tr>
+    <tr><td></td><td>object</td><td>The "LObject" instance to add.</td></tr>
+    <tr><td></td><td>position</td><td>A "mat4" instance.  Where to add it relative to the current object.</td></tr>
+    <tr><td>stat.remove()</td><td colspan=2>Removes this game object from the parent.  Note - this is the "child" in "obj.addChild(...) or lScene.lAddChild(...).</td></tr>
+</table>
+
+<hr />
+<h3>LGroup class</h3>
+
+<p>This is a quick method for creating a "one off" group object.</p>
+
+<pre>
+var grp = new LGroup(args, control)
+</pre>
+<div>is the same as</div>
+<pre>
+var grp  = new LObject(new LGroupDef(args), control);
+</pre>
+
+<p>This then can be included in the game object tree, collision sparse arrays or anything else as per a normal "LObject" type.</p>
+
+<hr />
+
+
+<h3>LStructure class</h3>
+
+<p>This is a quick method for creating a "one off" structures and the associated object.</p>
+
+<pre>
+var obj = new LStructure(shader, args, control)
+</pre>
+<div>is the same as</div>
+<pre>
+var obj  = new LObject(new LStructureDef(shader, args), control);
+</pre>
+
+<p>Components can be used by using the "structure" property of the object:</p>
+
+<pre>
+obj.structure.addBlock({........});
+...
+</pre>
+
+<p>This then can be included in the game object tree, collision sparse arrays or anything else as per a normal "LObject" type.</p>
+
+<hr />
+
+<h3>Textures</h3>
+<p>Textures are a bit peculiar in LimpetGE in that they need to be handled in shaders a lot more than other aspects.  Also, if flat colors are used, these are represented as "mini textures", being
+    a series of one-pixel points, each one a color to be used in the objects.</p>
+
+<p>The overall mechanism that is employed is:</p>
+<ul>
+    <li>An image, that is in fact a "collage of images", is defined at the time the "StructureDef" is created.</li>
+    <li>"Sections" of this collage, representing separate images in it, are defined in an instance of the "LTextueControl" class.</li>
+    <li>Each "component" that is added to the structure has a number of textures it emplys (how many defined by the component).
+        Which ones for what are defined in an array, or object, passed in the "texturecontrols" argument.</li>
+</ul>
+
+<p>Note: When defining colors in LimpetGE, they are defined using a "vec4" type array, representing red, green, blue and alpha values respectively.  Each value
+   is a float between 0.0 and 1.0.</p>
+
+<p>The texture loading is handled in the "doInitBuffer" function of the specific shader (documented in the Shader section), which is programmer controlled.
+The following applies to the "standard" shaders supplied, and is recommended to follow this convention as much as possible.</p>
+<p>In the "args" argument object of the "LStructureDef" constructor, - (an instance of this is passed as an argument to doInitBuffer) one of the following is passed:</p>
+<ul>
+    <li>args.texture : This is a string representing the URL of a texture collage.</li>
+    <li>args.color : This is a "vec4" array representing the color to use for all surfaces.</li>
+    <li>args.colors : This is an array of "vec4" arrays representing colors to be used on surfaces.</li>
+    <li>args.rawtexture : This is a re-loaded texture object containing the collage of images to use.</li>
+</ul>
+<p>When creating collages of images, it is recommended the collage image is "re-scaled" so that the pixel height and width is equal to (2 ^ n) - where "n" is any integer.  In other words, the width
+   is one of 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 etc pixels wide, and ditto for pixels high.  They need not be the same, just 2 ^ n.</p>
+
+<p>When the components of the structure are created, using the "add....(...)" methods, a "texturecontrols" argument is supplied, which can contain:</p>
+<ul>
+    <li>A list or a number keyed object containing a number of "LTextureControl" instances (see below).</li>.
+    <li>A list or a number keyed object containing a number of objects returned by the "lTextureColor(size, number)" function (see below).</li>.
+    <li>LTEXCTL_STATIC_LIST - This is a global constant that evauates to an infinite array consisting of virtual "LTextureControl" instances that represent the entire texture image/color.</li>
+    <li>An array returned by the "ltextureColorAll(size, num)" function  - see below</li> 
+    <li>An array returned by the "ltextureList(LTextureControl instance)" function  - see below</li> 
+</ul>
+
+
+
+<h3>LTextureControl class</h3>
+<p>This defines which part of a texture image collage to use for a specific surface.  An instance itself does not contain any texture/image data itself,
+   just the geometric "slice" or "rectangle" of the texture to use for the surface.  </p>
+
+<table>
+    <tr><td>new LTextureControl(image_size, base, size)</td><td colspan=2>Create a new texture control instance.  The argument are a series of two element arrays, each
+                representing width and height.  These can be of any scale, they need not be pixels, centimeters or anything else (but can be).  Also width and height may
+                 not need to be the same unit.  The units  are just used to determine which "bit" of the collage to use for each surface.</td></tr>
+    <tr><td></td><td>image_size</td><td>The size of the collage image as a  array of [width, height]  in any scale.</td></tr>
+    <tr><td></td><td>base</td><td>The bottom left hand corner of the collage to use for the surface in the same scale.</td></tr>
+    <tr><td></td><td>size</td><td>The size of the collage section to use for the surface in the same scale.</td></tr>
+</table>
+
+<p>The "scale" of these units can be anything so long as consistence.  For example, if a collage is two images high, and four images wide, then:</p>
+<ul>
+    <li>The image_size can be [4, 2]</li>
+    <li>The base can be [1, 0] for the second image along on the bottom row</li>
+    <li>The size can be [1, 1] for the image</li>
+</ul>
+
+<p>The above can be used regardless how wide or high the images in the collage are (as long as they are all the same).</p>
+
+<p>Images can be "inverted" or "reflected" by using negative values in the "size" argument, in this case, the "base" should be moved to reflect this,
+so for the above example for the same "section" to be reflected as though looking at a reflection on water (reflected vertically)...</p>
+
+<ul>
+    <li>The image_size:  [4, 2]</li>
+    <li>The base: [1, 1] for the second image along on the bottom row, top left corner</li>
+    <li>The size:  [1, -1] for the reflected image</li>
+</ul>
+
+<p>There is a global constant - LTEXCTL_STATIC - that represents a LTextureControl instance that includes the entire collage - equivalent to "LTextureControl([1, 1], [0, 0], [1, 1])".</p>
+
+<p>To apply images, or parts of the collage, the "texturecontrols" array is used.  Which ones to which surfaces the "LI_*" keys are used for keyed objects, (or those particular
+   positions in an array), for instance, imagine a dice face collage that looks like:</p>
+<div><img src="dice_faces.png" alt="Dice" /></div>
+<p>Note - the dimensions of the image has been padded out to obey the "2 ^ n" criteria for images.</p>
+<p>Then - this is applied by...
+<pre>
+var dice_struct = new LStructureDef(shaderSimple, {texture: "dice_faces.png"});
+
+var die_one   = new LTextureControl([4, 2], [0, 1], [1, 1]);
+var die_two   = new LTextureControl([4, 2], [1, 1], [1, 1]);
+var die_three = new LTextureControl([4, 2], [2, 1], [1, 1]);
+var die_four  = new LTextureControl([4, 2], [0, 0], [1, 1]);
+var die_five  = new LTextureControl([4, 2], [1, 0], [1, 1]);
+var die_six   = new LTextureControl([4, 2], [2, 0], [1, 1]);
+
+var dice_cube = new LObject(dice_struct, null);
+
+dice_cube.addBlock({size: [1, 1, 1],
+                    texturecontrols: lIndArray([
+                            [LI_FRONT,  die_one],
+                            [LI_BACK,   die_six],
+                            [LI_TOP,    die_three],
+                            [LI_LEFT,   die_two],
+                            [LI_BOTTOM, die_four],
+                            [LI_RIGHT,  die_five],
+                    ]));
+
+</pre>
+
+<p>Note: The "lIndArray" function changes array pairs into a key-value entry in an object.  See later this document.</p>
+
+<p>Alternatively, if you look at the "LI_*" values, the "txturecontrol arguments could be written..</p>
+
+<pre>
+dice_cube.addBlock({size: [1, 1, 1],
+                    texturecontrols: [die_one, die_six, die_two, die_three, die_five, die_four]);
+
+</pre>
+
+<p>Any entries omitted, or are "null", the surface will not be drawn.  Same as including it in the "hold" argument.</p>
+
+<p>The texture will automatically stretch or shrink in each dimension independently so that it is the smallest size that will cover all parts of the surface.</p>
+
+<h3>Colors on surfaces</h3>
+<p>At time of writing, LimpetGE does not include "static colors" for individual surfaces, however, this can be done using textures designed for the purpose, and some helper functions
+   exist to do this.</p>
+
+<p>If the "color" argument is supplied with the appropriage color values in the LStructureDef constructor (using standard "shader" routines), then a texture image is created one pixel wide and one pixel high consisting
+   of that color.  Omitting "texturecontrols" argument from the "add....(...)" componenet creation methods means that all the image is used for all surfaces, in effect coloring the 
+   object that color.</p>
+
+<p>Should the "colors" argument is supplied, with an array of colors, then an image 1 pixel high, and the array length pixels wide, is created and used as a texture.</p>
+<p>When componenets are then created using the "add....(...)" methods, the "texturecontrols" array or list can pass LTextureControl objects returned using the "lTextureColor" function.  This consists of:</p>
+
+<table>
+    <tr><td>ctrl = ltextureColor(total_colors, color_number)</td><td colspan=2>Retrieve the color to draw on surface</td></tr>
+    <tr><td></td><td>total_colors</td><td>Total colors in the "colors" array</td></tr>
+    <tr><td></td><td>number</td><td>The index of the color to use (starting from 0)</td></tr>
+    <tr><td></td><td colspan=2>Returns the "LTextureControl" instance that will extract the appropriate color</td></tr>
+</table>
+
+<p>For example:</p>
+
+<pre>
+var colors = [
+                [1.0, 0.0, 0.0, 1.0],   // red
+                [0.0, 1.0, 0.0, 1.0],   // green 
+                [0.0, 0.0, 1.0, 1.0],   // blue
+                [0.5, 0.5, 0.0, 1.0],   // yellow
+                [0.5, 0.0, 0.5, 1.0],   // purple
+                [0.0, 0.5, 0.5, 1.0],   // turquoise
+                [0.0, 0.0, 0.0, 1.0],   // Black
+                [0.0, 0.0, 0.0, 1.0]    // Black
+            ];
+// Above padded out with "black" so it is 2 ^ n in length
+
+var red       = lTextureColor(8, 0);
+var green     = lTextureColor(8, 1);
+var blue      = lTextureColor(8, 2);
+var yellow    = lTextureColor(8, 3);
+var purple    = lTextureColor(8, 4);
+var turquoise = lTextureColor(8, 5);
+
+var cube_struct = new LStructureDef(shaderSimple, {colors: colors});
+
+var cube = new LObject(cube_struct, null);
+
+cube.addBlock(size: [1, 1, 1],
+              texturecontrols: [red, green, blue, yellow, purple, turquoise]);
+</pre>
+
+<h3>Applying textures to surfaces</h3>
+
+<p>Imagine the object center is at the origin, and the texture image is at a positive value along the Z axis, perpendicular to it, but the right
+   way up regarding the X and Y axis, then the way the textures are applied is:</p>
+
+<table>
+    <tr><td>addBlock</td><td colspan=2>Adding a block, six surfaces:</td></tr>
+    <tr><td></td><td>LI_FRONT</td><td>Applied as is</td></tr>
+    <tr><td></td><td>LI_BACK</td><td>Rotated 180 degrees around the Y axis</td></tr>
+    <tr><td></td><td>LI_TOP</td><td>Rotated minus 90 degrees around the X axis</td></tr>
+    <tr><td></td><td>LI_RIGHT</td><td>Rotated plus 90 degrees around the Y axis</td></tr>
+    <tr><td></td><td>LI_BOTTOM</td><td>Rotated plus 90 degrees around the X axis</td></tr>
+    <tr><td></td><td>LI_LEFT</td><td>Rotated minus 90 degrees around the Y axis</td></tr>
+    <tr><td>addBlockPatch</td><td colspan=2>Adding a block patch, one surface:</td></tr>
+    <tr><td></td><td>LI_FRONT</td><td>Applied as is</td></tr>
+    <tr><td>addCylinder</td><td colspan=2>Adding a cylinder block, three surfaces:</td></tr>
+    <tr><td></td><td>LI_FRONT</td><td>Applied as is</td></tr>
+    <tr><td></td><td>LI_BACK</td><td>Rotated 180 degrees around the Y axis</td></tr>
+    <tr><td></td><td>LI_SIDE</td><td>Rotated minus 90 degrees around the X axis, then applied so the sides join at the top (x is zero, y is positive)</td></tr>
+    <tr><td>addSphere</td><td colspan=2>Adding a block patch, one surface:</td></tr>
+    <tr><td></td><td>LI_FRONT</td><td>Applied as is, the image is stretched to a ratio of width two, height 1.  It is then "wrapped around the sphere so that 
+                            the sides meet at the back, and the top and bottom of the image is "shrunk" so it is a tight fit around the sphere.</td></tr>
+    <tr><td>addPolygon</td><td colspan=2>Adding a polygon block, two plus number of sides surfaces:</td></tr>
+    <tr><td></td><td>LI_FRONT</td><td>Applied as is</td></tr>
+    <tr><td></td><td>LI_BACK</td><td>Rotated 180 degrees around the Y axis</td></tr>
+    <tr><td></td><td>LI_SIDE + n</td><td>N being the "nth" side starting from zero.  The image is rotated minus 90 degrees around the X axis, then 
+                    rotated around Z axis to be "parallel" to the side to be applied.</td></tr>
+    <tr><td>addTriangle</td><td colspan=2>Adds a triangle block.  As per a three sided polygon block.</td></tr>
+    <tr><td>addWTriangle</td><td colspan=2>Adds a wonky triangle block.  As per a three sided polygon block.  Care should be taken though, on the sides the images are "sheared".</td></tr>
+    <tr><td>addTrianglePatch</td><td colspan=2>Adding a triangle patch, one surface:</td></tr>
+    <tr><td></td><td>LI_FRONT</td><td>Applied as is</td></tr>
+    <tr><td>addBezierPatch</td><td colspan=2>Adding a bezier patch, one surface:</td></tr>
+    <tr><td></td><td>LI_FRONT</td><td>Applied as is, however, "as is" is how the coordinates are presented, rather than by the axis.</td></tr>
+    <tr><td>addBezierBlock</td><td colspan=2>Adding a bezier block, six surfaces, based on  how the coordinates are presented, rather than by the axis. 
+                        Also, unlike wonky tiangles, the sides are not "sheared.  It is worth bearing in mind the image
+                        is stretched or shrunk so it is a tight fit over the curves, with the corners pinned as such.</td></tr>
+    <tr><td></td><td>LI_FRONT</td><td>Applied as is.</td></tr>
+    <tr><td></td><td>LI_BACK</td><td>Rotated 180 degrees around the Y axis</td></tr>
+    <tr><td></td><td>LI_TOP</td><td>Rotated minus 90 degrees around the X axis</td></tr>
+    <tr><td></td><td>LI_RIGHT</td><td>Rotated plus 90 degrees around the Y axis</td></tr>
+    <tr><td></td><td>LI_BOTTOM</td><td>Rotated plus 90 degrees around the X axis</td></tr>
+    <tr><td></td><td>LI_LEFT</td><td>Rotated minus 90 degrees around the Y axis</td></tr>
+</table>
+<hr />
+
+<p>Some helper routines used in textures. Used in shader routines if anywhere.</p>
+
+<table>
+    <tr><td>lLoadTexture(url)</td><td colspan=2>Load a texture from a URL and return it</td></tr>
+    <tr><td></td><td>url</td><td>The URL of the appropriate image to load or a LimpetGE asset.</td></tr>
+    <tr><td>lLoadColor(color)</td><td colspan=2>Create a texture containing a one pixel image and return it</td></tr>
+    <tr><td></td><td>color</td><td>The color ("vec4") to use.</td></tr>
+    <tr><td>lLoadColors(colors, width, height)</td><td colspan=2>Create a texture containing a (width * height) pixel image and return it</td></tr>
+    <tr><td></td><td>colors</td><td>An array of "vec4" arrays representing colors.  The number of these should equal width multiplied by height. </td></tr>
+    <tr><td></td><td>width</td><td>The width in pixels of the image</td></tr>
+    <tr><td></td><td>height</td><td>The height in pixels of the image.  This is usually one, and nothing is achieved by using
+                anything else.  The "ltextureColor" helper function assumes this.</td></tr>
+</table>
+
+<hr />
+
+<h3>LAssets class - LimpetGE assets</h3>
+<p>Games require various ancillary "assets", or "files" to run.  It does not always make sense that these are downloaded asynchronously as required the way
+   a web browser does, or necessarily rely on the cache to stop duplicate downloads.  There is a case for pre-downloading these.</p>
+<p>In order to achieve this LimpetGE provides the "LAssets" class, which facilitates downloading images, sounds and 3D modelled objects ("XXX.obj" files).
+   It downloads these, stores them in Javascript "Blob" objects, and deploys these where appropriate.</p>
+
+<p>Due to the asynchronous nature of browser downloads, these need to be performed before the game is run, not at the start of it.  When download
+   is complete an "event" is run from the class that facilitates starting the actual game.  Something like:</p>
+
+<div class="example">// Download assets
+
+const g_assets = new Assets({
+    moo: "sounds/cow.wav",
+    bark: "sounds/dog.wav",
+    meow: "sounds/cat.wav",
+});
+
+function do_onload()
+{
+    function inprogress()
+    {
+        document.getElementById("inprogress").innerText =
+            g_assets.succeeded.toString() +
+            " out of " +
+            g_assets.total.toString() +
+            "assets downloaded";
+    },
+
+    function onend()
+    {
+        if(g_assets.succeeded == g_assets.total) {
+            document.getElementById("inprogress").innerText = "All assets downloaded"
+            document.getElementById("playbutton").disabled = false;
+        } else {
+            alert("Not all assets successfully downloaded");
+        }
+    }
+
+    g_assets.download({
+        inprogress: inprogress,
+        onend: onend});
+}
+</div>
+
+<p>For the above, in the HTML file, the body tag would include the attribute: <code>onload="do_onload();"</code> to instigate this.
+  It would also have a "span" or "div" element with an <code>id="inprogress"</code> attribute, and a disabled input button
+  button like: <code>&lt;input&nbsp;type="button"&nbsp;id="playbutton"&nbsp;disabled="disabled"&nbsp;value="Play game"&nbsp;/&gt;</code> used to
+  start the game.</p>
+
+<p>To access the assets themselves, use the "asset.data" property:</p>
+<div class="example">
+    sounds.cow = new LAudios(g_assets.moo, 1);
+    sounds.cat = new LAudios(g_assets.meow, 1);
+    sounds.dog = new LAudios(g_assets.bark, 1);
+</div>
+
+<p>The specification:</p>
+
+<table>
+    <tr><td>new LAssets(assets)</td><td colspan=2>The LAssets constructor</td></tr>
+    <tr><td></td><td>assets</td><td><div>A javascript named object, one entry per asset, consisting of:</div>
+        <ul>
+            <li>A string being the URL of the asset</li>
+            <li>A javascript object, containing the named arguments:
+                <ul>
+                    <li>url: A string containing the URL</li>
+                    <li>type: The Mime type</li>
+                </ul>
+            </li>
+        </ul>
+        </td></tr>
+    <tr><td>asset.download(callbacks)</td><td colspan=2>This method starts the downloads.  It returns more or less immediately, the
+                                                   downloads occurring asynchronously.</td></tr>
+    <tr><td></td><td><callbacks</td><td><div>The callbacks fired off by the download process:</div>
+            <ul>
+                <li>inprogress: The function called intermittently during the process, once after each download attempt is complete.</li>
+                <li>onend: The function called when all downloads are complete.</li>
+            </ul>
+        </td></tr>
+    <tr><td class="subsect" colspan=3>Some properties. The programmer should treat these as read only</td></tr>
+    <tr><td>assets.total</td><td colspan=2>The total assets to download</td></tr>
+    <tr><td>assets.completed</td><td colspan=2>The total assets that either have been downloaded, or have failed to download.</td></tr>
+    <tr><td>assets.succeeded</td><td colspan=2>The total assets that either have been downloaded successfully.</td></tr>
+    <tr><td>assets.data</td><td colspan=2>A javascript object whose named properties contain the respective asset ("Blob") downloaded.</td></tr>
+</table>
+
+<hr />
+
+<h3>LKey class</h3>
+
+<p>The keyboard key control object. This is used internally by the "lInput" object, but can be used outside that if required - but normally is not.</p>
+
+<table>
+    <tr><td>new LKey()</td><td colspan=2>Create a new keyboard object</td></tr>
+    <tr><td>key.func(ind)</td><td colspan=2>Set the boolean "val" property to the indicator.</td></tr>
+    <tr><td></td><td>ind</td><td>Either "true" of "false", what to set the "val" property.</td></tr>
+
+    <tr><td>key.funcon(ind)</td><td colspan=2>Set the boolean "val" property "true" if "ind" is true.</td></tr>
+    <tr><td></td><td>ind</td><td>Either "true" of "false", if "true" sets the "val" property to this</td></tr>
+
+    <tr><td>key.funcoff(true)</td><td colspan=2>Set the boolean "val" property "false" if "ind" is nt true.</td></tr>
+    <tr><td></td><td>ind</td><td>Either "true" of "false", if "false" sets the "val" property to this</td></tr>
+
+    <tr><td>vobj.ison()</td><td colspan=2>Return the "val" property..</td></tr>
+    <tr><td></td><td colspan=2>Returns if the "val" property is "true".</td></tr>
+</table>
+
+<hr />
+
+<h3>The lInput oject</h3>
+
+<p>This behaves like a static class instance.  It is used to control keyboard and mouse button input. Functions and methods are:</p>
+
+<table>
+    <tr><td>lInput.register(keycode, function)</td><td colspan=2>Register a keycode to perform a function</td></tr>
+    <tr><td></td><td>keycode</td><td>The integer keycode of a key pressed</td></tr>
+    <tr><td></td><td>function</td><td><div>The function to perform when the key is pressed or released.  An example:</div>
+                                      <div><code>lInput.register(83, function(ind) {picth_down = ind;});</code></div>
+                                      <div>This is the most efficient way of receiving inputs, though not the most intuitive.</div></td></tr>
+
+    <tr><td>lInput.press(keycode)</td><td colspan=2>Register a keycode that updates a "LKey" instance "val" property.</td></tr>
+    <tr><td></td><td>keycode</td><td>The integer keycode of a key pressed</td></tr>
+    <tr><td></td><td colspan=2>Returns a "LKey" instance,  whose "val" property is "true" when the key is pressed, and "false" when released.</td></tr>
+    
+    <tr><td>lInput.onoff(keycode_on, keycode_off)</td><td colspan=2>Register keycodes to turn a "LKey instance "val" properrty to "true" or "false"</td></tr>
+    <tr><td></td><td>keycode_on</td><td>The integer keycode of a key pressed that switches the "val" property to "true"</td></tr>
+    <tr><td></td><td>keycode_off</td><td>The integer keycode of a key pressed that switches the "val" property to "true"</td></tr>
+    <tr><td></td><td colspan=2>Returns a "LKey" instance,  whose "val" property is switched to "true" or "false"</td></tr>
+
+    <tr><td>lInput.usekeys()</td><td colspan=2>Tells the browser to use the events/functionality in this static object.</td></tr>
+    
+
+    <tr><td>lInput.keydown(event)</td><td colspan=2>Used internally, is initiated by the browser "keydown" event </td></tr>
+    <tr><td></td><td>event</td><td>The browser key event object.</td></tr>
+    
+    <tr><td>lInput.keyup(event)</td><td colspan=2>Used internally, is initiated by the browser "keyup" event </td></tr>
+    <tr><td></td><td>event</td><td>The browser key event object.</td></tr>
+    
+    <tr><td>lInput.dodown(event)</td><td colspan=2>Used internally, is initiated by the browser "mousedown" or "touchdown" event </td></tr>
+    <tr><td></td><td>event</td><td>The browser mouse/touch event object.</td></tr>
+    
+    <tr><td>lInput.doup(event)</td><td colspan=2>Used internally, is initiated by the browser "mouseup", "touchup" or "touchcancel" event </td></tr>
+    <tr><td></td><td>event</td><td>The browser mouse/touch event object.</td></tr>
+</table>
+
+<p>The global variables "lDoDown" and "lDoUp" are used internally for this functionality.  The "HTML" section of the documentation goes further into this.</p>
+
+<hr />
+
+<h3>LPRNG and LPRNGD class</h3>
+
+<p>A predictable random number generator.  Designed for speed rather than "true randomness", should be good nough for games.</p>
+
+<table>
+    <tr><td>new LPRNG(seed)</td><td colspan=2>Create a new PRNG object</td></tr>
+    <tr><td></td><td>seed</td><td>The seed for the generator, needs to be a (large) integer.  The same seed will produce the same sequence.</td></tr>
+    <tr><td>prng.next(scope)</td><td colspan=2>retrieve the next number, which will be an integer greater than or equal zerto and less than the argument.</td></tr>
+    <tr><td>prng.next(scope)</td><td colspan=2>retrieve the next number, which will be an integer greater than or equal zerto and less than the argument.</td></tr>
+    <tr><td></td><td colspan=2>Returns the next integer is returned: 0 >= returned value > scope.</td></tr>
+</table>
+
+<p>The LPRNGD class is identical with the exception it returns a floating point number, not an integer.</p>.
+
+<hr />
+
+<h3>Transformation Matrix Helper Functions</h3>
+
+<p>Various helper functions exist to assist transformation matrices, primarily to place objects.</p>
+
+<table>
+    <tr><td>lFromXYZ(x, y, z)</td><td colspan=2>Generate a translation transformation matrix</td></tr>
+    <tr><td></td><td>x</td><td>The amount to translate along the X axis.</td></tr>
+    <tr><td></td><td>y</td><td>The amount to translate along the Y axis.</td></tr>
+    <tr><td></td><td>z</td><td>The amount to translate along the Z axis.</td></tr>
+    <tr><td></td><td colspan=2>Returns the appropriate tranlation transformation matrix ("mat4").</td></tr>
+
+    <tr><td>lFromXYZR(x, y, z, ry)</td><td colspan=2>Generate a translation, then rotate it around the Y axis in situ to produce a transformation matrix</td></tr>
+    <tr><td></td><td>x</td><td>The amount to translate along the X axis.</td></tr>
+    <tr><td></td><td>y</td><td>The amount to translate along the Y axis.</td></tr>
+    <tr><td></td><td>z</td><td>The amount to translate along the Z axis.</td></tr>
+    <tr><td></td><td>ry</td><td>The amount in radians to rotate around the Y axis in situ.</td></tr>
+    <tr><td></td><td colspan=2>Returns the appropriate transformation matrix ("mat4").</td></tr>
+
+    <tr><td>lFromXYZPYR(x, y, z, rx, ry, rz)</td><td colspan=2>Generate a translation, then rotate it around Z, X and Y axis in situ (in that order) to produce a transformation matrix</td></tr>
+    <tr><td></td><td>x</td><td>The amount to translate along the X axis.</td></tr>
+    <tr><td></td><td>y</td><td>The amount to translate along the Y axis.</td></tr>
+    <tr><td></td><td>z</td><td>The amount to translate along the Z axis.</td></tr>
+    <tr><td></td><td>rx</td><td>The amount in radians to rotate around the X axis in situ (pitch).</td></tr>
+    <tr><td></td><td>ry</td><td>The amount in radians to rotate around the Y axis in situ (yaw).</td></tr>
+    <tr><td></td><td>rz</td><td>The amount in radians to rotate around the Z axis in situ (roll).</td></tr>
+    <tr><td></td><td colspan=2>Returns the appropriate transformation matrix ("mat4").</td></tr>
+
+</table>
+
+<hr />
+
+<h3>HTML Helper Functions</h3>
+<p>A number of functions exist to assist creating the HTML containing page for the game... </p>
+
+<table>
+    <tr><td>lElement(tag, attributes, text, children)</td><td colspan=2>Create HTML element entries, a helper to javascript's "createElement" function.</td></tr>
+    <tr><td></td><td>tag</td><td>The HTML tag, such as "div", "tr", "td" etc</td></tr>
+    <tr><td></td><td>attributes</td><td>If a javascript object, the attributes of the element.  If a string it is the "class" attribute.  Set to null for not or omit applicable</td></tr>
+    <tr><td></td><td>text</td><td>Containing text of the element.  Set to null , "" or omit for not applicable</td></tr>
+    <tr><td></td><td>children</td><td>An array of elements (HTML Element types).  Set to null or omit of not applicable</td></tr>
+    <tr><td></td><td colspan=2>Returns an appropriate HTML Element object.</td></tr>
+
+    <tr><td>lAddButton(orient, vpos, hpos, label, keycode)</td><td colspan=2>Creates a button on the canvas.</td></tr>
+    <tr><td></td><td>orient</td><td><div>One of the following:</div><ul>
+                                        <li>tl : Top left</li>
+                                        <li>tc : Top center</li>
+                                        <li>tr : Top right</li>
+                                        <li>bl : Bottom left</li>
+                                        <li>bc : Bottom center</li>
+                                        <li>br : Bottom right</li>
+                                        </ul>
+                                        <div>It is where on the canvas the button is anchored.</div></td?./tr>
+    <tr><td></td><td>vpos</td><td><div>How many buttons "in" vertically this button is positioned</div><ul>
+    <tr><td></td><td>hpos</td><td><div>How many buttons "in" horizontally this button is positioned</div><ul>
+    <tr><td></td><td>label</td><td><div>The label of the botton</div><ul>
+    <tr><td></td><td>keycode</td><td><div>The key code to emulate if button is pressed</div><ul>
+              
+</table>
+
+<p>For use if the "lElelemnt(...)" function it is best to show by example.</p>
+
+<pre>
+    document.getElementById("container").appendChild(
+        lElement("table", null, null, [
+            lElement("tr", null, null, [
+                lElement("td", null, "Top left"),
+                lElement("td"),
+                lElement("td", null, "Top right"),
+            ]),
+            lElement("tr", null, null, [
+                lElement("td", {colspan: "3"})
+            ]),
+            lElement("tr", null, null, [
+                lElement("td", null, "Bottom left"),
+                lElement("td"),
+                lElement("td", null, "Bottom right"),
+            ]),
+        ])
+    ]);
+</pre>
+
+<p>Will produce the same DOM section if the folowing HTML was used (whitespaces added for readability):</p>
+
+<pre>
+&lt;table&gt;
+    &lt;tr&gt;&lt;td&gt;Top left   &lt;/td&gt; &lt;td&gt;&lt;/td&gt; &lt;td&gt;Top right   &lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td colspan="3"&gt;&lt;/td&gt;                               &lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;Bottom left&lt;/td&gt; &lt;td&gt;&lt;/td&gt; &lt;td&gt;Bottom right&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+</pre>
+
+<hr />
+
+<h3>Other Miscellaneous Functions</h3>
+    
+<table>
+    <tr><td>lGetPosition(x, y, z, matrix)</td><td colspan=2>Apply transformation matrix on the coordinates [x, y, z].</td></tr>
+    <tr><td></td><td>x</td><td>The original X value</td></tr>
+    <tr><td></td><td>y</td><td>The original Y value</td></tr>
+    <tr><td></td><td>z</td><td>The original Z value</td></tr>
+    <tr><td></td><td>matrix</td><td>The transformation matrix ("mat4") to apply</td></tr>
+    <tr><td></td><td colspan=2>Returns a "vec3" style array representing the transformed point.</td></tr>
+
+    <tr><td>lAntiClock(a, b, c)</td><td colspan=2>See if three 2D points are anti-clockwise.</td></tr>
+    <tr><td></td><td>a</td><td>First point, in the form of an array [x, y]</td></tr>
+    <tr><td></td><td>b</td><td>First point, in the form of an array [x, y]</td></tr>
+    <tr><td></td><td>c</td><td>First point, in the form of an array [x, y]</td></tr>
+    <tr><td></td><td colspan=2>Returns boolean "true" if the points are anti-clockwise, "false" othereise..</td></tr>
+
+    <tr><td>lCoalesce(a, b)</td><td colspan=2>Returns b if a is null or undefined.</td></tr>
+    <tr><td></td><td>a</td><td>Prime value or object</td></tr>
+    <tr><td></td><td>b</td><td>Substiture value or object</td></tr>
+    <tr><td></td><td colspan=2>Returns the prime if not null or undefined, otherwise returns the substitute</td></tr>
+              
+    <tr><td>lIndArray(arraypairs)</td><td colspan=2>Returns an object based on an array of arrai pairs.  First item being the key, second the value.</td></tr>
+    <tr><td></td><td>arraypairs</td><td>An array of array pairs, eg: [[LI_TOP: tx1]. [LI_BOTTOM, tx2]]</td></tr>
+    <tr><td></td><td colspan=2>Returns an appropriate object obj:  obj[LI_TOP] = tx1, obj[LI_BOTTOM] = tx2</td></tr>
+              
+    <tr><td>lInitShaderPorgram(vertexSource, fragmentSource)</td><td colspan=2>Compiles the shader and returns the program.  Used internally by the shader routines.</td></tr>
+    <tr><td></td><td>vertexSource</td><td>The vertex source</td></tr>
+    <tr><td></td><td>fragmentSource</td><td>The fragment source</td></tr>
+    <tr><td></td><td colspan=2>Returns the compiled program</td></tr>
+</table>
+
+<hr />
+</table>
+
+</div>
+
+</body>
+</html>

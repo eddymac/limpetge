@@ -1,0 +1,216 @@
+<html><head><title>Kronky Test</title></head>
+<link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+<link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+<script type="text/javascript" src="../libs/gl-matrix.js"></script>
+<script type="text/javascript" src="../libs/limpetge.js"></script>
+<script type="text/javascript" src="kronky/shader_kronky.js"></script>
+<script type="text/javascript" src="kronky/kronky.js"></script>
+<script type="text/javascript" src="kronky/klevels.js"></script>
+<style>
+div.head {
+    font-size: 30;
+}
+button.mbut {
+    position:absolute;
+    width:50px;
+    height:50px;
+    font-size:25;
+}
+div.keys {
+    display: inline-block;
+    padding: 0 3em 0 3em;
+}
+div.ikey {
+    display: inline-block;
+    padding: 0 1em 0 0;
+    color: darkblue;
+    font-weight: bold;
+}
+div.idesc {
+    display: inline-block;
+}
+
+table.keyboard {
+    border-width: 1;
+    border-style: solid;
+}
+td.key {
+    border-width: 1;
+    border-style: solid;
+}
+
+td.keyname {
+    border-width: 1;
+    border-style: solid;
+    text-align: center;
+    font-weight: bold;
+    font-color: darkblue;
+}
+
+div.pictures {
+    font-size: 100px;
+    text-align: left;
+    line-height: 300px;
+}
+img.inpict {
+    vertical-align: middle;
+}
+div.onscreen {
+    background-color: #ffffff;
+    opacity: 0.7;
+    text-shadow: none;
+}
+div.scrmess {
+    color: black;
+    font-size: 25px;
+}
+
+    
+</style>
+<body onload="return g_loadassets();">
+
+    <div id="mform" style="display:block;">
+        <div>
+            <form name="mform" target="#" onsubmit="return false;">
+                <div class="head">The Kronky Game</div>
+                <hr />
+                <div class="description">Keys are:</div>
+                <div>
+                    <div class="keys">
+                        <table class="keyboard">
+                            <tr>
+                                <td class="key"><div class="ikey">Q</div></td><td><div class="idesc">Drop/place object</div></td>
+                                <td class="key"><div class="ikey">W</div></td><td><div class="idesc">Move forward</div></td>
+                                <td class="key"><div class="ikey">E</div></td><td><div class="idesc">Pick-up/take object</div></td>
+                            </tr>
+                            <tr>
+                                <td class="key"><div class="ikey">A</div></td><td><div class="idesc">Strafe left</div></td>
+                                <td class="key"><div class="ikey">S</div></td><td><div class="idesc">Move backwards</div></td>
+                                <td class="key"><div class="ikey">D</div></td><td><div class="idesc">Strafe right</div></td>
+                            </tr>
+                                <td class="key"></td><td></td>
+                                <td class="key"><div class="ikey">X</div></td><td><div class="idesc">"Fire" object</div></td>
+                                <td class="key"><div class="ikey">C</div></td><td><div class="idesc">Throw object</div></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="keys">
+                        <table class="keyboard">
+                            <tr>
+                                <td class="key"><div class="ikey">I</div></td><td><div class="idesc">Kronky: Inintialise</div></td>
+                                <td class="key"></td><td></td>
+                                <td class="key"><div class="ikey">P</div></td><td><div class="idesc">Kronky: Go Back in time</div></td>
+                            </tr>
+                            <tr>
+                                <td class="key"><div class="ikey">K</div></td><td><div class="idesc">Look up</div></td>
+                                <td class="key"></td><td></td>
+                                <td class="key"></td><td></td>
+                            </tr>
+                                <td class="key"><div class="ikey">M</div></td><td><div class="idesc">Look down</div></td>
+                                <td class="key"><div class="ikey">&lt;</div></td><td><div class="idesc">Turn left</div></td>
+                                <td class="key"><div class="ikey">&gt;</div></td><td><div class="idesc">Turn right</div></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <hr />
+                <div class=keys>
+                    <table class="keyboard">
+                        <tr><td class="key"><div class="ikey">Space</div></td><td><div class="idesc">Jump</div></td></tr>
+                        <tr><td class="key"><div class="ikey">Escape</div></td><td><div class="idesc">Restart level</div></td></tr>
+                        <tr><td class="key"><div class="ikey">G</div></td><td><div class="idesc">Fast Forward Time</div></td></tr>
+                        <tr><td class="key"><div class="ikey">Enter</div></td><td><div class="idesc">Save Point</div></td></tr>
+                        <tr><td class="key"><div class="ikey">Backspace</div></td><td><div class="idesc">Restore Point</div></td></tr>
+                    </table>
+                </div>
+                <hr />
+                <div class="description">Options and controls</div>
+                <div>
+                    <table>
+                        <tr><td>Level</td><td><select id="kronkylevel" name="kronkylevel"></select></td></tr>
+                        <tr><td></td><td><input type="checkbox" name="intros" checked="checked"/> Display introductions</td></tr>
+                        <tr><td></td><td><input type="button" id="playbutton" value="Go to level" onclick=" return fplaylevel(document.forms.mform.kronkylevel.value);" disabled="disabled"/>
+                            <span id="onloading">Loading assets</span></td></tr>
+                    </table>
+                </div>
+                <hr />
+            </form>
+            <div>Note: The flower is delicate, crashing into it with a rocket, or trying to throw it, will break it.</div>
+            <hr />
+        </div>
+    </div>
+    <div id="mgame" style="display:none;">
+        <div style="position: relative;" id="divcanv">
+            <canvas id="limpetge_canvas" width=1000 height=600 style="background-color:black;"></canvas>
+            <div id="top" style="position: absolute; top:0;left:0;font-weight:bold;font-size:30;color:cyan;text-shadow:2px 2px black;width: 100%">
+                <div style="float: left;"><span id=lTTitle></span> | <span id="lTMessage" style="color:lightblue;">Press ? for help</span></div>
+                <div style="float: right; padding: 0 15 0 0;"> | <span id="fastforward"></span><span id="record"></span> <span id="playing"></span> / <span id="total"></span></div>
+                <div style="clear: both"></div>
+                <div id="mhelp" class="onscreen" style="display: none">
+                    <div>
+                        <hr />
+                        <div class="keys">
+                            <table class="keyboard">
+                                <tr>
+                                    <td class="key"><div class="ikey">Q</div></td><td><div class="idesc">Drop/place object</div></td>
+                                    <td class="key"><div class="ikey">W</div></td><td><div class="idesc">Move forward</div></td>
+                                    <td class="key"><div class="ikey">E</div></td><td><div class="idesc">Pick-up/take object</div></td>
+                                </tr>
+                                <tr>
+                                    <td class="key"><div class="ikey">A</div></td><td><div class="idesc">Strafe left</div></td>
+                                    <td class="key"><div class="ikey">S</div></td><td><div class="idesc">Move backwards</div></td>
+                                    <td class="key"><div class="ikey">D</div></td><td><div class="idesc">Strafe right</div></td>
+                                </tr>
+                                    <td class="key"></td><td></td>
+                                    <td class="key"><div class="ikey">X</div></td><td><div class="idesc">"Fire" object</div></td>
+                                    <td class="key"><div class="ikey">C</div></td><td><div class="idesc">Throw object</div></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="keys">
+                            <table class="keyboard">
+                                <tr>
+                                    <td class="key"><div class="ikey">I</div></td><td><div class="idesc">Kronky: Inintialise</div></td>
+                                    <td class="key"></td><td></td>
+                                    <td class="key"><div class="ikey">P</div></td><td><div class="idesc">Kronky: Go Back in time</div></td>
+                                </tr>
+                                <tr>
+                                    <td class="key"><div class="ikey">K</div></td><td><div class="idesc">Look up</div></td>
+                                    <td class="key"></td><td></td>
+                                    <td class="key"></td><td></td>
+                                </tr>
+                                    <td class="key"><div class="ikey">M</div></td><td><div class="idesc">Look down</div></td>
+                                    <td class="key"><div class="ikey">&lt;</div></td><td><div class="idesc">Turn left</div></td>
+                                    <td class="key"><div class="ikey">&gt;</div></td><td><div class="idesc">Turn right</div></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <hr />
+                    <div>
+                        <div class="keys">
+                            <table class="keyboard">
+                                <tr><td class="key"><div class="ikey">Space</div></td><td><div class="idesc">Jump</div></td></tr>
+                                <tr><td class="key"><div class="ikey">Escape</div></td><td><div class="idesc">Restart level</div></td></tr>
+                                <tr><td class="key"><div class="ikey">G</div></td><td><div class="idesc">Fast Forward Time</div></td></tr>
+                                <tr><td class="key"><div class="ikey">Enter</div></td><td><div class="idesc">Save Point</div></td></tr>
+                                <tr><td class="key"><div class="ikey">Backspace</div></td><td><div class="idesc">Restore Point</div></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="onscreen scrmess">Press B to continue...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="mintro" style="display:none">
+        <div id="introcontent">
+        </div>
+        <div><form name="introbutton" target="#"><input type="button" value="Continue to level..." onclick="return e_playlevel()" /><input type="button" value="Back to menu" onclick="return dispback();" /></form></div>
+    </div>
+</body>
+</html>
+
+
+

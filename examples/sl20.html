@@ -1,0 +1,73 @@
+<html><head><title>SL20 Game</title></head>
+<link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+<link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+<script type="text/javascript" src="../libs/gl-matrix.js"></script>
+<script type="text/javascript" src="../libs/limpetge.js"></script>
+<script type="text/javascript" src="sl20/shader_sl20.js"></script>
+<script type="text/javascript" src="sl20/maze.js"></script>
+<script type="text/javascript" src="sl20/sl20.js"></script>
+<style>
+div.head {
+    font-size: 30;
+}
+button.mbut {
+    position:absolute;
+    width:50px;
+    height:50px;
+    font-size:25;
+}
+    
+</style>
+<body onload="g_loadassets()">
+    <div id="mgame" style="display:none;">
+        <div style="position: relative;">
+            <canvas id="limpetge_canvas" width=1000 height=600 style="background-color: black;"></canvas>
+            <div id="top" style="position: absolute; top:0;left:0;font-weight:bold;font-size:30;color:cyan;text-shadow:2px 2px black;">Maze: <span id="tmazename"></span> | Level: <span id="tlevel"></span> | Health: <span id=tlife></span> | <span id="tmessage"></span></div>
+            <div id="mobileform" style="position:absolute;top:0;left:0;z-index:1;display:none">
+                <form name="buttons" target='#' method='get' onsubmit="return false";>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="mform" style="display:block;">
+        <form name="mform" target="#" onsubmit="return false;">
+            <div class="head">The SL20 Game</div>
+            <hr />
+            <div class="description">Keys are:</div>
+            <div>
+                <table>
+                    <tr><td class="ikey">&lt;</td><td>Roll anti-clockwise</td></tr>
+                    <tr><td class="ikey">&gt;</td><td>Roll clockwise</td></tr>
+                    <tr><td class="ikey">S</td><td>Pitch down</td></tr>
+                    <tr><td class="ikey">X</td><td>Pitch up</td></tr>
+                    <tr><td class="ikey">A</td><td>Fire gun</td></tr>
+                    <tr><td class="ikey">Space</td><td>Play/Un pause</td></tr>
+                    <tr><td class="ikey">?</td><td>Pause</td></tr>
+                </table>
+	    </div>
+            <hr />
+            <div class="description">Options and controls</div>
+            <div>
+                <table>
+                    <tr><td>Maze name</td><td><input type="text" name="mazename" value="Labyrinth"/></td></tr>
+                    <tr><td>Level</td><td><input type="number" name="mazelevel" min=1 value=1></td></tr>
+                    <tr><td>Mobile</td><td><input type="checkbox" name="mobile"> On screen buttons</td></tr>
+                    <tr><td></td><td><input type="button" value="Play" onclick="return playgame(mazename.value, mazelevel.value, mobile.checked);" id="playbutton" disabled="yes"/>
+                        <span id="loading">Asets loading, please wait...</span></td></tr>
+                    
+                </table>
+            </div>
+            <hr />
+	    <div>
+                <ul>
+                    <li>Rolling and/or pitching will stop you moving forward.</li>
+                    <li>Stratergy tip: The "SL20 Monster" releases "Strands" to hunt you down.  Once clearing the initial strands you can find the
+                         SL20 Monster by going to where the strands are "sourced".  Once you find the monster, you can kill it (easier) by shooting at its extremities.
+                         </li>
+                 </ul>
+	    </div>
+            <hr />
+        </form>
+    </div>
+</body>
+</html>

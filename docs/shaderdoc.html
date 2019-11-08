@@ -1,0 +1,149 @@
+<html>
+    <head><title>LimpetGE Shader Reference</title></head>
+    <style>
+    td {
+        vertical-align: top;
+    }
+    td.subsect {
+        font-weight: bold;
+    }
+
+    </style>
+    <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+    <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+    <body>
+
+<div style="text-align:center;"><img src="../libs/limpetlogo.png" alt="LimpetGE Logo" /></div>
+<h1>LimpetGE Shader Reference</h1>
+<div>The LimpetGE shader reference manual.  This is not about actually wrining shaders, but how to incorporate them 
+     into the LimpetGE framework.</div>
+
+<h3>Overview</h3>
+<p>Each "shader" has it's information contained in a constant javascript object.  Each contains the following properties:</pi>
+<table>
+    <tr><td>key</td><td>A unique key number for the shader. It is usually (re)generated when compiling the script.</tr></td>
+    <tr><td>vertexSource</td><td>The Vertex Shader source code</td>
+    <tr><td>fragSource</td><td>The fragment shader source code</td>
+    <tr><td>compile()</td><td>Compiles the Fragment and Vertex programs. It also "binds" the shader's uniform and attribute locations, usually
+            into a "sub-object" called "locations" on the shader object.  Called once when initialising the LimpetGE environment (in "lInit()")</td><.tr>
+    <tr><td>doInitBuffer(structure)</td><td>A function, that has a structure as it's argument.  It assembles the OpenGL buffers from the Points, Normals and Texture coordinates arrays.
+                    These are then stored in the "buffer" property (also a Javascript object) on the structue class.  Related information to the buffers are stored there too.  Called for each structure
+                    when structures are complete.</td></tr>
+    <tr><td>useProgram()</td><td>A function, when called, is a wrapper around the OpenGL "useProgram" program.  Called once in each frame.</td></tr>
+    <tr><td>useBuffer(buffer)</td><td>Takes the structure's buffer as the argument.  It binds the buffer information to the uniform shader locations. It is called once per frame per structure.</td></tr>
+    <tr><td>doDraw(buffer, position, control)</td><td>Takes the structure's buffer, a "mat4" position and a game object's control as the arguments.  This binds any "last minute" uniform or attributes,
+            and does OpenGL's "drawElements(....)" routine (or equivalent).  Called once per frame per object.</td></tr>
+</table>
+
+<p>There is a global variable that needs to exist and be set as well:</p>
+
+<div>lShader_objects - This is an array of shaders used, in the order there objects are to be drawn.</div>
+
+<hr />
+
+<h4>Best way to include a new shader in LimpetGE</h4>
+
+<p>Take one, copy it, and modify it.</p>
+
+<hr />
+<h3>The vertesSource and fragSource properties</h3>
+
+<p>These are the "Fragment Shader" and "Vertex Shader" sources as strings.   I will not go into these, there is resource on the web how to write these.</p>
+
+<h3>The compile() function</h3>
+
+<p>This is esponsible for compiling the shaders and binding the uniform and attribute locations. </p>
+
+<p>To compile, there is a LimpetGE helper function "lInitShaderProgram(fragmentSource, vertexSource)". The definition of this is:</p>
+
+<table>
+    <tr><td>lInitShaderProgram(vertexSource, fragmentSource)</td><td colspan=2>Compile the shader sources</td></tr>
+    <tr><td></td><td>vertexSource</td><td>The source for the vertex shader</td></tr>
+    <tr><td></td><td>fragmentSource</td><td>The source for the fragment shader</td></tr>
+    <tr><td></td><td colspan=2>Returns the compiled program.  Usually stored in the "shader" property of the shader object.</td></tr>
+</table>
+
+<p>The locations are normally bound to variables in a created object, which is then stored in the "locations" property of the Shader Object.</p>
+
+<p>To understand this, it is probably best to look at the shader objects supplied.</p>
+
+<hr />
+
+<h3>The doInitBuffer(structure) function</h3>
+
+<p>This taks the structure (as created by "new LStructureDef") as the argument.  It is called uring the "lStructureSetup()" function, which is
+   automatically called for all structures that have not had this called before.  That function is called in the creation of the "Scene" instance is
+    created: a class that is derived from the "LBase" class.  If for some reason it is to be "re-initialised" he user can set the "compiled" property
+    on the structure to "false", and call "lStructureSetup()" again, or create a new "Scene".</p>
+
+<p>The relevant property arrays, and associated information, supplied by the structure are: </p>
+
+<table>
+    <tr><td>structure.args</td><td>The "object named arguments" passed to the LStructureDef constructor when created.</td></tr>
+    <tr><td>structure.pointsArray</td><td>An array containing the coordinates of the vertices (just the x, y and z, no w).</td></tr>
+    <tr><td>structure.normalsArray</td><td>An array containing the corresponding normals for the vertices (x, y and z).</td></tr>
+    <tr><td>structure.textureCoords</td><td>An array of The coordinates in the texture collage supplied (u, v) - values between 0.0 and 1.0.</td></tr>
+    <tr><td>structure.pointsIndex</td><td>An array of the indexes to be used as the controlling OpenGL "drawElements" function.</td></tr>
+    <tr><td>structure.numentries</td><td>This is the length of the "pointsIndex" array.</td></tr>
+</table>
+
+<p>While processing what is passed in "args", the following from the LimpetGE javascript may be useful:</p>
+
+<table>
+    <tr><td>lLoadTexture(url)</td><td colspan=2>Load a texture from a URL and return it</td></tr>
+    <tr><td></td><td>url</td><td>The URL of the appropriate image to load.</td></tr>
+    <tr><td>lLoadColor(color)</td><td colspan=2>Create a texture containing a one pixel image and return it</td></tr>
+    <tr><td></td><td>color</td><td>The color ("vec4") to use.</td></tr>
+    <tr><td>lLoadColors(colors, width, height)</td><td colspan=2>Create a texture containing a (width * height) pixel image and return it</td></tr>
+    <tr><td></td><td>colors</td><td>An array of "vec4" arrays representing colors.  The number of these should equal width multiplied by height. </td></tr>
+    <tr><td></td><td>width</td><td>The width in pixels of the image</td></tr>
+    <tr><td></td><td>height</td><td>The height in pixels of the image.  This is usually one, and nothing is achieved by using
+                anything else.  The "ltextureColor" helper function assumes this.</td></tr>
+</table>
+
+<p>It is at this point you can pass alternative textures (a more bloody face as an entity gets more injured, etc), and the such.</p>
+
+<p>The arrays need to go through the "bind" process, a reference stored on an object that is stored in the "buffer" property of the structure.</p>
+        
+<p>Again, to understand this, it is probably best to look at the shader objects supplied.</p>
+
+<hr />
+
+<h3>The useProgram() function</h3>
+<p>A wrapper to the OpenGL's "useProgram(shader)" function. The "shader" program is usually in the "shader" property of the object, if not, it
+   is where you put it in the "compile()" function.</p>
+
+<hr />
+
+<h3>The useBuffer(buffer) function</h3>
+
+<p>This is called once per frame per structure.  It performs the "bind" process of the arrays in the "buffer" (created in "doInitBuffer(...)" above) onto
+   the OpenGL "locations" (created in the "compile()" function above).  It also binds any uniform locations, remembering there is access to the "Scene" objects
+   (using the global "lScene" variable that stores a reference to it).</p>
+
+<p>Again, to understand this, it is probably best to look at the shader objects supplied.</p>
+<hr />
+    
+<h3>The doDraw(buffer, position, control) function</h3>
+
+<p>This draws the objecit, the arguments: </p>
+<table>
+    <tr><td>buffer</td><td>The "buffer" property of structure</td></tr>
+    <tr><td>position</td><td>The scene transformation position ("mat4") where this object is to be placed.</td></tr>
+    <tr><td>control</td><td>An object that is the "control" of the object, as defined when creating the "new LObject(structure, control)" instance.</td></tr>
+</table>
+
+<p>This functions needs to call the OpenGL "drawElements(...)" function (or whatever), and do the "last minute" proparations for that (binding the scene position and the like).</p>
+
+<p>Again, with dnger to repeating myself, to understand this, it is probably best to look at the shader objects supplied.</p>
+
+<hr />
+
+<h3>the lShader_objects array</h3>
+
+<p>This is a constant global array.  It lists the shader object references in the order they are to be drawn (transparent ones last).</p>
+
+<hr />
+
+</body>
+</html>

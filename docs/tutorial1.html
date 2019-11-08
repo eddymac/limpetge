@@ -1,0 +1,609 @@
+<html>
+    <head><title>LimpetGE Tutorial part 1</title></head>
+    <style>
+    td {
+        vertical-align: top;
+    }
+    td.subsect {
+        font-weight: bold;
+    }
+
+    div.example {
+        font-family: monospace;
+        background-color: #f0f0f0;
+        white-space: pre;
+    }
+
+    div.example2 {
+        font-family: monospace;
+        background-color: #f0f0ff;
+        white-space: pre;
+    }
+    div.indent {
+        padding: 5px 20px 5px 20px;
+        margin: 5px 0px 5px 0px;
+        border-size: 1px;
+        border-color: black;
+        border-style: solid;
+    }
+    
+
+    </style>
+
+    <script type="text/javascript" src="tutorial1.js"></script>
+    <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+    <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+    <body onload=do_onload();>
+
+<div style="text-align:center;"><img src="../libs/limpetlogo.png" alt="LimpetGE Logo" /></div>
+<h1>LimpetGE Tutoial part 1</h1>
+<div>The LimpetGE first tutorial.  Creation of a working script.</div>
+
+<h3>Introduction</h3>
+
+<p>LimpetGE is a WebGL game engine library written in Javascript to run in HTML5 (ECMA) compatible browesers, using WebGL.  It is designed to facilitate
+   the rapid development of simple WebGL games.  It is not a shader writer.  Also it has some 3D modelling routines incorporated in it, but simple
+   ones.</p>
+
+<p>This tutorial, with the next, goes through the process of creating a simple game.</p>
+
+<h3>Installation and dependncies</h3>
+
+<p>To install dowload th files to a development directory.  These should contain the following directory tree:</p>
+
+<ul>
+    <li>examples : The examples directory</li>
+    <ul>
+        <li>index.html : The examples "home" HTML page </li>
+        <li>kronky.html : The HTML container for the "kronky" exampe </li>
+        <li>sl20.html : The HTML container for the "SL20" exampe </li>
+        <li>sl20 : The iSL20 game directory
+            <ul>
+                <li><i>The SL20 games files</i></li>
+            </ul>
+        </li>
+        <li>kronky : The Kronky game directory
+            <ul>
+                <li><i>The Kronky games files</i></li>
+            </ul>
+        </li>
+    </ul>
+    <li>libs: The library directory
+        <ul>
+            <li>limpetge.js: The main LimpetGE</li>
+            <li>gl-matrix.js: The matrix routines</li>
+            <li>limpetlogo.png : A limpetGE logo</li>
+            <li>limpeticon.png : A limpetGE icon</li>
+        </ul>
+    </li>
+    <li>shaders
+        <ul>
+            <li>README.txt : A Readme file describing how to implement these</li>
+            <li><i>Various shader/interface scripts</i></li>
+        </ul>
+    </li>
+</ul>
+
+<p>To "do" this tutorial, it is assumed you will create a direcory "tutorial" (or whatever) and work in there.</p>
+
+<h3>Overall structural concept</h3>
+
+<p>Before actual coding though, I will go through the overall concepts of LimpetGE.</p>
+
+<p>LimpetGE is a game engine library.  It is not a "3D" magic thing, or shader writer.
+   There are however standard shaders, and appropriate interfaces, in the "shaders" directory.
+   (This tutorial will use one of those - "ShaderSimple".)</p>
+
+<p>The library handles creation and placement of game objects, collision detection helpers, sound
+   helpers, WebGL based key input helpers and the such.</p>
+
+<h4>Game object structure overview</h4>
+
+<p>For game objects, the "structure" hierarchy is:</p>
+
+<ul>
+    <li>Structure definition - The particular structure of a thing, or things, in the game
+        <ul>
+            <li>Structure component - A component of the sructure - block, cylinder, sphere, more complex shape etc.</li>
+            <li>Structure component - ditto</li>
+            <li>Structure component - ditto</li>
+        </ul>
+        <ul>
+            <li>Game object - an instance of this</li>
+            <li>Game object - ditto</li>
+            <li>Game object - ditto</li>
+        </ul>
+    <li>Structure definition - dito
+        <ul>
+            <li><i>Structure components</i></li>
+        </ul>
+        <ul>
+            <li><i>Game objects</i></li>
+        </ul>
+    </li>
+    <li>Structure definition - dito
+        <ul>
+            <li><i>Structure components</i></li>
+        </ul>
+        <ul>
+            <li><i>Game objects</i></li>
+        </ul>
+    </li>
+</ul>
+
+<p>Once created, Game objects are placed into a "Game object hierarchy":</p>
+<ul>
+    <li>The scene - environment which the game functions.
+        <ul>
+            <li>Top level game object
+                <ul>
+                    <li> Game object
+                        <ul>
+                            <li>Game object</li>
+                            <li>Game object</li>
+                            <li>...</li>
+                        </ul>
+                    </li>
+                    <li> Game object
+                        <ul>
+                            <li>...</li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul>
+                    <li> ...</li>
+                </ul>
+            </li>
+            <li>Top level game object</li>
+                <ul>
+                    <li>...</li>
+                </ul>
+            </li>
+            <li>...</li>
+        </ul>
+    </li>
+</ul>
+
+<p>In the running of the game, game objects are manipulated and tested on as per described.</p>
+
+<h3>The Game</h3>
+
+<p>The game this tutorial showcases is one called "Squish".  It is a very simple game where
+   the player tries to get to the end of a corridor avoiding a whole lot of giant
+   spheres rolling the other way, so as not to be "squished". No sound or anything included
+   here as I did not ant to clutter this first tutorial.</p>
+<p>A completed version of this game is included in the examples.</p>
+
+<h3>The HTML file</h3>
+
+<p>As this is a WebGL game it needs to exist on an HTML page.  The one used is:</p>
+
+<div class="example" id="exhtml"></div>
+
+<p>This is not a HTML tutorial, but to go through respective parts:</p>
+
+<ul>
+    <li>Four scripts are loaded:
+        <ol>
+            <li>"../libs/gl-matrix.js" - The glMatrix routines from the libs directory.</li>
+            <li>"../libs/limpetge.js" - The LimpetGE library routines and environment.</li>
+            <li>"squish.js" - The game itself, you will be writing this.  Most of the tutorial is involved with this.</li>
+            <li>"shader_squish.js" - The shaders used (one in this case).  You will be assembling this.</li>
+        </ol>
+    <li>The "BODY" element has an "onload" attribute to play the game once the HTML is loaded.</li>
+    <li>A canvas HTML object to run the game in.  This needs an "id" attribute of "limpetge_canvas".  An initial width and height are require but LimpetGE resizes it to fit the screen.
+        Also, the "background-color" of this element needs to be black, otherwise transparent renders in the game do not come out right.</li>
+    <li>A title and message line that is placed on top of the canvas at the top, with two "SPAN" elements (or something that can contain text) with "id" atrtributes of "lTTitle" and "lTMessage"
+        respectively</li>
+</ul>
+
+<h3>Conventions used in LimpetGE</h3>
+
+<p>In the LimpetGE library, global variables are used, as are properties on the programmer written "Scene" class.  The names of these all start with one of:</p>
+<ul>
+    <li>"lName..." - A small "l" (for love) followed by a capital letter, followed by the rest</li>
+    <li>"LName..." - A capital "L" followed by a capital letter, followed by the rest</li>
+    <li>"_lName..." - An underscore,  small "l", a capital letter, followed by the rest</li>
+    <li>"_LName..." - An underscore,  capital "L", a capital letter, followed by the rest</li>
+</uL>
+<p>The "regex" for this is: <code>_?[lL][A-Z][a-zA_Z_0-9]+</code></p>
+<p>If the programmer avoids variable names that follow the above criteria there will be no clashes, and it is easier to read. 
+   Also, is easy to see what is a library supplied variable/property/method easier, especially in this tutorial.!</p>
+        
+<p>Now that is out the way - to go to the meat of the game.</p>
+
+<h3>The main "squish.js" file</h3>
+
+<p>Looking at the "Structural Concept" tree above, we will start by the structure classes.  We will not create the instances at this point, just the classses.</p>
+
+<p> First things first, the top line should read:</p>
+<div class="example">"use strict";</div>
+<p>If not, yoiu deserve everything you are going to get.</p>
+
+<h4>Creating the Corridor structure</h4>
+
+<p>Let us do the "corridor" which the player advances through The structure is created within a function that returns an instance of it.
+This may seem daunting at first, but I will go through it line by line.</p>
+    
+<div class="example" id="ex1"></div>
+
+<p>Going through the function:</p>
+<div class="example" id="ex11">    var colors = [
+        [3.0, 0.2, 0.1, 1.0],   // red-brown
+        [0.8, 1.0, 1.0, 1.0],   // cyan
+        [0.0, 0.3, 0.0, 1.0],   // darkish green
+        [1.0, 1.0, 1.0, 1.0],   // White for lines
+    ]
+</div>
+
+<p>An array named "colors" is created with four colors.  The colors are "vec4" type, or
+   an array of four floating numbers, consisting of red, green, blue and alpha values.
+   These values are between 0.0 and 1.0.</p>
+
+<div class="example">    var struct = new LStructureDef(ShaderSimple, {colors: colors, collision: LSTATIC});</div>
+
+<p>Create a new instance of the structure definition.  Arguments are:</p>
+<ol>
+    <li>ShaderSimple - A reference to a shader.  ShaderSimple is a standard shader, use of which covered later in the tutorial.</li>
+    <li>A javascript object with a number of optional arguments.  These, in this example, are:
+        <ul>
+            <li>colors: The array of color arrays defined above</li>
+            <li>collision: Assigned constant value of LSTATIC - This means it will be included in the "Static Collision Detection" algorithms.  Details again later in this tutorial.</li>
+        </ul>
+    </li>
+</ol>
+
+<div class="example">    var brown = lTextureColor(4, 0);
+    var cyan = lTextureColor(4, 1);
+    var green = lTextureColor(4, 2);
+    var white = lTextureColor(4, 3);
+</div>
+
+<p>The way LimpetGE deals with colors is it creates a small texture of the colors, consisting of one pixel high and as many colors there are pixels wide, each pixel being
+   the appropriate color.  The shader then uses "UV" coordinate matching of that texture to assign the appropriate color to the appropriate surface.</p>
+<p>What the "lTextureColor" funcion does is that it converts the arguments given to an appropriate "LTextureControl" instance, which in turn controls the "UV" coordinates
+   in the shader buffer itself.  The arguments are:</p>
+<ol>
+    <li>The number of colors in the array of colors used</li>
+    <li>The index (starting at zero) of that particular color</li>
+</ol>
+<p>What the above code snippet does is to assign each color in the "colors" array defined above to instances that can be used for surfaces in the component creation below.</p>
+
+
+<p>Now the structure base and other data has been created, we can start adding components.</p>
+<p>For the "Squish" game, a unit of "1" in size represents one meter (ish). </p>
+<p>First - the corridor.  This has two walls (left and right), a floor and ceiling.  Each needs to be added.</p>
+<p>The walls of the corridor:</p>
+
+<div class="example">    struct.addBlock({position: lFromXYZ(-20.1, 0.5, 0), size: [0.1, 2.5, 120], texturecontrols: lIndArray([[LI_RIGHT, brown]])});
+    struct.addBlock({position: lFromXYZ(20.1, 0.5, 0), size: [0.1, 2.5, 120], texturecontrols: lIndArray([[LI_LEFT, brown]])});
+</div>
+
+<p>This adds the left wall, then the right.  Going through the first line (adding the left wall)..</p>
+<p>"addBlock" is a method of a "LStructureDef" class instance that adds a "block".  This is like a cube, brick, plank or similar, that has a width, height an depth and
+   right-angled corners, and straight edges and surfaces.  Like all components, it takes one argument, a javascript object consisting of a number of named controlling arguments,
+   most of those optional.  The ones used, with explanations, are:</p>
+
+<ul>
+    <li>position: This is the position where to place this component in the structure.  All components are created at the origin, and then placed here.  This is a "mat4" type (4 x 4 matrix), 
+        that is a transformation matrix.  The example uses the "lFromXYZ" function to create that, which creates a "translation" matrix:
+        <ol>
+            <li>The X coordintes to position the component.</li>
+            <li>The Y coordintes to position the component.</li>
+            <li>The Z coordintes to position the component.</li>
+        </ol>
+    </li>
+    <li>size:  This is a bit of a misnomer, it is in fact half the size.  It is an array that represents the co-ordinates of a corner of the block, the negative value of each represents
+        the other corner.  So in the corner, the opposite corners of the block will have the XYZ co-ordinates of (0.1, 2.5, 120) and (-0.1, -2.5, -120), making it 0.2 meters wide, 5.0 meters high and 240 meters long.</li>
+    <li>texturecontrols: A block has six surfaces, numbered zero through five.  These are also defined by the global variables LI_FRONT, LI_BACK, LI_TOP, LI_LEFT, LI_BOTTOM, LI_RIGHT respectively.
+        This argument takes an array, each numbered index of this controls what LTetureControl instance controls the look of that surface.  Any ommitted, undefined or null then that surface is not rendered.
+        What this line does is tell LimpetGE to render the right hand side of the block as "brown" (defined above) and not to render the other surfaces.</li>
+</ul>
+
+<div class="indent">
+<p>Digression - the "lIndArray" function.</p>
+<p>What this does is take an array of array pairs, and converts each pair into a [key, value] entry into an object.  So:</p>
+<div class="example2">var xxx = lIndArray([[LI_LEFT, blue], [LI_RIGHT, red]]);</div>
+<p>is the same as:
+<div class="example2">var xxx = {};
+xxx[LI_LEFT] = blue;
+xxx[LI_RIGHT] = red;
+</div>
+</div>
+
+<p>Therefore, the first line:</p>
+<ol>
+    <li>Creates a "block" that goes from 10 centimeters to the left, 2.5 meters below and 120 meters in front, and goes 10 centimeters to the right, 2.5 meters above and 120 meters behind the origin.</li>
+    <li>Moves that block 20.1 meters to the left</li>
+    <li>Tells LimpetGE to only renders the right hand side of it in brown.
+</ol>
+<p>In effect it tells LimpetGE to render a brown plane 20 meters to the left.</p>
+
+<p>The second line does the same thing, except to the wall on the right.</p>
+
+<div class="example">    struct.addBlock({position: lFromXYZ(0, -2.1, 0), size: [20, 0.1, 120], texturecontrols: lIndArray([[LI_TOP, green]]), corners: null});
+
+    struct.addBlock({position: lFromXYZ(0, 3.1, 0), size: [20, 0.1, 120], texturecontrols: lIndArray([[LI_BOTTOM, cyan]]), corners: null});
+</div>
+
+<p>These two lines create a green floor 2 meters below the origin, and a cyan ceiling 3 meters above.  I will leave it up to the reader to wok out the mechanics.  There is a new optional argument though:</p>
+<ul>
+    <li>corners: This is relevant where "collision: LSTATIC" was specified in the LStructureDef constructor. I will go into that later, but what "corners: null" does is
+        to leave out this componenet in the Collision Detection Algorithm.</li>
+</ul>
+
+<div class="example">    for(var i = -120; i &lt;= 120; i += 10) {
+        struct.addBlock({position: lFromXYZ(0, -2.0, i), size: [20, 0.001, 0.1], texturecontrols: lIndArray([[LI_TOP, white]]), corners: null});
+        struct.addBlock({position: lFromXYZ(-20.0, 0.5, i), size: [0.001, 2.5, 0.1], texturecontrols: lIndArray([[LI_RIGHT, white]]), corners: null});
+        struct.addBlock({position: lFromXYZ(20.0, 0.5, i), size: [0.001, 2.5, 0.1], texturecontrols: lIndArray([[LI_LEFT, white]]), corners: null});
+    }
+</div>
+<p>In order to see advancement along the corridor, the above places white lines 20 centimeters wide every 10 meters along it.  It doe this by rendering the top of a white blocks 2 millimeters thick
+   and 20 cetimetrs wide 1 millimetr above the floor, and the same 1 millimeter inside the side walls.  Again, not including these in the Collision Detection Mechanism (corners: null).
+</p>
+<div class="example">    struct.addBlock({position: lFromXYZ(0, -2.0, -101), size: [20, 0.001, 1], texturecontrols: lIndArray([[LI_TOP, white]]), corners: null});
+    struct.addBlock({position: lFromXYZ(-20.0, 0.5, -101), size: [0.001, 2.5, 1], texturecontrols: lIndArray([[LI_RIGHT, white]]), corners: null});
+    struct.addBlock({position: lFromXYZ(20.0, 0.5, -101), size: [0.001, 2.5, 1], texturecontrols: lIndArray([[LI_LEFT, white]]), corners: null});
+</div>
+
+<p>To include a finish line.  A line is created one meter thick at the end using the same method.</p>
+
+<p>That concludes building the components for the corridor.  The function then returns the instance when called.</p>
+
+<p>The Corridor structure has been defined. Now for some game objects.</p>
+
+<h4>The Scene</h4>
+
+<p>For objects to exist they need to have a scene to exist in.  We will start with a simple one.</p>
+
+<div class="example" id="w1"></div>
+
+<p>The "Scene" is programmer defined, but it needs to be derived from "LBase".  When an instance of this is created, a reference to that instance is
+   automatically copied to the global "lScene" variable.  While it is doing that, it also creates a camera object (an "LCamera" instance) and copies
+   that into the global variable "lCamera".</p>
+<p>More than one scene or camera can exist at the same time, but cannot be active simultaneously.  This is advanced stuff though and beyond this tutorial.
+   For now, we will just have one scene.</p>
+<p>To go through the above:</p>
+
+<div class="example">function Scene(args)
+{
+    LBase.call(this, args);
+
+    // Set up the keys
+    this.kForward = lInput.press(87);   // Key W
+    this.kBack = lInput.press(83);      // key S
+    this.kRight = lInput.press(190);    // key  &lt; or .
+    this.kLeft = lInput.press(188);     // key  &gt; or ,
+
+    lInput.usekeys();
+}
+</div>
+
+<p>The constructor.  It takes the argument "args", which is a Javascript object with optional named arguments, and passes this
+   to the "LBase" class constructor.  Other arguments can be included here of course if the programmer requires it.</p>
+
+<p>The "lInput" object is like a static class, and it handles the keyboard input during the game.  The "press(..)" method of this
+    takes a javascript key code of a key as the argument(The "https://keycode.info" web site is useful for determining this), and 
+   returns a "LKey" class instance, which has a property "val" which is the boolean "true" when the key is pressed, or "false" when not.</p>
+<p>The "lInput.usekeys()" method activates this.</p>
+
+<div class="example">Scene.prototype = Object.assign(Object.create(LBase.prototype), {
+    constructor: Scene,
+</div>
+
+<p>How I implement class inheritance in Javascript.</p>
+
+<div class="example">    lLoop: function(delta)
+    {
+        var x = 0;
+        var z = 0;
+
+        if(this.kForward.val)  z  -= delta * 5;              // How fast we run forward
+        if(this.kBack.val)  z += delta * 2.5;                // Run backwards half speed
+        if(this.kLeft.val)  x -= delta * 2.5;                // Same sideways, but slow down forward
+        if(this.kRight.val)  x += delta * 2.5;
+        if(x != 0) z *= 0.7;
+
+        lCamera.moveFlat(x, 0, z);
+
+        // Need to check if the camera has hit anything
+        var hasHitWall = false;
+        function _seecam(cob)
+        {
+            if(cob.control instanceof Corridor) // Hits a wall
+                hasHitWall = true;
+        }
+        this.lCAllPointDetect(lCamera, 0.3, _seecam);
+
+        // Has it hit a wall?
+        if(hasHitWall) lCamera.move(-x, 0, 0);
+        // Cannot go too far back
+        if(lCamera.z &gt;= 100) lCamera.move(0, 0, -z);
+
+        if(lCamera.z &lt;= -100) {
+            return false;
+        }
+
+        // Continue game
+        return true;
+    },
+</div>
+
+<p>The "lLoop" function is a virtual function in "LBase" so needs to be included in the "Scene" class.  It is called once per
+   frame.  It takes the argument "delta" which is a floating point of the number of seconds (not milliseconds) since the last time this was called.
+    I have found this to be a number near 0.013.</p>
+
+<p>Going through the function:</p>
+
+<div class="example">        var x = 0;
+        var z = 0;
+
+        if(this.kForward.val)  z  -= delta * 5;              // How fast we run forward
+        if(this.kBack.val)  z += delta * 2.5;                // Run backwards half speed
+        if(this.kLeft.val)  x -= delta * 2.5;                // Same sideways, but slow down forward
+        if(this.kRight.val)  x += delta * 2.5;
+        if(x != 0) z *= 0.7;
+
+        lCamera.moveFlat(x, 0, z);
+</div>
+
+<p>The above looks at the keyboard entry, and sets the "x" and "z" variables to how much the camera has moved depending on 
+   what key is pressed.  When going forward, the camera move at 5 meters a second (a good run).  When back or side
+   at 2.5 meters a second, and if moving sideways it slows how fast forward or back it is going by a factor of 0.7.</p>
+<p>The "moveFlat(....)" method of the lCamera object moves the camera along it's x or z axis.  As it does not
+   rotae at all, this is always towards the "back" of the scene.</p>
+
+<p>It is the responsibility of what has moved to see if it has hit anything.  So next the collision detection:</p>
+
+<div class="example">        var hasHitWall = false;
+        function _seecam(cob)
+        {
+            if(cob.control instanceof Corridor) // Hits a wall
+                hasHitWall = true;
+        }
+        this.lCAllPointDetect(lCamera, 0.3, _seecam);
+        if(hasHitWall) lCamera.move(-x, 0, 0);
+</div>
+
+<p>A closure function is used here.  The main part of the above is the "lCAllPointDetect(....)" method - (defined in "LBase").  This takes
+   three arguments:</p>
+<ol>
+    <li>lCamera - The Game Object to test detection for (which the camera is one).</li>
+    <li>Distance - this is the "buffer" distance of the object to test (lCamera in this case).  This overides the "distance" property of the object
+        itself if set.</li>
+    <li>_seecam - The closure function called if a collision occurs.  This is called for each collision detected.</li>.
+</ol>
+
+<p>The closure function itself takes one argument, which is the instance of the object that has been collided with.  In the above it looks at the "control" property
+   of that, and if it is "Corridor" (explained next in this tutorial) then it has hit a wall  If it has then it needs to move back.</p>
+<p>It would be wrong for the "move back" to occur in the closure, as that may be called more than once.  LimpetGE employs ray tracing, so if it gets laggy,
+   that scenario may occur.</p>
+
+<div class="example">        if(lCamera.z &gt;= 100) lCamera.move(0, 0, -z);
+        if(lCamera.z &lt;= -100) {
+            return false;
+        }
+        return true;
+</div>
+<p>In the above, if the camera tries to move before the start of the corridor it stops it. lCamera.z is the Camera's scene Z coordinates.
+Then if the camera reaches the end of the corridor, it exits the game ("lLoop" function returns the boolean "false"), otherwise
+the game continues ("lLoop" function returns boolean "true").
+</p>
+
+<p>Note: I could have simply tested if the "lCamera.x" property was less than -20 or greater than 20 for wall collision detection, but the reasons here for not are:</p>
+<ul>
+    <li>If I want to change the corridor some time so it was not straight and turned, this code would cope.</li>
+    <li>I wanted to demonstrate how to use the LimpetGE collision detection mechanism.
+</ul>
+
+<h4>The Corridor object</h4>
+
+<p>We have created the means for creating a "Corridor" structure.  To create the game object based on it:</p>
+
+<div class="example">function Corridor()
+{
+    this.obj = new LWObject(g_structures.Corridor, this);
+    lScene.lPlace(this.obj, mat4.create());
+}
+</div>
+<p>This is a class with no methods.  It is created by "new Corridor()".
+   This sets the propery "obj" to a Game object.  The constructor of this has:</p>
+    <ol>
+        <li>g_structures.Corridor - The LStructureDef instance for which you are creating an object for.  The "g_structures" object I will explain next, it is where to store the structures.</li>
+        <li>this - The control object assigned to the objects "control" property.  Used in collision detection and some shader draw routines.  It is usually "this".
+    </ol>
+<p>The "lScene.pPlace(...)" method places the object in the scene at the top level of the hierarchy.  The arguments for this are:</p>
+<ol>
+    <li>this.obj - The object to place on the scene</li>
+    <li>mat4.create() - The transformation matrix as to determine where to place the center of the object.  In this case, it is the identity matrix, which places that at the center.</li>
+</ol>
+
+<p>To put the whole together...</p>
+
+<div class="example">var g_structures = {};
+function g_playgame()
+{
+    lInit();
+
+    // Retrieve and place structure definitions where they can
+    // be accessed later
+
+    g_structures.Corridor = corridorStructure();
+
+    g_playlevel();
+}
+
+function g_playlevel()
+{
+
+    new Scene({lCSize: 5.0, lLDynamic: true, lLDistance: 0.3});
+
+    lScene.lDefaultMessage = "W: Forward, S: Back, &lt;: Left, &gt;: Right"
+
+    lScene.ambientLight = vec3.fromValues(0.3, 0.3, 0.3);
+    lScene.directionalLightColor = vec3.fromValues(1.0, 1.0, 1.0);
+
+    new Corridor();
+
+    lCamera.moveHere(0, 0, 98);
+    lScene.lSetup();
+    lScene.lMain();
+
+}
+</div>
+
+<p>The "g_structures" variable is a global one, and in fact, I would normally place it near the top of the jsavascript file.</p>
+<p>The "g_playgame()" function is called by the "onload" function of the HTML file.  and runs the thing.</p>
+
+<p>The "lInit()" function initialises the WebGL context (lGl variable), and compiles the shaders.  The inclusion of shaders is explained below.
+This should only be called once at the start of everything.</p>
+
+<p>Next to place the instance of LStuctureDef that defines the Corridor into "g_structures.Corridor".  This is not necessary per-se, but defining
+   structures can be resource intensive and I have got into the habbit of just doing so once, and storing it in a global variable.</p>
+<p>The "g_playlevel()" plays a level.  In this initial example this happens only once, so I could have included all "g_playlevel"'s code here.
+  Hoever, anything more complex that would not be right.</p>
+
+<p>In "g_playlevel()":</p>
+
+<p>The "new Scene({....})" constructor.  This creates a new "Scene", and places a copy of the instance in the global valriable "lScene", so it does not need to 
+   asign it to anything here.</p>
+<p>As for the constructor's named arguments suplied here:</p>
+<ul>
+    <li>lCSize: 5.0 - This is the size of the "cubes" the scene is divided into for the collision detection sparse array.  It defaults to 1.0, but will need (eventually) to be higher
+        here.</li>
+    <li>lLDynamic: true - A boolean value that determines if the camera is to be included in the Dynamic Collision Detection algorithms.</li>
+    <li>lLDistance: 0.3 - The distance used in the Dynamic Collision Detection by the camera.  0.3 represents 30 centimeters, so the "player" is 60 CM wide and fat!</li>
+</ul>
+
+<p>The lScene.lDefaultMessage property is the default message displayed in the HTML element Id'd "lTMessage".</p>
+<p>The "lScene.ambientLight" is a "vec3" array defining the ambient lighting (the light in the shade) used by the shader (explained below)</p>
+<p>The "lScene.directionalLightColor" is a "vec3" array defining the directional light color (sunlight) used by the shader.</li>
+<p>The "new Corridor()" statement creates a new corridor as defined above.  The constructor places it in the game object hierarchy (using "lScene.lPlace(...)"), so
+   again, needs no assignment here.</p>
+<p>The "lCamera.moveHere(....)" method moves the camera to the supplied X, Y and Z co-ordinates.  The camera is already pointing "down" the Z axis so it does not need to be rotated.</p>
+<p>The "lScene.lSetup()" function needs to be called after all objects are created. It primarily sets up the Static Collision Detection Sparse Array and positions everything in their initial
+   positions.</p>
+<p>The "lScene.lMain()" function runs the game.</p>
+
+<h4>The Shader Interface Program - "shader_squish.js"</h4>
+<p>This uses a standard shader "ShaderSimple".  To implement this:</p>
+<ol>
+    <li>Copy the "shaders/shader_template.js" program to "tutorial/shader_squish.js"</li>
+    <li>Edit the "tutorial/shader_squish.js" file, and paste the "shaders/simple.js" file into it where it says to do so.</li>
+    <li>Modify the "lShader_objects" array at the bottom to include "ShaderSimple", so:
+    <pre>
+const lShader_objects = [
+    ShaderSimple
+];
+</pre></li>
+</ol>
+<p>That should implement the shader proggram, as long as the script is referenced in a "&lt;script... &gt;" tag in the HTML.</p>
+
+<p>Once done you are ready to run the first iteration of this.  <a href="../examples/squish/tut01.js">The full script to date can be viewed here</a>.  It is not a game yet, but you can run something.
+    <a href="../examples/tut01.html">Here is a link to an HTML page where you can the script</a>.</p>
+
+<p>Continue to <a href="tutorial2.html">Part two of the tutorial</a>.
+
+
+</body>
+</html>

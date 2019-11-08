@@ -1,0 +1,29 @@
+/*
+ShaderSimple : A "SIMPLE" shader 
+
+A very simple shader.  Just uses a directional light and ambient one.
+
+doInitBuffer(structure)
+    structure.args:
+
+        One of:
+            texture: url string
+            rawrtexture: loaded texture
+            color: vec4 color
+            colors: array of vec4 colors
+
+        As well as the standard arrays
+
+doDraw(buffer, position, control)
+    lScene.ambienLight  - A vec3 representing the ambient light
+    lScene.directionalLightColor
+                        - A vec3 representing the direcrtional light color
+                          (the sun).
+    lSScene.directionalVector
+                        - The direction of the light taking into consideration
+                          where the camera is pointing.  LimpetGE updates this
+                          automatically if the direction is set using the
+                          "lScene.lDirectionalVector" ("vec3") is set.
+
+
+ */

@@ -1,0 +1,64 @@
+<html>
+    <head>
+        <title>LimpetGE - Limpet Game Enginr</title>
+    </head>
+    <style>
+    div.boxed {
+        margin:0 auto;
+        padding: 10px;
+        width:30em;
+        border-style:solid;
+        border-color:black;
+        border-width:1px;
+    }
+    </style>
+    <script type="text/javascript">
+    var g_disp = false;
+    function do_content()
+    {
+        if(!g_disp) {
+            document.getElementById("content").style.display = "block";
+            g_disp = true;
+        } else {
+            document.getElementById("content").style.display = "none";
+            g_disp = false;
+        }
+    }
+    </script>
+    <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+    <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+    <body>
+        <div class="boxed">
+        <div style="text-align:center;"><img src="../libs/limpetlogo.png" alt="LimpetGE Logo" /></div>
+        <div>The LimpetGE Game Engine</div>
+
+        <div>Example games...</div>
+        <ul>
+            <li><a href="sl20.html" target="_blank">SL20</a></li>
+            <li><a href="kronky.html" target="_blank">Kronky</a></li>
+            <li><a href="squish.html" target="_blank">Squish (Developer's tutorial game)</a></li>
+        </ul>
+        <div>Some <a href='#' onclick="do_content(); return false;">content</a> is released under the Creative Commons License</div>
+        <div style="font-size:12;display:none;background-color:lightgrey" id="content">
+            <p>This games uses sounds from <a href="https://zapsplat.com">ZapSplat</a> and <a href="https://freesound.org"</a>FreeSound</a>.  These sounds are released under the
+               various <a href="http://creativecommons.org"</a>Creative Commons Licenses</a>, some specifically under the <a href="https://creativecommons.org/licenses/by/4.0/">Attribution license</a>.
+                Also the <a href="https://www.zapsplat.com/license-type/standard-license/">ZapSplat Standard license</a>.</p>
+            <p>Some sonds were modified to shorten them and to standardise the sound format.</p>
+            <table>
+                <tr><th style="font-size:12;">Sound</th><th style="font-size:12;">Attribution</th></tr>
+                <tr><td style="font-size: 12;">Zip</td><td style="font-size: 12;"><a href="https://freesound.org/people/tmkappelt/">tmkappelt</a></td></tr>
+                <tr><td style="font-size:12;">Footstep</td><td style="font-size: 12;"><a href="https://freesound.org/people/OwlStorm/">OwlStorm</a></td></tr>
+                <tr><td style="font-size:12;">Smash</td><td style="font-size:12;"><a href="https://freesound.org/people/TROLlox_78/">TROLlox</a></td></tr>
+                <tr><td style="font-size:12;">Clunk</td><td style="font-size:12;"><a href="https://freesound.org/people/gadzooks/">gadzooks</a></td></tr>
+                <tr><td style="font-size:12;">Click</td><td style="font-size:12;"><a href="https://freesound.org/people/waveplay_old/">waveplay_old</a></td></tr>
+                <tr><td style="font-size:12;">Shot</td><td style="font-size:12;"><a href="https://freesound.org/people/urupin/">urupin</a></td></tr>
+                <tr><td style="font-size:12;">Wind</td><td style="font-size:12;"><a href="https://freesound.org/people/InspectorJ/">InspectorJ</a></td></tr>
+                <tr><td style="font-size:12;">Rumble</td><td style="font-size:12;"><a href="https://freesound.org/people/unfa/">unfa</a></td></tr>
+            </table>
+            <p><a href="#" onclick="do_content();return false;">Hide</a></p>
+        </div>
+        <div><a href="../index.html">Front page</a></div>
+    </div>
+    </body>
+</html>
+            
