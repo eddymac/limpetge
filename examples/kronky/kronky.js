@@ -3403,7 +3403,7 @@ Cage.prototype = {
         person.carrying.obj.ignore = false;
 
         if(tooclose) {
-            for(var i = 0; i < tpers.length; i++) tpers.travelling = null;
+            for(var i in tpers) tpers[i].travelling = null;
             return false;
         }
 

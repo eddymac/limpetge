@@ -26,6 +26,9 @@
         border-color: black;
         border-style: solid;
     }
+    div.bottom {
+        text-align: center;
+    }
     
 
     </style>
@@ -49,7 +52,9 @@
 
 <h3>Installation and dependncies</h3>
 
-<p>To install dowload th files to a development directory.  These should contain the following directory tree:</p>
+<p>At time of writing, the prject is hosted at <a href="https://github.com/eddymac/limpetge">https://github.com/eddymac/limpetge</a>.</p>
+
+<p>To install dowload the files to a development directory.  These should contain the following directory tree:</p>
 
 <ul>
     <li>examples : The examples directory</li>
@@ -512,7 +517,7 @@ the game continues ("lLoop" function returns boolean "true").
         <li>g_structures.Corridor - The LStructureDef instance for which you are creating an object for.  The "g_structures" object I will explain next, it is where to store the structures.</li>
         <li>this - The control object assigned to the objects "control" property.  Used in collision detection and some shader draw routines.  It is usually "this".
     </ol>
-<p>The "lScene.pPlace(...)" method places the object in the scene at the top level of the hierarchy.  The arguments for this are:</p>
+<p>The "lScene.lPlace(...)" method places the object in the scene at the top level of the hierarchy.  The arguments for this are:</p>
 <ol>
     <li>this.obj - The object to place on the scene</li>
     <li>mat4.create() - The transformation matrix as to determine where to place the center of the object.  In this case, it is the identity matrix, which places that at the center.</li>
@@ -600,10 +605,11 @@ const lShader_objects = [
 <p>That should implement the shader proggram, as long as the script is referenced in a "&lt;script... &gt;" tag in the HTML.</p>
 
 <p>Once done you are ready to run the first iteration of this.  <a href="../examples/squish/tut01.js">The full script to date can be viewed here</a>.  It is not a game yet, but you can run something.
-    <a href="../examples/tut01.html">Here is a link to an HTML page where you can the script</a>.</p>
+    <a href="../examples/tut01.html" traget="_blank">Here is a link to an HTML page where you can the script</a>.</p>
 
 <p>Continue to <a href="tutorial2.html">Part two of the tutorial</a>.
 
+    <hr />
 
 </body>
 </html>

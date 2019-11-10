@@ -34,6 +34,9 @@
         color: #ff0000;
         text-decoration: line-through;
     }
+    div.bottom {
+        text-align: center;
+    }
 
     </style>
 
@@ -50,7 +53,7 @@
 <h3>Part 2 - Making The Game</h3>
 
 <p>In <a href="tutorial1.html">part one</a> of this tutorial we created a LimpetGE script that worked.  Now to convert it into the game.
-  The game consists of making your way to the end of a corridor wihout being "squished" by spheres oing the other way.
+  The game consists of making your way to the end of a corridor wihout being "squished" by spheres going the other way.
   We have created the corridor, now for the spheres.</p>
 
 <h4>The Sphere Structure definition</h4>
@@ -140,7 +143,7 @@ Each one will be used to create spheres of their specific color:</p>
 <p>Static types are created by defining "collision: LSTATIC" in the "args" argument of the "LStructureDef" class constructor.  Then, while creating
    the components on that, a collision "block" is created that fits around that component.  This can be changed by:</p>
 <ul>
-    <li>Specifying the "corners" entry in the "args" argument of the "structure.add...(...)" method, such as "corners: [-1, -2, -3], [4, 5, 6]]" .
+    <li>Specifying the "corners" entry in the "args" argument of the "structure.add...(...)" method, such as "corners: [[-1, -2, -3], [4, 5, 6]]" .
         This will overide the block created by using one specified by that entry.  It as an array of two arrays, each of those representing
         oposite corners of the "block" to use.  Note - the "position" entry does not effect these.</li>
     <li>Specifying "corners: null" in the "args" argument.  This disables the creation of a collision block for that component.</li>
@@ -269,7 +272,7 @@ var g_prng = new LPRNG(Math.random() * 10000);
         ray tracing tot he current one.  If this is not done it would "ray trace" from the origin (or wherever the sphere last "died").  This is not what is
         required.</li>
     <li>Ensure the collision is "false"</li>
-    <li>Perform the collision test using the "lScene.lCAllDynamicPointDetect(...)".  The arguments for thsi are:
+    <li>Perform the collision test using the "lScene.lCAllDynamicPointDetect(...)".  The arguments for this are:
         <ol>
             <li>this.obj - The object to perform the test on</li>
             <li>2.0 - The "distance" the object is from the central point.  This is the radius of the sphere.</li>
@@ -478,7 +481,7 @@ place these near the top of the file. </p>
 
 <p>The reason why "g_playlevel()" is separate to "g_playgame()" is that the time consuming "lInit()" function, and the creation of structures happen once, but
    a new "Scene" is created for each level.  The first level is called when the game is first run (from the "g_playgame()" function called on the
-   HTML "BODY" tag "onload" attribute, and subsequently from the "lScene.restart()" property function explained below.</p>
+   HTML "BODY" tag "onload" attribute, and subsequently from the "lScene.lRestart()" property function explained below.</p>
 
 <p>After the "Scene" has been created, the sphere objects are.  When they are created they take an argument, between 0 to 3 inclusive.  This is the structure that sphere uses
    to create the game object, which here determines the color.  They are also created invisible, and therefore not included in the collision
@@ -536,7 +539,7 @@ place these near the top of the file. </p>
 <p>The "lScene.sidx" property holds an index to the above, to decide which is "instigated" next (see below)</p>
 <p>The "lScene.ishit" is set to true if the player gets squished.  Already covered in the "sphere.move(...)" method.</p>
 <p>The "lScene.nextsphere" is the number of seconds (usually less than 1) when the next sphere is instigated.</p>
-<p>The "lScene.restart" is a property that holds a function (not a method as it is not on the javascript objects prototype).  
+<p>The "lScene.lRestart" is a property that holds a function (not a method as it is not on the javascript objects prototype).  
    It sstores the function that is performed when the game ends by the "lScene.lLoop(...)" method returning boolan "false".
    The function sets up here dos the following:</p>
 <ol>
@@ -834,10 +837,11 @@ place these near the top of the file. </p>
 <p>That is it.  If you have managed to do all that you have created your first game.</p>
 
 <p><a href="../examples/squish/squish1.js">The full script to date can be viewed here</a>.  It is an elementary game, but still a game!
-    <a href="../examples/squish1.html">Here is a link to an HTML page where you can play it!</a>.</p>
+    <a href="../examples/squish1.html" target="_blank">Here is a link to an HTML page where you can play it!</a>.</p>
 
 <p>Continue to <a href="tutorial3.html">Part three of the tutorial</a>.
 
+    <hr />
 
 </body>
 </html>
