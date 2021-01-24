@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<!--
+Version History
+0.1 20-Jan-2021 - Initial release
+0.2 21-Jan-2021 - Fixed Tradtional Keys bugs, Fixed arrow keys used for all maps trade/equipment screens bug
+                  Fixed mission 1 last message bug
+0.3 22 Jan 2021 - regression bug fixes - dump cargo and info
+-->
+<html><head><title>BElite</title></head>
+<link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+<link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+<script type="module" src="belite/belite.js"></script>
+<style>
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    border: 0;
+    display: block;
+}
+div.inote {
+    display: inline-block;
+    padding: 0px 3px;
+    border-width: 0px 1px;
+    border-color: black;
+    border-style: solid;
+    font-size: 90%;
+}
+div.column {
+    display: inline-block;
+    padding: 0px 3px;
+    vertical-align: top;
+}
+table.trades {
+    background-color: green;
+    margin: 20px auto;
+    width: 512px;
+}
+table.equipment {
+    background-color: pink;
+    margin: 20px auto;
+    width: 512px;
+}
+table.status {
+    background-color: yellow;
+    text-align: left;
+    margin: 20px auto;
+    width: 512px;
+    border-style: solid;
+    border-color: blue;
+    border-width: 5px;
+}
+td.key {
+    border-width: 1px;
+    border-style: solid;
+    min-width: 3em;
+    text-align: center;
+}
+td.status_title {
+    width: 10em;
+}
+tr.high {
+    background-color: white;
+}
+tr.trade_total {
+    background-color: cyan;
+    font-weight: bold;
+    font-size: 120%;
+}
+tr.equipment_total {
+    background-color: hotpink;
+    font-weight: bold;
+    font-size: 120%;
+}
+tr.trade_title {
+    background-color: cyan;
+    font-size: 150%;
+    font-weight: blue;
+    text-align: center;
+}
+tr.equipment_title {
+    background-color: hotpink;
+    font-size: 150%;
+    font-weight: blue;
+    text-align: center;
+}
+span.subnote {
+    font-size: 80%;
+}
+span.trade_error {
+    background-color: red;
+    font-weight: bold;
+}
+span.equipment_error {
+    background-color: red;
+    font-weight: bold;
+}
+td {
+    vertical-align: top;
+}
+td.trade_f_title {
+    text-align: left;
+    font-weight: bold;
+    width: 20em;
+}
+td.trade_n_title {
+    text-align: right;
+    font-weight: bold;
+    width: 10em;
+}
+td.trade_f_line {
+    text-align: left;
+}
+td.trade_n_line {
+    text-align: right;
+}
+td.equipment_f_title {
+    text-align: left;
+    font-weight: bold;
+    width: 20em;
+}
+td.equipment_n_title {
+    text-align: right;
+    font-weight: bold;
+    width: 10em;
+}
+td.equipment_f_line {
+    text-align: left;
+}
+td.equipment_n_line {
+    text-align: right;
+}
+#dispmission {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+}
+
+#dmisbox {
+    width: 75%;
+    margin: 10px auto;
+    padding: 20px;
+    background-color: white;
+    font-size: 150%;
+}
+
+#dispmisenter {
+    text-align: center;
+}
+
+#dispstatus {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+#disptrades {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+#dispequipment {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+#dispequipment {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+#displong {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+#longcanvas {
+    display: block;
+    border-style: solid;
+    border-width: 5px;
+    border-color: blue;
+    margin: 20px auto;
+    background-color: black;
+}
+#dispplandata {
+    display: block;
+    background-color: cyan;
+    border-color: blue;
+    border-width: 5px;
+    margin: 5px auto;
+    width: 512px;
+    text-align: left;
+    border-style: solid;
+    border-color: blue;
+}
+#dispshort {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+#shortcanvas {
+    display: block;
+    border-style: solid;
+    border-width: 5px;
+    border-color: blue;
+    margin: 20px auto;
+    background-color: black;
+}
+#dispshortdata {
+    display: block;
+    background-color: cyan;
+    border-color: blue;
+    border-width: 5px;
+    margin: 5px auto;
+    width: 512px;
+    text-align: left;
+    border-style: solid;
+    border-color: blue;
+    border-width: 5px;
+}
+#dispinfo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+#dispfind {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+#enterprompt {
+    color: cyan;
+    font-size: 200%;
+}
+#enterfind {
+    font-size: 200%;
+    background-color: cyan;
+    border-color: blue;
+    border-width: 5px;
+    margin: 5px auto;
+    display: inline-block;
+    text-transform: uppercase;
+}
+#dispinfodata {
+    display: block;
+    background-color: cyan;
+    border-color: blue;
+    border-width: 5px;
+    margin: 5px auto;
+    width: 512px;
+    text-align: left;
+    border-style: solid;
+    border-color: blue;
+}
+div.topmessage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: center;
+    width: 100%;
+    z-index: 1;
+}
+#dispmessage {
+    display: inline-block;
+    font-size: 200%;
+    text-shadow: 2px 2px #000000;
+    color: lightblue;
+    text-align: center;
+    margin: 0px auto;
+}
+#mgame {
+    display: none;
+}
+
+#mform {
+    display: block;
+    margin: 10px;
+    border: 5;
+}
+</style>
+<body onload="return g_loadassets();" id="body">
+    <div id="mform">
+        <div>
+            <form name="mform" target="#" onsubmit="return false;">
+                <div class="head">BELITE Game - Version 0.3 <span class="subnote">(View top of HTML source for version history)</span></div>
+                <hr />
+                <div class="description">A remake of the 1984 ELIITE game by David Braben and Ian Bell for AcornSoft Ltd on the old BBC Micro Computer.</div>
+                <hr />
+                <div class="description">
+                    <div style="display: inline-block;">Keys are: </div>
+                    <div style="display: inline-block;">
+                        <select name="keybard_layout" id="keyboard_layout">
+                            <option value=0 selected="yes">PC Layout</option>
+                            <option value=1>Traditional Layout</option>
+                        </select>
+                        <input type="checkbox" name="swap_pitch" id="swap_pitch" /> Swap pitch keys?
+                        <input type="button" value="Apply" onclick="return apply_keyboard(keyboard_layout.value, swap_pitch.checked);">
+                    </div>
+                </div>
+                <div>
+                    <div class="keys" id="dkeyboard_layout">
+                        <table class="keyboard" id="tkeyboard_layout">
+                            <tr>
+                                <td>
+                                    <table>
+                                        <tr><td class="key"><div class="ikey" id="key_go_forward">W</div></td><td><div class="idesc">Throttle Forward</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_go_back">S</div></td><td><div class="idesc">Throttle Back</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_roll_anti">&larr;</div></td><td><div class="idesc">Roll anti-clockwise</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_roll_clock">&rarr;</div></td><td><div class="idesc">Roll clockwise</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_pitch_up">&uarr;</div></td><td><div class="idesc">Pitch up</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_pitch_down">&darr;</div></td><td><div class="idesc">Pitch down</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_fire">Q</div></td><td><div class="idesc">Fire laser *</div></td></tr>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table>
+                                        <tr><td class="key"><div class="ikey" id="key_do_target">T</div></td><td><div class="idesc">Target (missile *)</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_missfire">M</div></td><td><div class="idesc">Fire missile</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_untarget">U</div></td><td><div class="idesc">Untarget (missile)</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_ecm">E</div></td><td><div class="idesc">ECM **</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_jump">J</div></td><td><div class="idesc">Jump Space</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_kjump">K</div></td><td><div class="idesc">K-Jump Space (x 10)</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_unjump">N</div></td><td><div class="idesc">Normal Space</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_hyper">H</div></td><td><div class="idesc">Hyper Space *</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_halactic">G</div></td><td><div class="idesc">Galactic Hyper Space **</div></td></tr>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table>
+                                        <tr><td class="key"><div class="ikey" id="key_do_computer">C</div></td><td><div class="idesc">Docking Computer **</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_escape">P</div></td><td><div class="idesc">Escape Pod **</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_computer_off">D</div></td><td><div class="idesc">Computer off</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_dump">V</div></td><td><div class="idesc">Dump cargo ***</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_bomb">B</div></td><td><div class="idesc">Energy Bomb **</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_info">I</div></td><td><div class="idesc">Planet Info</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_last">L</div></td><td><div class="idesc">Last Mission Message</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_find">F</div></td><td><div class="idesc">Find Planet</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_origin">O</div></td><td><div class="idesc">Map cursor reset</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_enter">ENTER</div></td><td><div class="idesc">Map select</div></td></tr>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table>
+                                        <tr><td class="key"><div class="ikey" id="key_do_front">1</div></td><td><div class="idesc">Look Forward/Launch</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_see_leftt">2</div></td><td><div class="idesc">Look left</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_see_rightt">3</div></td><td><div class="idesc">Look right</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_see_upt">4</div></td><td><div class="idesc">Look up</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_see_downt">5</div></td><td><div class="idesc">Look Down</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_short">6</div></td><td><div class="idesc">Local Star Chart</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_long">7</div></td><td><div class="idesc">Galactic Star Chart</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_equipment">8</div></td><td><div class="idesc">Equipment Panel</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_trades">9</div></td><td><div class="idesc">Market/Trade Panel</div></td></tr>
+                                        <tr><td class="key"><div class="ikey" id="key_do_status">0</div></td><td><div class="idesc">Status Panel</div></td></tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan=4>
+                                    <div class="inote">* = Assuming appropriate resource/equipment bought</div>
+                                    <div class="inote">** = When fitted</div>
+                                    <div class="inote">*** = In "Market/Trade" panel</div>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <hr />
+                <div class="column">
+                    <table>
+                        <tr><td>Commander</td><td id="dis_commander"></td></tr>
+                        <tr><td>Galaxy Number</td><td id="dis_galaxy"></td></tr>
+                        <tr><td>Planet</td><td id="dis_planet"></td></tr>
+                        <tr><td>Rank</td><td id="dis_rank"></td></tr>
+                        <tr><td>Credits</td><td id="dis_credits"></td></tr>
+                        <tr><td></td><td><input type="button" id="playbutton" value="Play Game" onclick=" return playgame();" disabled="disabled"/>
+                                <span id="onloading">Loading assets</span></td></tr>
+                    </table>
+                </div>
+                <div class="column">
+                    <div><a href="belitemanual.html" target="top">Cobra III Flight Manual</a></div>
+                </div>
+                <hr />
+            </form>
+            <div>
+                This game uses a cookies to store game data. Individual cookies can be "exported" as a line of text, and "imported" into this game on another device.
+            </div>
+            <hr />
+            <div id="dispsaves"></div>
+            <hr />
+            <div class="bottom">
+                <div class="column"><a href="https://paypal.me/EdwardMacnaghten"><img src="../docs/btn_donateCC_LG.gif" alt="Donate" /></a></div>
+                <div class="column">Created by <a href="https://edlsystems.com/eddy">Edward Macnaghten</a> using the <a href="https://edlsystems.com/games">LimpetGE Game Engine</a></div>
+            </div>
+        </div>
+    </div>
+    <div id="mgame">
+        <div style="position: relative;" id="divcanv">
+            <canvas id="limpetge_canvas" width=1000 height=600 style="background-color:black;"></canvas>
+            <div class="topmessage"><div id="dispmessage"></div></div>
+            <div id="disptrades"></div>
+            <div id="dispequipment"></div>
+            <div id="displong">
+                <canvas id="longcanvas" width="1024" height="512"></canvas>
+                <div id="dispplandata"></div>
+            </div>
+            <div id="dispshort">
+                <canvas id="shortcanvas" width="512" height="512"></canvas>
+                <div id="dispshortdata"></div>
+            </div>
+            <div id="dispinfo">
+                <div id="dispinfodata"></div>
+            </div>
+            <div id="dispfind">
+                <div id="enterprompt">Enter planet name to find: </div>
+                <div id="enterfind"></div>
+            </div>
+            <div id="dispstatus"> </div>
+            <div id="dispmission">
+                <div id="dmisbox">
+                    <div id="dispmissiontext"></div>
+                    <br />
+                    <div id="dispmisenter">Press SPACE to continue...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:none">
+        <canvas style="background-color:black;" width=1024 height=512 id="canvasplanet"></canvas>
+        <canvas style="background-color:black;" width=1024 height=512 id="canvassun"></canvas>
+        <canvas style="background-color:red" width=4096 height=4096 id="canvasstasides"></canvas>
+        <canvas style="background-color:black;" width=8192 height=4096 id="canvasstars"></canvas>
+    </div>
+    <div id="debug"></div>
+</body>
+</html>
+
+
+

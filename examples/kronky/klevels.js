@@ -1,5 +1,19 @@
 "use strict";
 
+import {LAssets, LImage, LAudios, LAudioLoop, LBase, LCamera, LObject, LIObject, LWObject, LStaticGroup, LGroupDef,
+    LStructureDef, LTextureControl, LVirtObject, LGroup, LStructure, LKey, lInput, lInText, LObjImport, LComponent,
+    lInit, lClear, lStructureSetup, lTextureColor, lTextureColorAll, lTextureList, lLoadTexture, lReloadTexture, lLoadTColor,
+    lReloadTColor, lLoadTColors, lReloadTColors, lLoadTCanvas, lReloadTCanvas, lInitShaderProgram, lElement, lAddButton, lCanvasResize,
+    lFromXYZR, lFromXYZ, lFromXYZPYR, lExtendarray, lGetPosition, lAntiClock, lCoalesce, lIndArray,
+    LPRNG, LPRNGD, LCANVAS_ID, LR90, LR180, LR270, LR360, LI_FRONT, LI_BACK, LI_SIDE, LI_TOP, LI_RIGHT, LI_BOTTOM, LI_LEFT, LSTATIC,
+    LDYNAMIC, LNONE, LBUT_WIDTH, LBUT_HEIGHT, LMESTIME, LASSET_THREADS, LASSET_RETRIES, LOBJFILE_SMOOTH, LTMP_MAT4A, LTMP_MAT4B,
+    LTMP_MAT4C, LTMP_QUATA, LTMP_QUATB, LTMP_QUATC, LTMP_VEC3A, LTMP_VEC3B, LTMP_VEC3C, lSScene, LTEXCTL_STATIC,
+    LTEXCTL_STATIC_LIST, lGl, lCamera, lScene, lDoDown, lDoUp, lShader_objects, mat4, vec3, vec4, quat} from "../../libs/limpetge.js";
+
+import { EKronky, Wall, GlassPartition, Post, Exit, Flower, Lift, DodgyBridge, DodgyBridge2, Cage, PushMe,
+Zip11, Zip21, FlowerStand, Glass, Door, Portcullis, Rope, DKeyHole, XKeyHole, Rocket, DKey, XKey, Pillar, Pedestal,
+Floor, PFloor, RFloor, RPFloor, Wire, WireQ} from "./kronky.js";
+
 const cLevels = [
     {
         description: "Tutorial - Take the flower to the exit",
@@ -563,18 +577,23 @@ const cLevels = [
         map: function()
         {
             lScene.walls(-2.5, -1.5, 2.5, 2.5, 1);
-            new Floor(-50, 5, 0, 0);
+            new Floor(-40, 5, -10, 0);
+            new Pillar(-40, 0, -10, 0);
+            new Floor(-50, 10, 0, 0);
+            new Pillar(-50, 5, 0, 0);
             new Pillar(-50, 0, 0, 0);
             new Floor(-40, 20, 10, 0);
             new Pillar(-40, 15, 10, 0);
             new Pillar(-40, 10, 10, 0);
             new Pillar(-40, 5, 10, 0);
             new Pillar(-40, 0, 10, 0);
-            new Floor(-30, 15, 20, 0);
+            new Floor(-30, 20, 20, 0);
+            new Pillar(-30, 15, 20, 0);
             new Pillar(-30, 10, 20, 0);
             new Pillar(-30, 5, 20, 0);
             new Pillar(-30, 0, 20, 0);
-            new Floor(-20, 15, 30, 0);
+            new Floor(-20, 20, 30, 0);
+            new Pillar(-20, 15, 30, 0);
             new Pillar(-20, 10, 30, 0);
             new Pillar(-20, 5, 30, 0);
             new Pillar(-20, 0, 30, 0);
@@ -583,18 +602,23 @@ const cLevels = [
             new Pillar(-10, 5, 40, 0);
             new Pillar(-10, 0, 40, 0);
     
-            new Floor(50, 5, 0, 0);
+            new Pillar(40, 0, -10, 0);
+            new Floor(40, 5, -10, 0);
+            new Pillar(50, 5, 0, 0);
+            new Floor(50, 10, 0, 0);
             new Pillar(50, 0, 0, 0);
             new Floor(40, 20, 10, 0);
             new Pillar(40, 15, 10, 0);
             new Pillar(40, 10, 10, 0);
             new Pillar(40, 5, 10, 0);
             new Pillar(40, 0, 10, 0);
-            new Floor(30, 15, 20, 0);
+            new Floor(30, 20, 20, 0);
+            new Pillar(30, 15, 20, 0);
             new Pillar(30, 10, 20, 0);
             new Pillar(30, 5, 20, 0);
             new Pillar(30, 0, 20, 0);
-            new Floor(20, 15, 30, 0);
+            new Floor(20, 20, 30, 0);
+            new Pillar(20, 15, 30, 0);
             new Pillar(20, 10, 30, 0);
             new Pillar(20, 5, 30, 0);
             new Pillar(20, 0, 30, 0);
@@ -614,23 +638,30 @@ const cLevels = [
             new Floor(-10, 5, -20, 0);
             new Pillar(-10, 0, -20, 0);
             new Floor(0, 5, -10, 0);
-            new Pillar(0, 0, -10, 0);
-            new Floor(10, 5, 0, 0);
-            new Pillar(10, 0, 0, 0);
-            new Floor(-10, 5, 0, 0);
             new Pillar(-10, 0, 0, 0);
             new Floor(0, 20, 10, 0);
             new Pillar(0, 15, 10, 0);
             new Pillar(0, 10, 10, 0);
             new Pillar(0, 5, 10, 0);
     
-            new Rocket(4, 20, 6, 0);
+            new Pillar(10, 0, 0, 0);
+            new Pillar(10, 5, 0, 0);
+            new Pillar(10, 10, 0, 0);
+            new Pillar(10, 15, 0, 0);
+            new Floor(10, 20, 0, 0);
+            new Pillar(-10, 0, 0, 0);
+            new Pillar(-10, 5, 0, 0);
+            new Pillar(-10, 10, 0, 0);
+            new Pillar(-10, 15, 0, 0);
+            new Floor(-10, 20, 0, 0);
+
+            new Rocket(10, 20, 0, 0);
             var exit = new Exit(0, 5, -33, LR180);
     
             new DKey(-40, 20, 10, 0);
-            new DKeyHole(-50, 5, -4, 0);
+            new DKeyHole(-40, 5, -14, 0);
             new XKey(40, 20, 10, 0);
-            new XKeyHole(50, 5, -4, 0);
+            new XKeyHole(40, 5, -14, 0);
     
             new FlowerStand(0, 10, 50, 0);
             new Flower(0, 10, 50, 0);
@@ -900,6 +931,8 @@ const cLevels = [
             new Floor(0, 5, 20, 0);
             new Floor(-30, 0, 10, 0);
             new Floor(-30, 0, 0, 0);
+            var port2 = new Portcullis(-30, 0, 4, 0);
+            new Rope(-31, 0, 7, 0).setPort(port2);
     
             new Cage(-4, 0, 10, 0);
             new PushMe(4, 0, 4, 0);
@@ -1248,22 +1281,27 @@ const cLevels = [
     
     },
     {
-        description: "High king Checkers",
+        description: "High King Checkers",
         map: function()
         {
             lScene.walls(-2.5, -1.5, 2.5, 2.5, 2);
-            new Floor(-50, 5, 0, 0);
+            new Pillar(-40, 0, -10, 0);
+            new RFloor(-40, 5, -10, 0);
+            new Floor(-50, 10, 0, 0);
+            new Pillar(-50, 5, 0, 0);
             new Pillar(-50, 0, 0, 0);
             new RFloor(-40, 20, 10, 0);
             new Pillar(-40, 15, 10, 0);
             new Pillar(-40, 10, 10, 0);
             new Pillar(-40, 5, 10, 0);
             new Pillar(-40, 0, 10, 0);
-            new Floor(-30, 15, 20, 0);
+            new RFloor(-30, 20, 20, 0);
+            new Pillar(-30, 15, 20, 0);
             new Pillar(-30, 10, 20, 0);
             new Pillar(-30, 5, 20, 0);
             new Pillar(-30, 0, 20, 0);
-            new Floor(-20, 15, 30, 0);
+            new RFloor(-20, 20, 30, 0);
+            new Pillar(-20, 15, 30, 0);
             new Pillar(-20, 10, 30, 0);
             new Pillar(-20, 5, 30, 0);
             new Pillar(-20, 0, 30, 0);
@@ -1272,18 +1310,23 @@ const cLevels = [
             new Pillar(-10, 5, 40, 0);
             new Pillar(-10, 0, 40, 0);
     
-            new Floor(50, 5, 0, 0);
+            new RFloor(40, 5, -10, 0);
+            new Pillar(40, 0, -10, 0);
+            new Floor(50, 10, 0, 0);
+            new Pillar(50, 5, 0, 0);
             new Pillar(50, 0, 0, 0);
             new RFloor(40, 20, 10, 0);
             new Pillar(40, 15, 10, 0);
             new Pillar(40, 10, 10, 0);
             new Pillar(40, 5, 10, 0);
             new Pillar(40, 0, 10, 0);
-            new Floor(30, 15, 20, 0);
+            new RFloor(30, 20, 20, 0);
+            new Pillar(30, 15, 20, 0);
             new Pillar(30, 10, 20, 0);
             new Pillar(30, 5, 20, 0);
             new Pillar(30, 0, 20, 0);
-            new Floor(20, 15, 30, 0);
+            new RFloor(20, 20, 30, 0);
+            new Pillar(20, 15, 30, 0);
             new Pillar(20, 10, 30, 0);
             new Pillar(20, 5, 30, 0);
             new Pillar(20, 0, 30, 0);
@@ -1296,24 +1339,38 @@ const cLevels = [
             new Pillar(0, 5, 50, 0);
             new Pillar(0, 0, 50, 0);
     
-            new Floor(0, 0, -30, 0);
-            new Floor(10, 0, -20, 0);
-            new Floor(-10, 0, -20, 0);
-            new Floor(0, 0, -10, 0);
-            new Floor(10, 0, 0, 0);
-            new Floor(-10, 0, 0, 0);
+            new Pillar(0, 0, -30, 0);
+            new Pillar(10, 0, -20, 0);
+            new Pillar(-10, 0, -20, 0);
+            new Pillar(0, 0, -10, 0);
+            new Floor(0, 5, -30, 0);
+            new Floor(10, 5, -20, 0);
+            new Floor(-10, 5, -20, 0);
+            new Floor(0, 5, -10, 0);
+
+            new Pillar(10, 0, 0, 0);
+            new Pillar(10, 5, 0, 0);
+            new Pillar(10, 10, 0, 0);
+            new Pillar(10, 15, 0, 0);
+            new RFloor(10, 20, 0, 0);
+            new Pillar(-10, 0, 0, 0);
+            new Pillar(-10, 5, 0, 0);
+            new Pillar(-10, 10, 0, 0);
+            new Pillar(-10, 15, 0, 0);
+            new RFloor(-10, 20, 0, 0);
+
             new RFloor(0, 20, 10, 0);
             new Pillar(0, 15, 10, 0);
             new Pillar(0, 10, 10, 0);
             new Pillar(0, 5, 10, 0);
     
-            new Rocket(4, 0, -34, 0);
-            var exit = new Exit(0, 0, -33, LR180);
+            new Rocket(4, 5, -34, 0);
+            var exit = new Exit(0, 5, -33, LR180);
     
-            new DKey(-50, 5, 0, 0);
-            new DKeyHole(-50, 5, -4, 0);
-            new XKey(50, 5, 0, 0);
-            new XKeyHole(50, 5, -4, 0);
+            new XKey(-50, 10, 0, 0);
+            new XKeyHole(40, 5, -14, 0);
+            new DKey(50, 10, 0, 0);
+            new DKeyHole(-40, 5, -14, 0);
     
             new FlowerStand(0, 10, 50, 0);
             new Flower(0, 10, 50, 0);
@@ -1337,6 +1394,8 @@ const cLevels = [
             new PushMe(0, 5, 56, 0);
             new RFloor(0, 5, 40, 0);
             new Pillar(0, 0, 40, 0);
+            new FlowerStand(0, 5, 58, 0);
+            new Flower(0, 5, 58, 0);
             new Cage(0, 5, 36, 0);
         
 
@@ -1346,13 +1405,13 @@ const cLevels = [
             new Pedestal(-30, 0, 0, 0);
             new RPFloor(-30, 5, 0, 0);
 
-            new Pedestal(0, 0, -20, 0);
-            new RPFloor(0, 5, -20, 0);
-            new FlowerStand(0, 5, -20, 0);
-            new Flower(0, 5, -20, 0);
+            new Pedestal(0, 0, -10, 0);
+            new RPFloor(0, 5, -10, 0);
+            new DodgyBridge(0, 5, -20, 0);
+            new Floor(0, 0, -20, 0);
             new Floor(-5, 0, -30, 0);
             new Floor(5, 0, -30, 0);
-            // new Lift(0, 0, -26.5, 0);
+            // new DodgyBridge(0, 5, -20, 0);
 
 
             new Floor(-25, 0, -30, 0);
@@ -1451,8 +1510,6 @@ const cLevels = [
             new RFloor(-20, 5, -120, 0);
             new RFloor(-20, 0, -130, 0);
 
-
-
             lScene.do_achieve = function() {
                 if (lScene.achievements.ld1 >= 1) ld1.open();
                 if (lScene.achievements.rd1 >= 1) rd1.open();
@@ -1519,8 +1576,8 @@ const cLevels = [
             new Pedestal(0, 0, 40, 0);
             new RPFloor(0, 5, 30, 0);
             new RPFloor(0, 5, 40, 0);
-            new Pedestal(-20, 0, 43, 0);
-            new RPFloor(-20, 5, 43, 0);
+            new Pedestal(-20, 0, 42, 0);
+            new RPFloor(-20, 5, 42, 0);
             new RPFloor(-30, 0, 47, 0);
             new PFloor(-30, 5, 47, 0);
 
@@ -1531,7 +1588,7 @@ const cLevels = [
 
             new Pedestal(0, 0, 50, 0);
             new RPFloor(0, 5, 50, 0);
-            new Pillar(0, 5, 60, 0);
+            new Pedestal(0, 5, 60, 0);
             new PFloor(0, 10, 60, 0);
             var pent = new Portcullis(0, 5, 45, 0);
             new Rope(-1, 5, 48, 0).setPort(pent);
@@ -1579,35 +1636,41 @@ const cLevels = [
             new Cage(-4, 5, 16, 0);
 
 
-            new RPFloor(-76, 0, -10, 0);
-            new RPFloor(-73, 0, 0, 0);
+            new RPFloor(-76, 0, -16, 0);
+            new RPFloor(-74, 0, -6, 0);
             new Lift(-71.5, 0, -12, 0);
+            new Lift(-76, 0, -20.5, 0);
+            new Lift(-69.5, 0, -1.5, 0);
 
             new Pedestal(-66, 0, -12, 0);
             new PFloor(-66, 5, -12, 0);
-            new Pedestal(-63, 0, -2, 0);
-            new PFloor(-63, 5, -2, 0);
-            new XKey(-59, 5, -6, 0);
-            new EKronky(-59, 5, 2, 0);
+
+            new Pedestal(-64, 0, 2, 0);
+            new PFloor(-64, 5, 2, 0);
+            new XKey(-60, 5, -2, 0);
+            new EKronky(-60, 5, 6, 0);
+
             new PushMe(-62, 5, -16, 0);
             new EKronky(-62, 5, -8, 0);
-            new Pedestal(-69, 0, -22, 0);
-            new RPFloor(-69, 5, -22, 0);
-            new Cage(-65, 5, -22, 0);
+
+            new Pedestal(-73, 0, -26, 0);
+            new RPFloor(-73, 5, -26, 0);
+            new Cage(-69, 5, -26, 0);
 
             new Pedestal(-35, 0, 12, 0);
             new Pedestal(-35, 5, 12, 0);
             new Pedestal(-35, 10, 12, 0);
             new Pedestal(-35, 15, 12, 0);
 
-            var lport = new Portcullis(-69, 5, -18, 0);
-            new Rope(-70, 5, -15, 0).setPort(lport);
+            var lport = new Portcullis(-73, 5, -26, -LR90);
+            new Rope(-76, 5, -25, -LR90).setPort(lport);
 
             new RPFloor(-58, 0, -60, 0);
             new PFloor(-58, 5, -60, 0);
             new EKronky(-58, 5, -60, 0);
 
             lCamera.moveFlat(2, 10, 64);
+            // lCamera.moveFlat(-61, 10, -7);
             // lCamera.moveFlat(0, 5, 16);
             // new PushMe(-65, 5, -22, 0);
             // new Cage(-62, 5, -16, 0);
@@ -1623,3 +1686,5 @@ const cLevels = [
         }
     },
 ];
+
+export {cLevels};

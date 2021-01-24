@@ -32,9 +32,9 @@ doDraw(buffer, position, control)
 
  */
 
-const ShaderSimpleTrans = {
-    key: 5,
-    fragSource: `
+class ShaderSimpleTrans {
+    static key = -1;
+    static fragSource = `
         uniform highp vec3 uDirectionalLightColor;
         uniform highp vec3 uDirectionalVector;
         uniform highp vec3 uAmbientLight;
@@ -67,16 +67,18 @@ const ShaderSimpleTrans = {
                         color.w);
             
         }
-    `,
+    `;
 
-    vertexSource: `
+    static vertexSource = `
         attribute vec4 aVertexPosition;
         attribute vec3 aVertexNormal;
         attribute vec2 aTextureCoords;
 
         uniform mat4 uPositionMatrix;   // Position of object relative to lCamera
         uniform mat4 uViewMatrix;       // View of object (above + projection)
-        uniform mat4 uNormalMatrix;     // Normal matrix
+
+        // Uncomment following if transforming by non scalar position matrices
+        // uniform mat4 uNormalMatrix;     // Normal matrix
 
         // Following could be constants, but will put them here anyways
         uniform vec3 uDirectionalLightColor;
@@ -90,14 +92,18 @@ const ShaderSimpleTrans = {
         void main(void) {
             gl_Position = uViewMatrix * aVertexPosition;
 
-            vNormal = (uNormalMatrix * vec4(aVertexNormal, 1.0)).xyz;
+            // Comment following if transforming by non scalar position matrices
+            vNormal = (uPositionMatrix * vec4(aVertexNormal, 0.0)).xyz;
+            // Uncomment following if transforming by non scalar position matrices
+            // vNormal = (uNormalMatrix * vec4(aVertexNormal, 0.0)).xyz;
+
             vPosition = (uPositionMatrix * aVertexPosition).xyz;
             vCoords = aTextureCoords;
         }
-    `,
+    `;
 
     // This is called on load
-    compile: function()
+    static compile()
     {
         _lShaderId += 1;
         ShaderSimpleTrans.key = _lShaderId;
@@ -113,7 +119,9 @@ const ShaderSimpleTrans = {
             // uniforms
             uPositionMatrix: lGl.getUniformLocation(prog, 'uPositionMatrix'),
             uViewMatrix: lGl.getUniformLocation(prog, 'uViewMatrix'),
-            uNormalMatrix: lGl.getUniformLocation(prog, 'uNormalMatrix'),
+
+            // Uncomment following if transforming by non scalar position matrices
+            // uNormalMatrix: lGl.getUniformLocation(prog, 'uNormalMatrix'),
             uColor: lGl.getUniformLocation(prog, 'uColor'),
             uSampler: lGl.getUniformLocation(prog, 'uSampler'),
 
@@ -134,9 +142,9 @@ const ShaderSimpleTrans = {
         lGl.enableVertexAttribArray(
             ShaderSimpleTrans.locations.aTextureCoords
         );
-    },
+    }
 
-    doInitBuffer: function(structure)
+    static doInitBuffer(structure)
     {
 
         const buffer = structure.buffer;
@@ -175,7 +183,7 @@ const ShaderSimpleTrans = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -184,14 +192,14 @@ const ShaderSimpleTrans = {
         buffer.index = indexBuffer;
         buffer.numentries = structure.numentries;
 
-    },
+    }
 
-    useProgram: function()
+    static useProgram()
     {
         lGl.useProgram(ShaderSimpleTrans.shader);
-    },
+    }
 
-    useBuffer: function(buffer)
+    static useBuffer(buffer)
     {
         lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.point);
         lGl.vertexAttribPointer(
@@ -233,25 +241,30 @@ const ShaderSimpleTrans = {
         lGl.uniform3fv(ShaderSimpleTrans.locations.uAmbientLight, lScene.ambientLight);
         lGl.uniform3fv(ShaderSimpleTrans.locations.uDirectionalLightColor, lScene.directionalLightColor);
         lGl.uniform1i(ShaderSimpleTrans.locations.uSampler, 0);
-    },
+    }
 
-    doDraw: function(buffer, position, control)
+    static positionMatrix = mat4.create();
+    static normalMatrix = mat4.create();
+    static viewMatrix = mat4.create();
+
+
+    static doDraw(buffer, position, control)
     {
         lGl.uniform3fv(ShaderSimpleTrans.locations.uDirectionalVector, lSScene.directionalVector);
 
         const ma = mat4.create();
-        mat4.multiply(ma, lCamera.position, position);
 
-        const normalMatrix = mat4.create();
-        mat4.invert(normalMatrix, ma);
-        mat4.transpose(normalMatrix, normalMatrix);
 
-        mat4.multiply(ma, lCamera.currview, position);
-        lGl.uniformMatrix4fv(ShaderSimpleTrans.locations.uViewMatrix, false, ma);
-        mat4.multiply(ma, lCamera.position, position);
-        lGl.uniformMatrix4fv(ShaderSimpleTrans.locations.uPositionMatrix, false, ma);
-        // lGl.uniformMatrix4fv(this.locations.uProjectionMatrix, false, lCamera.currview);
-        lGl.uniformMatrix4fv(ShaderSimpleTrans.locations.uNormalMatrix, false, normalMatrix); 
+        lGl.uniformMatrix4fv(ShaderSimpleTrans.locations.uViewMatrix, false,
+            mat4.multiply(this.viewMatrix, lCamera.currview, position));
+
+        lGl.uniformMatrix4fv(ShaderSimpleTrans.locations.uPositionMatrix, false,
+            mat4.multiply(this.positionMatrix, lCamera.position, position));
+
+        // Uncomment following if transforming by non scalar position matrices
+        // lGl.uniformMatrix4fv(ShaderSimpleTrans.locations.uNormalMatrix, false,
+        //    mat4.transpose(this.normalMatrix,
+        //        mat4.invert(this.normalMatrix, this.positionMatrix)));
 
         lGl.bindBuffer(lGl.ELEMENT_ARRAY_BUFFER, buffer.index);
 
@@ -261,5 +274,5 @@ const ShaderSimpleTrans = {
                     lGl.UNSIGNED_SHORT,  // type
                     0                   // Offset
         );
-    },
+    }
 }

@@ -1,12 +1,16 @@
 <html><head><title>SL20 Game</title></head>
 <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
 <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
-<script type="text/javascript" src="../libs/gl-matrix.js"></script>
-<script type="text/javascript" src="../libs/limpetge.js"></script>
-<script type="text/javascript" src="sl20/shader_sl20.js"></script>
-<script type="text/javascript" src="sl20/maze.js"></script>
-<script type="text/javascript" src="sl20/sl20.js"></script>
+<script type="module" src="sl20/sl20.js"></script>
 <style>
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    border: 0;
+    overflow: hidden;
+    display: block;
+}
 div.head {
     font-size: 30;
 }
@@ -18,6 +22,11 @@ button.mbut {
 }
 div.bottom {
     text-align: center;
+}
+#mform {
+    display: block;
+    margin: 10px;
+    border: 5;
 }
     
 </style>
@@ -32,7 +41,7 @@ div.bottom {
             </div>
         </div>
     </div>
-    <div id="mform" style="display:block;">
+    <div id="mform">
         <form name="mform" target="#" onsubmit="return false;">
             <div class="head">The SL20 Game</div>
             <hr />
@@ -71,6 +80,7 @@ div.bottom {
 	    </div>
             <hr />
         </form>
+    <div class="bottom"><a href="https://paypal.me/EdwardMacnaghten"><img src="../docs/btn_donateCC_LG.gif" alt="Donate" /></a></div>
     </div>
 </body>
 </html>

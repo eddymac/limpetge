@@ -1,12 +1,17 @@
 <html><head><title>Kronky Test</title></head>
 <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
 <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
-<script type="text/javascript" src="../libs/gl-matrix.js"></script>
-<script type="text/javascript" src="../libs/limpetge.js"></script>
-<script type="text/javascript" src="kronky/shader_kronky.js"></script>
-<script type="text/javascript" src="kronky/kronky.js"></script>
-<script type="text/javascript" src="kronky/klevels.js"></script>
+<script type="module" src="./kronky/kronky.js"></script>
+
 <style>
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    border: 0;
+    overflow: hidden;
+    display: block;
+}
 div.head {
     font-size: 30;
 }
@@ -67,12 +72,24 @@ div.scrmess {
 div.bottom {
     text-align: center;
 }
+#mform {
+    display: block;
+    margin: 10px;
+    border: 5;
+}
+#mintro {
+    display: block;
+    margin: 10px;
+    border: 5;
+    overflow: scroll;
+    height: 100%;
+}
 
     
 </style>
 <body onload="return g_loadassets();">
 
-    <div id="mform" style="display:block;">
+    <div id="mform">
         <div>
             <form name="mform" target="#" onsubmit="return false;">
                 <div class="head">The Kronky Game</div>
@@ -140,6 +157,7 @@ div.bottom {
             </form>
             <div>Note: The flower is delicate, crashing into it with a rocket, or trying to throw it, will break it.</div>
             <hr />
+            <div class="bottom"><a href="https://paypal.me/EdwardMacnaghten"><img src="../docs/btn_donateCC_LG.gif" alt="Donate" /></a></div>
         </div>
     </div>
     <div id="mgame" style="display:none;">

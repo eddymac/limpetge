@@ -1,0 +1,35 @@
+<html><head><title>Squish - Devloper Tutorial Three</title></head>
+<link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
+<link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
+<script type="module" src="squish/tut03.js"></script>
+<style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0px;
+        border: 0;
+        overflow: hidden;
+        display: block;
+    }
+    div.top {
+        position: absolute;
+        top:0;
+        left:0;
+        font-weight:bold;
+        font-size:30;
+        color:cyan;
+        text-shadow:2px 2px black;
+        width: 100%
+    }
+</style>
+<body onload="g_playgame();">
+    <div id="mgame">
+        <div style="position: relative;">
+            <canvas id="limpetge_canvas" width=1000 height=600 style="background-color:black;"></canvas>
+            <div id="top" class="top">
+                <div><span id=lTTitle></span> | <span id="lTMessage"</span></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

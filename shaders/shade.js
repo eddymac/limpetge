@@ -19,9 +19,9 @@ doInitBuffer(structure)
 doDraw(buffer, position, control)
     lScene.ambienLight  - A vec3 representing the ambient light
 */
-const ShaderShade = {
-    key: 4,
-    fragSource: `
+class ShaderShade {
+    static key = -1;
+    static fragSource = `
         uniform highp vec3 uAmbientLight;
         uniform sampler2D uSampler;
 
@@ -34,15 +34,13 @@ const ShaderShade = {
                 (uAmbientLight * color.xyz), color.w);
             
         }
-    `,
+    `;
 
-    vertexSource: `
+    static vertexSource: `
         attribute vec4 aVertexPosition;
         attribute vec2 aTextureCoords;
 
-        uniform mat4 uPositionMatrix;   // Position of object relative to lCamera
         uniform mat4 uViewMatrix;       // View of object (above + projection)
-        uniform mat4 uNormalMatrix;     // Normal matrix
         // uniform mat4 uProjectionMatrix;
 
         varying highp vec2 vCoords;
@@ -53,10 +51,10 @@ const ShaderShade = {
 
             vCoords = aTextureCoords;
         }
-    `,
+    `;
 
     // This is called on load
-    compile: function()
+    static compile()
     {
         _lShaderId += 1;
         ShaderShade.key = _lShaderId;
@@ -69,9 +67,7 @@ const ShaderShade = {
             aTextureCoords: lGl.getAttribLocation(prog, 'aTextureCoords'),
 
             // uniforms
-            uPositionMatrix: lGl.getUniformLocation(prog, 'uPositionMatrix'),
             uViewMatrix: lGl.getUniformLocation(prog, 'uViewMatrix'),
-            uNormalMatrix: lGl.getUniformLocation(prog, 'uNormalMatrix'),
             uSampler: lGl.getUniformLocation(prog, 'uSampler'),
 
             uAmbientLight: lGl.getUniformLocation(prog, 'uAmbientLight'),
@@ -83,14 +79,11 @@ const ShaderShade = {
             ShaderShade.locations.aVertexPosition,
         );
         lGl.enableVertexAttribArray(
-            ShaderShade.locations.aVertexNormal
-        );
-        lGl.enableVertexAttribArray(
             ShaderShade.locations.aTextureCoords
         );
-    },
+    }
 
-    doInitBuffer: function(structure)
+    static doInitBuffer(structure)
     {
 
         const buffer = structure.buffer;
@@ -118,7 +111,7 @@ const ShaderShade = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -127,14 +120,14 @@ const ShaderShade = {
         buffer.index = indexBuffer;
         buffer.numentries = structure.numentries;
 
-    },
+    }
 
-    useProgram: function()
+    static useProgram()
     {
         lGl.useProgram(ShaderShade.shader);
-    },
+    }
 
-    useBuffer: function(buffer)
+    static useBuffer(buffer)
     {
         lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.point);
         lGl.vertexAttribPointer(
@@ -163,28 +156,18 @@ const ShaderShade = {
 
         lGl.uniform3fv(ShaderShade.locations.uAmbientLight, lScene.ambientLight);
         lGl.uniform1i(ShaderShade.locations.uSampler, 0);
-    },
+    }
 
-    doDraw: function(buffer, position, control)
+    static positionMatrix = mat4.create();
+
+    static doDraw(buffer, position, control)
     {
         // Base position is the transpose matrix for parent
         // Camera is an object with perspective and movement there
         // newpos is now the position relative to parent
 
-        // What we need to transpose normal matrix by
-
-        const ma = mat4.create();
-        mat4.multiply(ma, lCamera.position, position);
-
-        const normalMatrix = mat4.create();
-        mat4.invert(normalMatrix, ma);
-        mat4.transpose(normalMatrix, normalMatrix);
-
-        mat4.multiply(ma, lCamera.currview, position);
-        lGl.uniformMatrix4fv(ShaderShade.locations.uViewMatrix, false, ma);
-        mat4.multiply(ma, lCamera.position, position);
-        lGl.uniformMatrix4fv(ShaderShade.locations.uPositionMatrix, false, ma);
-        // lGl.uniformMatrix4fv(this.locations.uProjectionMatrix, false, lCamera.currview);
+        lGl.uniformMatrix4fv(ShaderShade.locations.uViewMatrix, false,
+            mat4.multiply(this.positionMatrix, lCamera.currview, position));
 
         lGl.bindBuffer(lGl.ELEMENT_ARRAY_BUFFER, buffer.index);
 
@@ -194,5 +177,5 @@ const ShaderShade = {
                     lGl.UNSIGNED_SHORT,  // type
                     0                   // Offset
         );
-    },
+    }
 }

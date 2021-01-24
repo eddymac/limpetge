@@ -11,6 +11,16 @@
  * At the moment, do 1, then combine 2 and 3
  */
 
+import {LAssets, LImage, LAudios, LAudioLoop, LBase, LCamera, LObject, LIObject, LWObject, LStaticGroup, LGroupDef,
+    LStructureDef, LTextureControl, LVirtObject, LGroup, LStructure, LKey, lInput, lInText, LObjImport, LComponent,
+    lInit, lClear, lStructureSetup, lTextureColor, lTextureColorAll, lTextureList, lLoadTexture, lReloadTexture, lLoadTColor,
+    lReloadTColor, lLoadTColors, lReloadTColors, lLoadTCanvas, lReloadTCanvas, lInitShaderProgram, lElement, lAddButton, lCanvasResize,
+    lFromXYZR, lFromXYZ, lFromXYZPYR, lExtendarray, lGetPosition, lAntiClock, lCoalesce, lIndArray,
+    LPRNG, LPRNGD, LCANVAS_ID, LR90, LR180, LR270, LR360, LI_FRONT, LI_BACK, LI_SIDE, LI_TOP, LI_RIGHT, LI_BOTTOM, LI_LEFT, LSTATIC,
+    LDYNAMIC, LNONE, LBUT_WIDTH, LBUT_HEIGHT, LMESTIME, LASSET_THREADS, LASSET_RETRIES, LOBJFILE_SMOOTH, LTMP_MAT4A, LTMP_MAT4B,
+    LTMP_MAT4C, LTMP_QUATA, LTMP_QUATB, LTMP_QUATC, LTMP_VEC3A, LTMP_VEC3B, LTMP_VEC3C, lSScene, LTEXCTL_STATIC,
+    LTEXCTL_STATIC_LIST, lGl, lCamera, lScene, lDoDown, lDoUp, lShader_objects, mat4, vec3, vec4, quat} from "../../libs/limpetge.js";
+
 var _lShaderId = 0;
 
 const ShaderSimple = {
@@ -161,7 +171,7 @@ const ShaderSimple = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -356,7 +366,7 @@ const ShaderLight = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -534,7 +544,7 @@ const ShaderShade = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -704,7 +714,7 @@ const ShaderSolid = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -929,7 +939,7 @@ const ShaderSimpleTrans = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -1024,11 +1034,187 @@ const ShaderSimpleTrans = {
     },
 }
 
-const lShader_objects = [
+/*
+ShaderPanorama : A "Panorama" shader for "light" objects.
+
+For panorama views only (does not move when camera does)
+
+
+doInitBuffer(structure)
+    structure.args:
+
+        One of:
+            texture: url string
+            rawrtexture: loaded texture
+            color: vec4 color
+            colors: array of vec4 colors
+
+        As well as the standard arrays
+
+doDraw(buffer, position, control)
+    No argument looked at
+
+
+ */
+const ShaderPanorama = {
+    key: 9,
+    fragSource: `
+        uniform sampler2D uSampler;
+
+        varying highp vec2 vCoords;
+
+        void main() {
+            gl_FragColor = texture2D(uSampler, vCoords);
+        }
+    `,
+
+    vertexSource: `
+        attribute vec4 aVertexPosition;
+        attribute vec2 aTextureCoords;
+
+        uniform mat4 uViewMatrix;       // View of object (above + projection)
+
+        varying highp vec2 vCoords;
+
+        void main(void) {
+            gl_Position = uViewMatrix * aVertexPosition;
+            vCoords = aTextureCoords;
+        }
+    `,
+
+    // This is called on load
+    compile: function()
+    {
+        _lShaderId += 1;
+        ShaderPanorama.key = _lShaderId;
+
+        const prog = lInitShaderProgram(ShaderPanorama.vertexSource, ShaderPanorama.fragSource);
+        ShaderPanorama.shader = prog;
+        ShaderPanorama.locations = {
+            // attributes
+            aVertexPosition: lGl.getAttribLocation(prog, 'aVertexPosition'),
+            aTextureCoords: lGl.getAttribLocation(prog, 'aTextureCoords'),
+
+            // uniforms
+            uViewMatrix: lGl.getUniformLocation(prog, 'uViewMatrix'),
+            uSampler: lGl.getUniformLocation(prog, 'uSampler'),
+
+        };
+
+        // I cannot think of a reason not to enable them here
+        lGl.enableVertexAttribArray(
+            ShaderPanorama.locations.aVertexPosition,
+        );
+        lGl.enableVertexAttribArray(
+            ShaderPanorama.locations.aTextureCoords
+        );
+    },
+
+    doInitBuffer: function(structure)
+    {
+
+        const buffer = structure.buffer;
+        const  args = structure.args;
+
+        if(args.rawtexture) {
+            buffer.texture = args.rawtexture;
+        }
+        if(args.texture) {
+            buffer.texture = lLoadTexture(args.texture);
+        }
+        else if(args.colors) {
+            buffer.texture = lLoadTColors(args.colors, args.colors.length, 1);
+        }
+        else if(args.color) {
+            buffer.texture = lLoadTColor(args.color);
+        }
+
+        const pointBuffer = lGl.createBuffer();
+        lGl.bindBuffer(lGl.ARRAY_BUFFER, pointBuffer);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.pointsArray), lGl.STATIC_DRAW);
+        buffer.point = pointBuffer;
+
+        const coordBuffer = lGl.createBuffer();
+        lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
+        buffer.coords = coordBuffer;
+
+        const indexBuffer = lGl.createBuffer();
+        lGl.bindBuffer(lGl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        lGl.bufferData(lGl.ELEMENT_ARRAY_BUFFER, new Uint16Array(structure.pointsIndex), lGl.STATIC_DRAW);
+        buffer.index = indexBuffer;
+        buffer.numentries = structure.numentries;
+
+    },
+
+    useProgram: function()
+    {
+        lGl.useProgram(ShaderPanorama.shader);
+    },
+
+    useBuffer: function(buffer)
+    {
+        lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.point);
+        lGl.vertexAttribPointer(
+            ShaderPanorama.locations.aVertexPosition,
+            3,      // number of components
+            lGl.FLOAT,   // Type
+            false,      // Normalize
+            0,          // Stride
+            0           // Offset
+        );
+
+
+        // Coords
+        lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.coords);
+        lGl.vertexAttribPointer(
+            ShaderPanorama.locations.aTextureCoords,
+            2,          // Number of components
+            lGl.FLOAT,   // Type
+            false,      // Normalize
+            0,          // Stride
+            0           // Float
+	    );
+
+        lGl.activeTexture(lGl.TEXTURE0);
+        lGl.bindTexture(lGl.TEXTURE_2D, buffer.texture);
+
+        lGl.uniform1i(ShaderPanorama.locations.uSampler, 0);
+    },
+
+    doDraw: function(buffer, position, control)
+    {
+        const ma = mat4.create();
+        mat4.fromQuat(ma, lCamera.quat);
+
+        mat4.multiply(ma, lCamera.projection, ma);
+        lGl.uniformMatrix4fv(ShaderPanorama.locations.uViewMatrix, false, ma);
+
+        lGl.bindBuffer(lGl.ELEMENT_ARRAY_BUFFER, buffer.index);
+
+        lGl.drawElements(
+                    lGl.TRIANGLES,       // Yeah, these
+                    buffer.numentries,    // Count
+                    lGl.UNSIGNED_SHORT,  // type
+                    0                   // Offset
+        );
+    },
+}
+
+lExtendarray(lShader_objects, [
     ShaderSimple,
+    ShaderPanorama,
     ShaderShade,
     ShaderSolid,
     ShaderLight,
     ShaderSimpleTrans,
-];
+]);
 
+export {
+    ShaderSimple,
+    ShaderPanorama,
+    ShaderShade,
+    ShaderSolid,
+    ShaderLight,
+    ShaderSimpleTrans,
+}

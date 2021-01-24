@@ -1,5 +1,19 @@
 "use strict";
 
+import {LAssets, LImage, LAudios, LAudioLoop, LBase, LCamera, LObject, LIObject, LWObject, LStaticGroup, LGroupDef,
+    LStructureDef, LTextureControl, LVirtObject, LGroup, LStructure, LKey, lInput, lInText, LObjImport, LComponent,
+    lInit, lClear, lStructureSetup, lTextureColor, lTextureColorAll, lTextureList, lLoadTexture, lReloadTexture, lLoadTColor,
+    lReloadTColor, lLoadTColors, lReloadTColors, lLoadTCanvas, lReloadTCanvas, lInitShaderProgram, lElement, lAddButton, lCanvasResize,
+    lFromXYZR, lFromXYZ, lFromXYZPYR, lExtendarray, lGetPosition, lAntiClock, lCoalesce, lIndArray,
+    LPRNG, LPRNGD, LCANVAS_ID, LR90, LR180, LR270, LR360, LI_FRONT, LI_BACK, LI_SIDE, LI_TOP, LI_RIGHT, LI_BOTTOM, LI_LEFT, LSTATIC,
+    LDYNAMIC, LNONE, LBUT_WIDTH, LBUT_HEIGHT, LMESTIME, LASSET_THREADS, LASSET_RETRIES, LOBJFILE_SMOOTH, LTMP_MAT4A, LTMP_MAT4B,
+    LTMP_MAT4C, LTMP_QUATA, LTMP_QUATB, LTMP_QUATC, LTMP_VEC3A, LTMP_VEC3B, LTMP_VEC3C, lSScene, LTEXCTL_STATIC,
+    LTEXCTL_STATIC_LIST, lGl, lCamera, lScene, lDoDown, lDoUp, lShader_objects, mat4, vec3, vec4, quat} from "../../libs/limpetge.js";
+
+import {ShaderSimple, ShaderShade, ShaderSolid, ShaderLight, ShaderSimpleTrans} from "./shader_kronky.js";
+
+import {cLevels} from "./klevels.js";
+
 const BASEDIR = "kronky/";
 
 const MFORWARD = 0x00000001;
@@ -36,54 +50,53 @@ const CPLAY    = 0x40000000;
 
 const CEND     = 0x80000000;
 
-const WALLADS = BASEDIR + "wallads.jpg";
-const SLICK = BASEDIR + "slick1.jpg";
-const SKY = BASEDIR + "sky.jpg";
-const KEXIT = BASEDIR + "kexit.jpg";
-const KFLOOR = BASEDIR + "kfloor.jpg";
-const KRFLOOR = BASEDIR + "krfloor.jpg";
 
 const SQRT2 = Math.sqrt(2);
 const SQRT2x2 = SQRT2 * 2;
 
-const g_assets = new LAssets({
-    whoosh: BASEDIR + "sounds/whoosh.wav",
-    pickupflower: BASEDIR + "sounds/pickupflower.wav",
-    lift: BASEDIR + "sounds/lift.wav",
-    flush1: BASEDIR + "sounds/flush1.wav",
-    pickup: BASEDIR + "sounds/pickup.wav",
-    drophere: BASEDIR + "sounds/drophere.wav",
-    chuck: BASEDIR + "sounds/chuck.wav",
-    unlock: BASEDIR + "sounds/unlock.wav",
-    smash: BASEDIR + "sounds/smash.wav",
-    splash: BASEDIR + "sounds/splash.wav",
-    gong: BASEDIR + "sounds/gong.wav",
-    rocket: BASEDIR + "sounds/rocket.wav",
-    thud: BASEDIR + "sounds/thuda.wav",
-    kkstart: BASEDIR + "sounds/kkstart.wav",
-    kkplay: BASEDIR + "sounds/kkplay.wav",
-    door: BASEDIR + "sounds/door.wav",
-    cagefly: BASEDIR + "sounds/cagefly.wav",
-    pushme: BASEDIR + "sounds/pushme.wav",
-    click: BASEDIR + "sounds/click.wav",
-    clunk: BASEDIR + "sounds/clunk.wav",
-    hit: BASEDIR + "sounds/hit.wav",
-    footstep: BASEDIR + "sounds/footstep.wav",
-    fanfare: BASEDIR + "sounds/fanfare.wav",
-    zip: BASEDIR + "sounds/zip.wav",
-    ratchet: BASEDIR + "sounds/ratchet.wav",
-    rumble:  BASEDIR + "sounds/rumble.wav",
-    landing: BASEDIR + "sounds/landing.wav",
-    twang: BASEDIR + "sounds/twang.wav",
-    bump: BASEDIR + "sounds/bump.wav",
-    shuffle:  BASEDIR + "sounds/shuffle.wav",
-    csave: BASEDIR + "sounds/csave.wav",
-    crestore: BASEDIR + "sounds/crestore.wav",
-    ticktock: BASEDIR + "sounds/ticktock.wav",
+const g_assets_obj = new LAssets({
+    whoosh: {url: BASEDIR + "sounds/whoosh.wav", number: 1},
+    pickupflower: {url: BASEDIR + "sounds/pickupflower.wav", number: 1},
+    lift: {url: BASEDIR + "sounds/lift.wav", number: 5},
+    flush1: {url: BASEDIR + "sounds/flush1.wav", number: 1},
+    pickup: {url: BASEDIR + "sounds/pickup.wav", number: 5},
+    drophere: {url: BASEDIR + "sounds/drophere.wav", number: 5},
+    chuck: {url: BASEDIR + "sounds/chuck.wav", number: 5},
+    unlock: {url: BASEDIR + "sounds/unlock.wav", number: 5},
+    smash: {url: BASEDIR + "sounds/smash.wav", number: 5},
+    splash: {url: BASEDIR + "sounds/splash.wav", number: 5},
+    gong: {url: BASEDIR + "sounds/gong.wav", number: 1},
+    rocket: {url: BASEDIR + "sounds/rocket.wav", loop: true},
+    thud: {url: BASEDIR + "sounds/thuda.wav", number: 5},
+    kkstart: {url: BASEDIR + "sounds/kkstart.wav", number: 5},
+    kkplay: {url: BASEDIR + "sounds/kkplay.wav", number: 5},
+    door: {url: BASEDIR + "sounds/door.wav", loop: true},
+    cagefly: {url: BASEDIR + "sounds/cagefly.wav", loop: true},
+    pushme: {url: BASEDIR + "sounds/pushme.wav", number: 5},
+    click: {url: BASEDIR + "sounds/click.wav", number: 5},
+    clunk: {url: BASEDIR + "sounds/clunk.wav", number: 5},
+    hit: {url: BASEDIR + "sounds/hit.wav", number: 5},
+    footstep: {url: BASEDIR + "sounds/footstep.wav", number: 5},
+    fanfare: {url: BASEDIR + "sounds/fanfare.wav", number: 5},
+    zip: {url: BASEDIR + "sounds/zip.wav", loop: true},
+    ratchet: {url: BASEDIR + "sounds/ratchet.wav", loop: true},
+    rumble:  {url: BASEDIR + "sounds/rumble.wav", loop: true},
+    landing: {url: BASEDIR + "sounds/landing.wav", number: 5},
+    twang: {url: BASEDIR + "sounds/twang.wav", number: 5},
+    bump: {url: BASEDIR + "sounds/bump.wav", number: 1},        // Intentionally 1
+    shuffle:  {url: BASEDIR + "sounds/shuffle.wav", loop: true},
+    csave: {url: BASEDIR + "sounds/csave.wav", number: 1},
+    crestore: {url: BASEDIR + "sounds/crestore.wav", number: 1},
+    ticktock: {url: BASEDIR + "sounds/ticktock.wav", loop: true},
+    wallads: BASEDIR + "wallads.jpg",
+    slick: BASEDIR + "slick1.jpg",
+    // sky: BASEDIR + "sky.jpg",
+    kexit: BASEDIR + "kexit.jpg",
+    kfloor: BASEDIR + "kfloor.jpg",
+    krfloor: BASEDIR + "krfloor.jpg",
 });
 
-
-const sounds = { };
+const g_assets = g_assets_obj.assets;
 
 function g_loadassets()
 {
@@ -92,47 +105,12 @@ function g_loadassets()
         document.getElementById("playbutton").disabled=false;
         document.getElementById("onloading").innerText = "All assets Loaded";
 
-        var ass = g_assets.data;
+        let llen = cLevels.length;
+        let sel = document.getElementById("kronkylevel");
 
-        sounds.whoosh = new LAudios(ass.whoosh, 1, 1);
-        sounds.pickupflower = new LAudios(ass.pickupflower, 1, 2);
-        sounds.lift = new LAudios(ass.lift, 5, 3);
-        sounds.flush = new LAudios(ass.flush1, 1, 4);
-        sounds.pickup = new LAudios(ass.pickup, 5, 5);
-        sounds.drophere = new LAudios(ass.drophere, 5, 6);
-        sounds.chuck = new LAudios(ass.chuck, 5, 7);
-        sounds.unlock = new LAudios(ass.unlock, 5, 8);
-        sounds.smash = new LAudios(ass.smash, 5, 9);
-        sounds.splash = new LAudios(ass.splash, 5, 10);
-        sounds.gong = new LAudios(ass.gong, 1);
-        sounds.rocket = new LAudioLoop(ass.rocket);
-        sounds.thud = new LAudios(ass.thud, 5);
-        sounds.kkstart = new LAudios(ass.kkstart, 5);
-        sounds.kkplay = new LAudios(ass.kkplay, 5);
-        sounds.door = new LAudioLoop(ass.door);
-        sounds.cagefly = new LAudioLoop(ass.cagefly);
-        sounds.pushme = new LAudios(ass.pushme, 5);
-        sounds.click = new LAudios(ass.click, 5);
-        sounds.clunk = new LAudios(ass.clunk, 5);
-        sounds.hit = new LAudios(ass.hit, 5);
-        sounds.footstep = new LAudios(ass.footstep, 5);
-        sounds.fanfare = new LAudios(ass.fanfare, 5);
-        sounds.zip = new LAudioLoop(ass.zip);
-        sounds.ratchet = new LAudioLoop(ass.ratchet);
-        sounds.rumble = new LAudioLoop(ass.rumble);
-        sounds.landing = new LAudios(ass.landing, 5);
-        sounds.twang = new LAudios(ass.twang, 5);
-        sounds.bump = new LAudios(ass.bump, 1);    // Intentionally 1
-        sounds.shuffle = new LAudioLoop(ass.shuffle);
-        sounds.csave = new LAudios(ass.csave, 1);
-        sounds.crestore = new LAudios(ass.crestore, 1);
-        sounds.ticktock = new LAudioLoop(ass.ticktock);
-        var llen = cLevels.length;
-        var sel = document.getElementById("kronkylevel");
-
-        for(var i = 0; i < llen; i++)
+        for(let i = 0; i < llen; i++)
         {
-            var atts = {value: i};
+            let atts = {value: i};
             if(i == 0) atts.selected = "selected";
             sel.appendChild(lElement("option", atts, (i + 1).toString() + ": " + cLevels[i].description));
         }
@@ -140,61 +118,60 @@ function g_loadassets()
 
     function inprogress()
     {
-        document.getElementById("onloading").innerText = g_assets.succeeded.toString() + " out of " + g_assets.total.toString() + " assets Loaded";
+        document.getElementById("onloading").innerText = g_assets_obj.succeeded.toString() + " out of " + g_assets_obj.total.toString() + " assets Loaded";
     }
 
-    g_assets.download({onend:onend, inprogress:inprogress});
+    g_assets_obj.download({onend:onend, inprogress:inprogress});
 }
 
 var g_LevelNum = 0;
 var cLevelPlaying = true;
 var gCloseGame = false;
 
-function BaseThing(structure, shadind, x, y, z, ry)
-{
-    this.islive = false;
-    this.isfloor = false;
-    this.iswire = false;
-
-    this.obj = new LWObject(structure[0], this);
-    this.aobj = new LObject(structure[1], this);
-    this.iscarried = null;
-    this.isstanding = true;
-
-    if(shadind) {
-        this.obj.mkvisible(false);
-        this.shadowobj = new LObject(structs.shadowStruct, this);
-        this.obj.addChild(this.shadowobj, mat4.create());
-        this.shadowobj.mkvisible(true);
+class BaseThing {
+    constructor(structure, shadind, x, y, z, ry)
+    {
+        this.islive = false;
+        this.isfloor = false;
+        this.iswire = false;
+    
+        this.obj = new LWObject(structure[0], this);
+        this.aobj = new LObject(structure[1], this);
+        this.iscarried = null;
+        this.isstanding = true;
+    
+        if(shadind) {
+            this.obj.mkvisible(false);
+            this.shadowobj = new LObject(structs.shadowStruct, this);
+            this.obj.addChild(this.shadowobj, mat4.create());
+            this.shadowobj.mkvisible(true);
+        }
+    
+        this.standrot = 0;
+    
+        this.obj.addChild(this.aobj, mat4.create());
+        lScene.lAddChild(this.obj, mat4.create());
+        this.place(x, y, z, ry);
+    
+        this.canpickup = true;
+        lScene.pickups.push(this);
+        lScene.animates.push(this);
+    
+    
+        this.chuckheight = 0;
+        this.ischucking = false;
+        this.chuckby = null;
+        this.chuckcoll = new LVirtObject(this, 0, 0, 0, 0.2);
+        this.dropcoll = new LVirtObject(this, 0, 0, 0, 0.2);
+        this.chuckry = 0;
+    
+        this.statestatic = false;
+    
+        this.istravel = false;
+        this.iscage = false;
     }
 
-    this.standrot = 0;
-
-    this.obj.addChild(this.aobj, mat4.create());
-    lScene.lAddChild(this.obj, mat4.create());
-    this.place(x, y, z, ry);
-
-    this.canpickup = true;
-    lScene.pickups.push(this);
-    lScene.animates.push(this);
-
-
-    this.chuckheight = 0;
-    this.ischucking = false;
-    this.chuckby = null;
-    this.chuckcoll = new LVirtObject(this, 0, 0, 0, 0.2);
-    this.dropcoll = new LVirtObject(this, 0, 0, 0, 0.2);
-    this.chuckry = 0;
-
-    this.statestatic = false;
-
-    this.istravel = false;
-    this.iscage = false;
-}
-
-BaseThing.prototype = {
-    constructor: BaseThing,
-    save: function()
+    save()
     {
         var obj = this.obj;
         var ret = {
@@ -209,11 +186,11 @@ BaseThing.prototype = {
         this.vsave(ret);
         return ret;
         
-    },
+    }
 
-    vsave: function(ret) {},       // Virtual function to save specific stuff
+    vsave(ret) {}       // Virtual function to save specific stuff
 
-    restore: function(saved)
+    restore(saved)
     {
         this.obj.restore(saved.obj);
 
@@ -241,11 +218,11 @@ BaseThing.prototype = {
         }
         */
         this.vrestore(saved);
-    },
+    }
 
-    vrestore: function(saved) {},
+    vrestore(saved) {}
 
-    pickup: function(pobj) {
+    pickup(pobj) {
         // if(this.iscarried) 
             // pobj.carrying = null;
         this.iscarried = pobj;
@@ -255,7 +232,7 @@ BaseThing.prototype = {
 
         this.ischucking = false;
 
-        sounds.pickup.play();
+        g_assets.pickup.play();
         if(pobj instanceof Player) {
             this.aobj.moveHere(0.2, -0.4, -0.1);
         }
@@ -275,17 +252,17 @@ BaseThing.prototype = {
         // mat4.translate(mb, mb, vec4.fromValues(0, 0, 1.5, 1.0));
         // mat4.translate(mb, mb, vec4.fromValues(.2, -.4, -1.5, 1.0));
         // mat4.translate(mb, mb, vec4.fromValues(0, 0, -1.5, 1.0));
-    },
+    }
 
-    resetpickup: function(pobj)
+    resetpickup(pobj)
     {
        this.iscarried = null;
        this.isstanding = true;
        this.shadowobj.mkvisible(true);
-    },
+    }
 
 
-    place: function(x, y, z, ry)
+    place(x, y, z, ry)
     {
         this.islive = true;
         this.obj.moveHere(x, y, z);
@@ -295,9 +272,9 @@ BaseThing.prototype = {
         this.shadowobj.mkvisible(true);
         this.isstanding = true;
         this.obj.procpos();
-    },
+    }
 
-    chuck: function(person)
+    chuck(person)
     {
         var pobj = person.obj;
         var obj = this.obj;
@@ -323,7 +300,7 @@ BaseThing.prototype = {
         if(hit) {
             person.carrying = null;
             this.end();
-            sounds.smash.play();
+            g_assets.smash.play();
             return(false);
         }
             
@@ -341,13 +318,13 @@ BaseThing.prototype = {
 
         this.canpickup = true;
 
-        sounds.chuck.play();
+        g_assets.chuck.play();
 
         return true;
         
-    },
+    }
 
-    chucking: function(delta)
+    chucking(delta)
     {
 
         // Save distance to floor on old 
@@ -400,13 +377,13 @@ BaseThing.prototype = {
 
         if(hit) {
             // SMASH
-            sounds.smash.play();
+            g_assets.smash.play();
             this.end();
             return;
         }
 
         if (obj.y < -7.5) {
-            sounds.splash.play();
+            g_assets.splash.play();
             this.end();
             return;
         }
@@ -447,14 +424,14 @@ BaseThing.prototype = {
                 return;
             }
         }
-    },
+    }
 
-    end: function()
+    end()
     {
         this._baseend();
-    }, 
+    }
 
-    _baseend: function()
+    _baseend()
     {
         this.islive = false;
         this.obj.mkvisible(false);
@@ -464,10 +441,9 @@ BaseThing.prototype = {
             this.iscarried = null;
         }
         this.obj.procpos();
-    },
-    
+    }
 
-    drophere: function(pobj, x, y, z, ry)
+    drophere(pobj, x, y, z, ry)
     {
         if(this.iscarried) {
 
@@ -523,16 +499,15 @@ BaseThing.prototype = {
             this.shadowobj.mkvisible(true);
             obj.procpos();
 
-            sounds.drophere.play();
+            g_assets.drophere.play();
 
             return true;
         } else {
             return false;
         }
-    },
+    }
 
-
-    animate: function(delta)
+    animate(delta)
     {
         if(!this.islive) return;
         if(this.iscarried) return;
@@ -549,10 +524,11 @@ BaseThing.prototype = {
             this.aobj.rotateHere(0, 0, -this.standrot);
             this.aobj.procpos();
         }
-    },
-    fits: function(xobj) {return false;},
+    }
 
-    kronkycarry: function(kronky)
+    fits(xobj) {return false;}
+
+    kronkycarry(kronky)
     {
         var obj = this.obj;
         var crobj = kronky.obj;
@@ -570,9 +546,9 @@ BaseThing.prototype = {
         // obj.rotateFlat(crobj.rx, 0, 0);
 
         obj.procpos();
-    },
+    }
 
-    playercarry: function(person)
+    playercarry(person)
     {
         var obj = this.obj;
 
@@ -587,81 +563,81 @@ BaseThing.prototype = {
         obj.moveHere(lCamera.x + va[0], lCamera.y + va[1], lCamera.z + va[2]);
         obj.rotateFlatHere(0, lCamera.ry, 0);
         obj.procpos();
-    },
+    }
 
-    fire: function(person) {},
+    fire(person) {}
 }
 
-function Person()
-{
-    this.dojump = false;
-    this.carrying = null;
-    this.pmode = 0;
-    this.travelling = null;
-    this.zipdist = 0;
-    this.okctrl = 0;
-    this.swing = 0;
-    this.isshuffling = false;
-    this.picked = false;
-}
+class Person {
+    constructor()
+    {
+        this.dojump = false;
+        this.carrying = null;
+        this.pmode = 0;
+        this.travelling = null;
+        this.zipdist = 0;
+        this.okctrl = 0;
+        this.swing = 0;
+        this.isshuffling = false;
+        this.picked = false;
+        this.ride = null;
+    }
 
-Person.prototype = {
-    constructor: Person,
-
-    move: function(x, y, z)
+    move(x, y, z)
     {
         this.obj.moveFlat(x, y, z);
         this.obj.procpos();
-    },
+    }
 
-    rotateFlat: function(rx, ry)
+    rotateFlat(rx, ry)
     {
         this.obj.rotateFlat(rx, ry);
-    },
+    }
 
-    bounce: function(delta)
+    bounce(delta)
     {
         this.vvel = -(delta + (this.vvel * 0.8));
-    },
+    }
 
-    fall: function(delta)
+    fall(delta)
     {
         this.vvel -= delta;
         return this.vvel * delta;
-    },
+    }
 
-    seeswing: function(z)
+    seeswing(z)
     {
         if(z == 0) {
             this.stopswing();
         } else {
             this.swingarms(z);
         }
-    },
+    }
 
-    swingarms: function(delta)
+    swingarms(delta)
     {
         var nswing = this.swing + (delta * 2);
         if(this.swing >= 4)
         {
             nswing -= 4;
-            sounds.footstep.play();
+            g_assets.footstep.play();
         }
         else if(this.swing < 0)
         {
-            sounds.footstep.play();
+            g_assets.footstep.play();
             nswing += 4;
         } else if (this.swing <= 2 && nswing > 2) {
-            sounds.footstep.play();
+            g_assets.footstep.play();
         } else if (this.swing >= 2 && nswing < 2) {
-            sounds.footstep.play();
+            g_assets.footstep.play();
         }
 
         this.swing = nswing;
-    }, 
-    stopswing: function() {},
+    }
 
-    pickupobj: function()
+    stopswing() {}
+
+    pickupobj()
     {
         if(this.carrying) {
             if(!this.picked) {
@@ -683,8 +659,9 @@ Person.prototype = {
             }
             this.carrying.pickup(this);
         }
-    },
-    drophereobj: function()
+    }
+
+    drophereobj()
     {
         if(!this.carrying) return;
         if(this.ride) return;
@@ -694,16 +671,16 @@ Person.prototype = {
             this.carrying = null;
             this.displaydrop();
         }
-    },
-    displaydrop: function() {},
-    displayzip: function(zip) {},
-    zipstart: function(zip) {},
-    zipend: function(zip) {},
-    zipgo: function(zip) {},
+    }
 
-    loop: function(delta, nkctrl)
+    displaydrop() {}
+    displayzip(zip) {}
+    zipstart(zip) {}
+    zipend(zip) {}
+    zipgo(zip) {}
+
+    loop(delta, nkctrl)
     {
-
         var obj = this.obj;
         var x = 0;
         var y = 0;
@@ -748,12 +725,12 @@ Person.prototype = {
         if(shuffling) {
             if(!this.isshuffling) {
                 this.isshuffling = true;
-                sounds.shuffle.play();
+                g_assets.shuffle.start();
             }
         } else {
             if(this.isshuffling) {
                 this.isshuffling = false;
-                sounds.shuffle.pause();
+                g_assets.shuffle.pause();
             }
         }
         if((nkctrl & OFIRE) != 0) {
@@ -772,7 +749,7 @@ Person.prototype = {
         }
 
         if(this.islift) {
-            sounds.lift.play();
+            g_assets.lift.play();
             this.vvel = .5;
             this.hvel = 1;
             this.hry = this.obj.ry;
@@ -809,7 +786,7 @@ Person.prototype = {
             this.ride.riding(this, delta);
             if(obj.x > 1000 || obj.x < -1000 || obj.z > 1000 || obj.z < -1000 || obj.y < -7.5)
             {
-                sounds.splash.play();
+                g_assets.splash.play();
                 this.die();
             }
             return false;
@@ -820,7 +797,7 @@ Person.prototype = {
         obj.procpos();
 
         if(obj.y < -7.5) {
-            sounds.splash.play();
+            g_assets.splash.play();
             this.die();
             return false;
         }
@@ -852,9 +829,9 @@ Person.prototype = {
             if(pinst.moveback) {
                 if(this.carrying) {
                     if(pinst.wire) {
-                        sounds.twang.play();
+                        g_assets.twang.play();
                     } else {
-                        sounds.bump.play();
+                        g_assets.bump.play();
                     }
                 }
                 // obj.moveFlat(-x, vvel * delta, -z);
@@ -872,9 +849,9 @@ Person.prototype = {
             dfloor = pinst.dfloor;
             if(pinst.moveback) {
                 if(pinst.wire) {
-                    sounds.twang.play();
+                    g_assets.twang.play();
                 } else {
-                    sounds.bump.play();
+                    g_assets.bump.play();
                 }
                 obj.moveFlat(-x, 0, -z);
                 // obj.moveFlat(-x, vvel * delta, -z);
@@ -902,7 +879,7 @@ Person.prototype = {
             // On the floor!
             canjump = true;
             if(vvel != 0)  {
-                sounds.thud.play();
+                g_assets.thud.play();
                 this.vvel = 0;
             }
         } else if (dfloor < 0) {
@@ -911,7 +888,7 @@ Person.prototype = {
             obj.moveHere(obj.x, pinst.wy, obj.z);  // Gone too far, fix, do this way to stop round thrashing
             obj.procpos();
             if(vvel != 0) {
-                sounds.thud.play();
+                g_assets.thud.play();
                  this.vvel = 0;
             }
             canjump = true;
@@ -964,13 +941,13 @@ Person.prototype = {
         }
 
         if(canjump && dojump) this.jump();
-    },
+    }
 
     /*
      * Ridecoll does various collision tests
      */
 
-    ridecoll: function(z)
+    ridecoll(z)
     {
         var pobj = this.obj;
         var wobj = this.carrying.obj;
@@ -1054,7 +1031,7 @@ Person.prototype = {
         wobj.ignore = false;
         pobj.ignore = false;
         return {hit: hit, wire: wire, above: above, alevel: alevel, hitflower: hitflower, hitrocket: hitrocket};
-    },
+    }
 
     ridelevel(y)
     {
@@ -1068,7 +1045,7 @@ Person.prototype = {
         }
         pobj.moveFlatHere(pobj.x, y, pobj.z);
         pobj.procpos();
-    },
+    }
 
     ridemove(z)
     {
@@ -1078,7 +1055,8 @@ Person.prototype = {
         pobj.moveFlat(0, 0, z);
         pobj.procpos();
         this.carrything();
-    },
+    }
+
     rideheight(y)
     {
         var pobj = this.obj;
@@ -1087,11 +1065,11 @@ Person.prototype = {
         pobj.moveHere(pobj.x, y, pobj.z);
         pobj.procpos();
         this.carrything();
-    },
-    end: function()
+    }
+    end()
     {
         this.die();
-    },
+    }
 }
 
 function eKronkyStructure()
@@ -1106,17 +1084,15 @@ function eKronkyStructure()
     return [gdef, stru];
 }
 
-function EKronky(x, y, z, ry)
-{
-    BaseThing.call(this, structs.EKronky, true, x, y, z, ry);
-    lScene.stateobjs.push(this);
-    this.active = true;
-}
+class EKronky extends BaseThing {
+    constructor(x, y, z, ry)
+    {
+        super(structs.EKronky, true, x, y, z, ry);
+        lScene.stateobjs.push(this);
+        this.active = true;
+    }
 
-EKronky.prototype = Object.assign(Object.create(BaseThing.prototype), {
-    constructor: EKronky,
-
-    pickup: function(person)
+    pickup(person)
     {
         person.carrying = null;
         this.obj.mkvisible(false);
@@ -1126,20 +1102,21 @@ EKronky.prototype = Object.assign(Object.create(BaseThing.prototype), {
                 lScene.numkronky += 1;
                 g_total.innerText = lScene.numkronky;
                 lScene.lMessage("**** New Kronky charge added ****", "lightgreen");
-                sounds.fanfare.play();
+                g_assets.fanfare.play();
             } else {
                 lScene.lMessage("Already added this Kronky charge unit");
             }
         }
-    },
+    }
 
-    drophere: function(pobj, x, y, z, ry) {},
+    drophere(pobj, x, y, z, ry) {}
 
-    vsave: function(ret)
+    vsave(ret)
     {
         ret.active = this.active;
-    },
-    vrestore: function(saved)
+    }
+
+    vrestore(saved)
     {
         // Only make unactive here if swapping kronnkies
         if(lScene.kswap) {
@@ -1148,12 +1125,10 @@ EKronky.prototype = Object.assign(Object.create(BaseThing.prototype), {
         } else {
             this.active = saved.active;
         }
-    },
+    }
 
-    respawn: function() { },
-});
-
-
+    respawn() { }
+}
 
 function kronkyStructure()
 {
@@ -1266,87 +1241,84 @@ function kronkyStructure()
 }
 
 
-function Kronky()
-{
-
-    Person.call(this);
-    var strs = structs.Kronky;
-
-    var obj = new LWObject(strs.stru, this);
-    this.obj = obj;
-    var aobj = new LObject(strs.starm, this);
-    obj.addChild(aobj, lFromXYZ(-0.33, -0.45, 0.0));
-    this.ltarm = aobj;
-    var aobj = new LObject(strs.starm, this);
-    obj.addChild(aobj, lFromXYZ(0.33, -0.45, 0.0));
-    this.rtarm = aobj;
-
-    var aobj =  new LObject(strs.starm, this);
-    this.ltarm.addChild(aobj, lFromXYZ(0, -0.42, 0.0));
-    this.lbarm = aobj;
-
-    var aobj =  new LObject(strs.starm, this);
-    this.rtarm.addChild(aobj, lFromXYZ(0, -0.42, 0.0));
-    this.rbarm = aobj;
-
+class Kronky extends Person {
+    constructor()
+    {
+        super();
+        var strs = structs.Kronky;
     
-    var aobj =  new LObject(strs.suleg, this);
-    obj.addChild(aobj, lFromXYZ(-0.13, -1.0, 0.0));
-    this.luleg = aobj
+        var obj = new LWObject(strs.stru, this);
+        this.obj = obj;
+        var aobj = new LObject(strs.starm, this);
+        obj.addChild(aobj, lFromXYZ(-0.33, -0.45, 0.0));
+        this.ltarm = aobj;
+        var aobj = new LObject(strs.starm, this);
+        obj.addChild(aobj, lFromXYZ(0.33, -0.45, 0.0));
+        this.rtarm = aobj;
+    
+        var aobj =  new LObject(strs.starm, this);
+        this.ltarm.addChild(aobj, lFromXYZ(0, -0.42, 0.0));
+        this.lbarm = aobj;
+    
+        var aobj =  new LObject(strs.starm, this);
+        this.rtarm.addChild(aobj, lFromXYZ(0, -0.42, 0.0));
+        this.rbarm = aobj;
+    
+        
+        var aobj =  new LObject(strs.suleg, this);
+        obj.addChild(aobj, lFromXYZ(-0.13, -1.0, 0.0));
+        this.luleg = aobj
+    
+        var aobj =  new LObject(strs.suleg, this);
+        obj.addChild(aobj, lFromXYZ(0.13, -1.0, 0.0));
+        this.ruleg = aobj
+    
+    
+    
+        var aobj =  new LObject(strs.slleg, this);
+        this.luleg.addChild(aobj, lFromXYZ(0.0, -0.7, 0.0));
+        this.llleg = aobj
+    
+        var aobj =  new LObject(strs.slleg, this);
+        this.ruleg.addChild(aobj, lFromXYZ(0.0, -0.7, 0.0));
+        this.rlleg = aobj
+    
+        this.pid = 1;
+        this.carrying = null;
+    
+        this.obj.mkvisible(false);
+        this.islive = false;
+        this.ry = 0;
+        this.rx = 0;
+    
+        this.cbinst = new ColCB(this, this.obj);
+        this.vvel = 0;
+        this.dojump = false;
+        this.jumpcoll = new LVirtObject(this, 0, 0, 0, 0);
+    
+        this.isfloor = false;
+        this.iswire = false;
+        this.istravel = false;
+        this.iscage = false;
+    
+        lScene.stateobjs.push(this);
+    
+        this.rec_actions = [];
+        this.rec_progress = 0;       // progress recording
+        this.rec_playback = 0;      // Playback
+        this.rec_playidx = 0;
+        this.rec_recidx = 0;        
+    
+        this.rec_curraction = 0;    // next action
+        this.rec_currprog = 0.0;    // progress next action is activated
+        this.rec_oldaction = 0;     // Performing action
+        this.rec_isrecording = false;
+        this.rec_isplaying = false;
+    
+        this.rec_okctrl = 0;
+    }
 
-    var aobj =  new LObject(strs.suleg, this);
-    obj.addChild(aobj, lFromXYZ(0.13, -1.0, 0.0));
-    this.ruleg = aobj
-
-
-
-    var aobj =  new LObject(strs.slleg, this);
-    this.luleg.addChild(aobj, lFromXYZ(0.0, -0.7, 0.0));
-    this.llleg = aobj
-
-    var aobj =  new LObject(strs.slleg, this);
-    this.ruleg.addChild(aobj, lFromXYZ(0.0, -0.7, 0.0));
-    this.rlleg = aobj
-
-    this.pid = 1;
-    this.carrying = null;
-
-    this.obj.mkvisible(false);
-    this.islive = false;
-    this.ry = 0;
-    this.rx = 0;
-
-    this.cbinst = new ColCB(this, this.obj);
-    this.vvel = 0;
-    this.dojump = false;
-    this.jumpcoll = new LVirtObject(this, 0, 0, 0, 0);
-
-    this.isfloor = false;
-    this.iswire = false;
-    this.istravel = false;
-    this.iscage = false;
-
-    lScene.stateobjs.push(this);
-
-    this.rec_actions = [];
-    this.rec_progress = 0;       // progress recording
-    this.rec_playback = 0;      // Playback
-    this.rec_playidx = 0;
-    this.rec_recidx = 0;        
-
-    this.rec_curraction = 0;    // next action
-    this.rec_currprog = 0.0;    // progress next action is activated
-    this.rec_oldaction = 0;     // Performing action
-    this.rec_isrecording = false;
-    this.rec_isplaying = false;
-
-    this.rec_okctrl = 0;
-}
-
-Kronky.prototype = Object.assign(Object.create(Person.prototype), {
-    constructor: Kronky,
-
-    save: function()
+    save()
     {
         var sact = this.rec_actions;
         var dact = [];
@@ -1366,6 +1338,7 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
             travelling: this.travelling,
             zipdist: this.zipdist,
             vvel: this.vvel,
+            ride: this.ride,
 
             rec_actions: dact,
             rec_progress: this.rec_progress,
@@ -1380,13 +1353,13 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
             rec_isplaying: this.rec_isplaying,
             rec_okctrl: this.rec_okctrl,
         }
-    },
+    }
 
-    restore: function(saved)
+    restore(saved)
     {
         if(this.travelling) {
             if(this.travelling instanceof ZipBase) {
-                sounds.zip.pause();
+                g_assets.zip.pause();
             }
         }
         var diff = 0;
@@ -1402,11 +1375,12 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
         this.iscage = saved.iscage;
         this.travelling = saved.travelling;
         this.vvel = saved.vvel;
+        this.ride = saved.ride;
 
 
         if(this.travelling) {
             if(this.travelling instanceof ZipBase) {
-                sounds.zip.play();
+                g_assets.zip.start();
             }
         }
             
@@ -1416,9 +1390,9 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
 
             var sact = saved.rec_actions;
             var dact = [];
+            this.rec_actions = dact;
             var rlen = sact.length;
             for(var i = 0; i < rlen; i++) dact.push(sact[i]);
-            this.rec_actions = dact;
 
             this.rec_progress = saved.rec_progress;
             this.rec_playback = saved.rec_playback;
@@ -1438,14 +1412,14 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
         if(diff != 0 && (lScene.kswap)) {
             lScene.playkronky += diff;
         }
-    },
+    }
 
-    rotateFlat: function(rx, ry)
+    rotateFlat(rx, ry)
     {
         this.obj.rotateFlat(0, ry);
-    },
+    }
 
-    displaydrop: function()
+    displaydrop()
     {
         this.rtarm.rotateHere(0, 0, 0);
         this.rbarm.rotateHere(0, 0, 0);
@@ -1453,48 +1427,47 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
         this.lbarm.rotateHere(0, 0, 0);
         this.rtarm.procpos();
         this.rbarm.procpos();
-    },
+    }
 
-    zipstart: function(zip) {
+    zipstart(zip) {
         zip.cobj.mkvisible(true);
-    },
+    }
         
-    zipend: function(zip) {
+    zipend(zip) {
         zip.cobj.mkvisible(false);
-    },
+    }
         
-    zipgo: function(zip)
+    zipgo(zip)
     {
         zip.cobj.moveHere(this.obj.x, this.obj.y + 0.5, this.obj.z);
         zip.cobj.procpos();
-    },
+    }
 
-
-    displayzip: function(zip)
+    displayzip(zip)
     {
         this.rtarm.rotateHere(LR180, 0, 0);
         this.rbarm.rotateHere(0, 0, 0);
         this.ltarm.rotateHere(LR180, 0, 0);
         this.lbarm.rotateHere(0, 0, 0);
 
-    },
+    }
 
-    swingarms: function(delta)
+    swingarms(delta)
     {
         var nswing = this.swing + (delta * 2);
         if(this.swing >= 4)
         {
             nswing -= 4;
-            sounds.footstep.play();
+            g_assets.footstep.play();
         }
         else if(this.swing < 0)
         {
-            sounds.footstep.play();
+            g_assets.footstep.play();
             nswing += 4;
         } else if (this.swing <= 2 && nswing > 2) {
-            sounds.footstep.play();
+            g_assets.footstep.play();
         } else if (this.swing >= 2 && nswing < 2) {
-            sounds.footstep.play();
+            g_assets.footstep.play();
         }
 
         this.swing = nswing;
@@ -1547,9 +1520,9 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
 
         this.llleg.rotateHere(LR90 * -lknee  * .75, 0, 0);
         this.rlleg.rotateHere(LR90 * -rknee  * .75, 0, 0);
-    },
+    }
 
-    stopswing: function()
+    stopswing()
     {
         if(this.swing == 0) return;
         if(!this.carrying) {
@@ -1567,14 +1540,14 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
         this.rlleg.rotateHere(0, 0, 0);
 
         this.swing = 0;
-    },
+    }
 
-    carrything: function()
+    carrything()
     {
         if(this.carrying) this.carrying.kronkycarry(this);
-    },
+    }
 
-    mklive: function()
+    mklive()
     {
         this.stopswing();
         this.obj.mkvisible(true);
@@ -1583,14 +1556,14 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
         // Bug
         if(this.carrying)
             this.carrying = null;
-    },
+    }
 
-    die: function()
+    die()
     {
         this.endlive();
-    },
+    }
 
-    endlive: function()
+    endlive()
     {
         if(this.obj.isvisible) {
             this.obj.mkvisible(false);
@@ -1606,20 +1579,22 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
             lScene.playkronky -= 1;
             g_playing.innerText = lScene.playkronky;
         }
-    },
-    jump: function(delta)
+    }
+
+    jump(delta)
     {
         if(this.vvel <= 0)
             this.vvel += .2;
-    },
+    }
 
-    lplay: function(delta)
+    lplay(delta)
     {
         this.endlive();
-    },
-    lrecord: function(delta, nkctrl) {},
+    }
 
-    rec_update: function(delta, nkctrl)
+    lrecord(delta, nkctrl) {}
+
+    rec_update(delta, nkctrl)
     {
         this.rec_progress += delta;
         if(nkctrl != this.rec_okctrl) {
@@ -1627,9 +1602,9 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
             this.rec_recidx += 1;
             this.rec_actions.push([this.rec_progress, nkctrl]);
         }
-    },
+    }
 
-    rec_play: function(delta, cback)
+    rec_play(delta, cback)
     {
         if(!this.rec_isplaying) return;
         var opb = this.rec_playback;
@@ -1662,9 +1637,9 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
             this.rec_curraction = this.rec_actions[this.rec_playidx][1];
         }
         if(delta > 0) cback(delta, this.rec_oldaction);
-    },
+    }
 
-    rec_reset: function()
+    rec_reset()
     {
         this.rec_actions = [];
         this.rec_progress = 0;       // progress recording
@@ -1677,32 +1652,30 @@ Kronky.prototype = Object.assign(Object.create(Person.prototype), {
         this.rec_oldaction = 0;
         this.rec_isrecording = false;
         this.rec_isplaying = false;
-    },
-});
-
-
-function Player()
-{
-    Person.call(this);
-    this.pid = 0;
-    this.carrying = null;
-
-    this.movedown = 0;
-
-    this.cbinst = null; // Do not know if camera is called yet
-    this.vvel = 0;
-    this.dojump = false;
-    this.ride = null;
-    this.jumpcoll = new LVirtObject(this, 0, 0, 0, 0);
-    this.jumpcoll.ignore = true;
-    this.obj = null;    // Fix later
-    this.isfloor = false;
-    this.iswire = false;
+    }
 }
-Player.prototype = Object.assign(Object.create(Person.prototype), {
-    constructor: Player,
 
-    save: function()
+
+class Player extends Person {
+    constructor()
+    {
+        super();
+        this.pid = 0;
+        this.carrying = null;
+    
+        this.movedown = 0;
+    
+        this.cbinst = null; // Do not know if camera is called yet
+        this.vvel = 0;
+        this.dojump = false;
+        this.jumpcoll = new LVirtObject(this, 0, 0, 0, 0);
+        this.jumpcoll.ignore = true;
+        this.obj = null;    // Fix later
+        this.isfloor = false;
+        this.iswire = false;
+    }
+
+    save()
     {
         return {
             obj: this.obj.save(),
@@ -1717,14 +1690,15 @@ Player.prototype = Object.assign(Object.create(Person.prototype), {
             travelling: this.travelling,
             zipdist: this.zipdist,
             vvel: this.vvel,
+            ride: this.ride,
         }
-    }, 
+    } 
 
-    restore: function(saved)
+    restore(saved)
     {
         if(this.travelling) {
             if(this.travelling instanceof ZipBase) {
-                sounds.zip.pause();
+                g_assets.zip.pause();
             }
         }
         this.obj.restore(saved.obj);
@@ -1738,35 +1712,37 @@ Player.prototype = Object.assign(Object.create(Person.prototype), {
         this.iscage = saved.iscage;
         this.travelling = saved.travelling;
         this.vvel = saved.vvel;
+        this.ride = saved.ride;
 
         if(this.travelling) {
             if(this.travelling instanceof ZipBase) {
-                sounds.zip.play();
+                g_assets.zip.start();
             }
         }
-    },
+    }
 
-    gotcha: function(obj)
+    gotcha(obj)
     {
         console.log("Gotcha ", obj);
-    },
+    }
 
-    move: function(x, y, z)
+    move(x, y, z)
     {
         lCamera.moveFlat(x, y, z);
-    },
+    }
 
-    carrything: function()
+    carrything()
     {
         if(this.carrying) this.carrying.playercarry(this);
-    },
-    jump: function()
+    }
+
+    jump()
     {
         if(this.vvel <= 0)
             this.vvel += .2;
-    },
+    }
 
-    lrecord: function(delta, nkctrl)
+    lrecord(delta, nkctrl)
     {
         // Only do record if on terra firma (not riding anything)
         // 
@@ -1866,7 +1842,7 @@ Player.prototype = Object.assign(Object.create(Person.prototype), {
                 this.rec_player_carrying = this.carrying;
                 lScene.state = lScene.savestate();
                 g_record.innerText = "R";
-                sounds.kkstart.play();
+                g_assets.kkstart.play();
             } else {
                 lScene.record = null;
                 kronky.rec_isrecording = false;
@@ -1875,9 +1851,9 @@ Player.prototype = Object.assign(Object.create(Person.prototype), {
         if(this.carrying) this.carrying.obj.ignore = false;
         this.obj.ignore = false;
         crobj.ignore = false;
-    },
+    }
 
-    lplay: function(delta, nkctrl)
+    lplay(delta, nkctrl)
     {
 
         if(!lScene.record) {
@@ -1906,8 +1882,6 @@ Player.prototype = Object.assign(Object.create(Person.prototype), {
 
             kronky.rec_isrecording = false;
             kronky.rec_isplaying = true;
-
-            g_playing.innerText = lScene.playkronky;
 
             lCamera.moveHere(this.rec_kronky_x, this.rec_kronky_y, this.rec_kronky_z);
             lCamera.rotateFlatHere(0, this.rec_kronky_ry);
@@ -1948,11 +1922,11 @@ Player.prototype = Object.assign(Object.create(Person.prototype), {
             lScene.playkronky += 1;
             g_playing.innerText = lScene.playkronky;
             g_record.innerText = "";
-            sounds.kkplay.play();
+            g_assets.kkplay.play();
         }
-    },
+    }
 
-    die: function()
+    die()
     {
         // Simply stop all play loops - easier than working out which ones are playing
         lScene.stopsounds();
@@ -1961,40 +1935,39 @@ Player.prototype = Object.assign(Object.create(Person.prototype), {
             this.carrying = null;
         }
         if(!lScene.isdead) {
-            sounds.flush.play();
+            g_assets.flush1.play();
             lScene.seefinished = true;
             lScene.isdead = true;
             lScene.timer = 2;
             lScene.lMessage("Died");
         }
-    },
+    }
 
-    end: function()
+    end()
     {
         this.die();
-    },
-});
+    }
+}
 
 // Helper callbacks for collisions
 
 
-function ColCB(person, obj)
-{
-    this.dfloor = 100;
-    this.moveback = false;
-    this.person = person;
-    this.carrying = person.carrying;
-    this.obj = obj;
-    this.wy = 0;
-    this.islift = null;
-    this.travelling = null;
-    this.onbridge = null;
-    this.wire = null;
-}
+class ColCB {
+    constructor(person, obj)
+    {
+        this.dfloor = 100;
+        this.moveback = false;
+        this.person = person;
+        this.carrying = person.carrying;
+        this.obj = obj;
+        this.wy = 0;
+        this.islift = null;
+        this.travelling = null;
+        this.onbridge = null;
+        this.wire = null;
+    }
 
-ColCB.prototype = {
-    constructor: ColCB,
-    carry: function(cob)
+    carry(cob)
     {
         var control = cob.control;
         if((!control.isfloor) && (!control.istravel)  && (!control.iscage) && (!control.iswire)) {
@@ -2007,9 +1980,9 @@ ColCB.prototype = {
                 }
             }
         }
-    },
+    }
 
-    empty: function (cob)
+    empty(cob)
     {
         var control = cob.control;
         if(control.isfloor) {
@@ -2033,9 +2006,9 @@ ColCB.prototype = {
                 this.wire = cob;
             }
         }
-    },
+    }
 
-    reset: function(person)
+    reset(person)
     {
         this.dfloor = 100;
         this.moveback = false;
@@ -2044,122 +2017,198 @@ ColCB.prototype = {
         this.wy = 0;
         this.onbridge = null;
         this.wire = null;
-    },
+    }
 }
 
-function Scene(args)
-{
+class State {
+    constructor()
+    {
+        this.things = [];
+        this.achievements = {};
+    }
+    save(scene)
+    {
+        let dobjs = scene.stateobjs;
+        let dlen = dobjs.length;
+        let things = [];
 
-    this.player = new Player();
-    args.lLControl = this.player;
-    args.lDirectionalVector = vec3.fromValues(0.6, 0.7, 0.8);
+        for(var i = 0;  i < dlen; i++)
+        {
+            var obj = dobjs[i];
+            things.push([obj, obj.save()]);
+        }
 
-    LBase.call(this, args);
+        var achievements = {};
+        for(var key in lScene.achievements) {
+            achievements[key] = lScene.achievements[key];
+        }
+        this.things = things;
+        this.achievements = achievements;
+    }
+    copy()
+    {
 
-    this.player.cbinst = new ColCB(lScene.player, lCamera);
-    this.player.obj = lCamera;
+        /*
+        function _recur(_data)
+        {
+            let out = {};
+            console.log(_data);
+            for(let _key in _data) {
+                let itm = _data[_key];
+                if(!(itm instanceof ColCB)) {
+                    if(itm instanceof Object) {
+                        out[_key] = _recur(itm);
+                    } else {
+                        out[_key] = itm;
+                    }
+                }
+            }
+            return out;
+        }
+        */
+                
+        let things = [];
+        let achievements = {};
+        for(let thing of this.things)
+            things.push([thing[0], thing[1]]);
 
-    this.ambientLight =  null;
-    this.directionalLightColor = null;
-    this.restorelight();
+        let tachs = this.achievements;
+        for(let key in this.achievements)
+            achievements[key] = tachs[key];
 
-    var keys = {
-        ctrl: 0
-    };
-
-
-    // Register keys as functions for performance
-    lInput.register(77, function(ind)  {if(ind) keys.ctrl |= RDOWN; else keys.ctrl &= ~(RDOWN);});
-    lInput.register(75, function(ind)  {if(ind) keys.ctrl |= RUP  ; else keys.ctrl &= ~(RUP);});
-    // lInput.register(188, function(ind) {keys.roll_anti = ind;});
-    // lInput.register(190, function(ind) {keys.roll_clock = ind;});
-    lInput.register(87, function(ind)  {if(ind) keys.ctrl |= MFORWARD  ; else keys.ctrl &= ~(MFORWARD);});
-    lInput.register(83, function(ind) {if(ind) keys.ctrl |= MBACK  ; else keys.ctrl &= ~(MBACK);});
-    lInput.register(68, function(ind)  {if(ind) keys.ctrl |= MRIGHT  ; else keys.ctrl &= ~(MRIGHT);});
-    lInput.register(65, function(ind) {if(ind) keys.ctrl |= MLEFT  ; else keys.ctrl &= ~(MLEFT);});
-
-    lInput.register(66, function(ind) {if(ind) keys.ctrl |= NOOP  ; else keys.ctrl &= ~(NOOP);});
-
-    lInput.register(32, function(ind) {if(ind) keys.ctrl |= MJUMP  ; else keys.ctrl &= ~(MJUMP);});
-
-    lInput.register(188, function(ind)  {if(ind) keys.ctrl |= RLEFT  ; else keys.ctrl &= ~(RLEFT);});
-    lInput.register(190, function(ind)  {if(ind) keys.ctrl |= RRIGHT ; else keys.ctrl &= ~(RRIGHT);});
-
-    lInput.register(73, function(ind)  {if(ind) keys.ctrl |= CRECORD ; else keys.ctrl &= ~(CRECORD);});
-    lInput.register(80, function(ind)  {if(ind) keys.ctrl |= CPLAY ; else keys.ctrl &= ~(CPLAY);});
-    // lInput.register(27, function(ind) {if(ind) lScene.doescape()});
-    // lInput.register(65, function(ind) {if(ind) keys.fire = true;});
-    lInput.register(69, function(ind)  {if(ind) keys.ctrl |= OPICK; else keys.ctrl &= ~(OPICK);});
-    lInput.register(81, function(ind)  {if(ind) keys.ctrl |= ODROP; else keys.ctrl &= ~(ODROP);});
-    lInput.register(88, function(ind)  {if(ind) keys.ctrl |= OFIRE; else keys.ctrl &= ~(OFIRE);});
-    lInput.register(67, function(ind)  {if(ind) keys.ctrl |= OCHUCK; else keys.ctrl &= ~(OCHUCK);});
-
-    lInput.register(27,  function(ind)  {if(ind) keys.ctrl |= CRESET; else keys.ctrl &= ~(CRESET);});
-    lInput.register(13, function(ind)  {if(ind) keys.ctrl |= CSAVE; else keys.ctrl &= ~(CSAVE);});
-    lInput.register(8, function(ind)  {if(ind) keys.ctrl |= CRESTORE; else keys.ctrl &= ~(CRESTORE);});
-    lInput.register(71, function(ind)  {if(ind) keys.ctrl |= CFORWARD; else keys.ctrl &= ~(CFORWARD);});
-    lInput.register(72, function(ind)  {if(ind) keys.ctrl |= CHELP; else keys.ctrl &= ~(CHELP);});
-    lInput.register(191, function(ind)  {if(ind) keys.ctrl |= CHELP; else keys.ctrl &= ~(CHELP);});
-
-    // Use them
-    lInput.usekeys();
-
-    this.keys = keys;
-    this.okctrl = 0;
-
-    this.record = null;
-    this.state = [];
-
-    this.success = false;
-    this.isdead = false;
-    this.seefinished = false;
-    this.flowerstands = [];
-
-    this.achievements = {
-        dkey: 0
-    };
-    this.stateobjs = [];
-    this.pickups = [];
-    this.animates = [];
-
-    this.prngd = new LPRNGD(Math.random() * 10000);
-    this.prng = new LPRNG(1000 + g_LevelNum);
-
-    this.timer = 0;
-
-    this.minx = -1000;
-    this.minz = -1000;
-    this.maxx = 1000;
-    this.maxz = 1000;
-
-    this.kronky = [];
-    this.numkronky = 1;
-    this.playkronky = 0;
-
-    this.kswap = false;     // When restoring - swap kronky and player
-
-    this.gamedata = null;
-    this.isincommand = false;
-    this.isinforward = false;
-    this.doingforward = false;
-    this.ishelp = false;
-    this.flowers = [];
-
+        let state = new State;
+        state.achievements = achievements;
+        state.things = things;
+        return state;
+    }
+    restore(scene)
+    {
+        var things = this.things;
+        var achievements = this.achievements;
+        var slen = things.length;
+        for(var i = 0;  i < slen; i++)
+        {
+            var sta = things[i];
+            sta[0].restore(sta[1]);
+        }
+        scene.achievements = {};
+        for(var key in achievements) {
+            scene.achievements[key] = achievements[key];
+        }
+    }
 }
+        
 
-Scene.prototype = Object.assign(Object.create(LBase.prototype), {
-    constructor: Scene,
+class Scene extends LBase {
+    constructor(args)
+    {
+    
+        args.lDirectionalVector = vec3.fromValues(0.6, 0.7, 0.8);
+        args.lLControl = new Player();
+        super(args);
+        this.player = args.lLControl;
+    
+        this.player.cbinst = new ColCB(lScene.player, lCamera);
+        this.player.obj = lCamera;
+    
+        this.ambientLight =  null;
+        this.directionalLightColor = null;
+        this.restorelight();
+    
+        var keys = {
+            ctrl: 0
+        };
+    
+    
+        // Register keys as functions for performance
+        lInput.register(77, function(ind)  {if(ind) keys.ctrl |= RDOWN; else keys.ctrl &= ~(RDOWN);});
+        lInput.register(75, function(ind)  {if(ind) keys.ctrl |= RUP  ; else keys.ctrl &= ~(RUP);});
+        // lInput.register(188, function(ind) {keys.roll_anti = ind;});
+        // lInput.register(190, function(ind) {keys.roll_clock = ind;});
+        lInput.register(87, function(ind)  {if(ind) keys.ctrl |= MFORWARD  ; else keys.ctrl &= ~(MFORWARD);});
+        lInput.register(83, function(ind) {if(ind) keys.ctrl |= MBACK  ; else keys.ctrl &= ~(MBACK);});
+        lInput.register(68, function(ind)  {if(ind) keys.ctrl |= MRIGHT  ; else keys.ctrl &= ~(MRIGHT);});
+        lInput.register(65, function(ind) {if(ind) keys.ctrl |= MLEFT  ; else keys.ctrl &= ~(MLEFT);});
+    
+        lInput.register(66, function(ind) {if(ind) keys.ctrl |= NOOP  ; else keys.ctrl &= ~(NOOP);});
+    
+        lInput.register(32, function(ind) {if(ind) keys.ctrl |= MJUMP  ; else keys.ctrl &= ~(MJUMP);});
+    
+        lInput.register(188, function(ind)  {if(ind) keys.ctrl |= RLEFT  ; else keys.ctrl &= ~(RLEFT);});
+        lInput.register(190, function(ind)  {if(ind) keys.ctrl |= RRIGHT ; else keys.ctrl &= ~(RRIGHT);});
+    
+        lInput.register(73, function(ind)  {if(ind) keys.ctrl |= CRECORD ; else keys.ctrl &= ~(CRECORD);});
+        lInput.register(80, function(ind)  {if(ind) keys.ctrl |= CPLAY ; else keys.ctrl &= ~(CPLAY);});
+        // lInput.register(27, function(ind) {if(ind) lScene.doescape()});
+        // lInput.register(65, function(ind) {if(ind) keys.fire = true;});
+        lInput.register(69, function(ind)  {if(ind) keys.ctrl |= OPICK; else keys.ctrl &= ~(OPICK);});
+        lInput.register(81, function(ind)  {if(ind) keys.ctrl |= ODROP; else keys.ctrl &= ~(ODROP);});
+        lInput.register(88, function(ind)  {if(ind) keys.ctrl |= OFIRE; else keys.ctrl &= ~(OFIRE);});
+        lInput.register(67, function(ind)  {if(ind) keys.ctrl |= OCHUCK; else keys.ctrl &= ~(OCHUCK);});
+    
+        lInput.register(27,  function(ind)  {if(ind) keys.ctrl |= CRESET; else keys.ctrl &= ~(CRESET);});
+        lInput.register(13, function(ind)  {if(ind) keys.ctrl |= CSAVE; else keys.ctrl &= ~(CSAVE);});
+        lInput.register(8, function(ind)  {if(ind) keys.ctrl |= CRESTORE; else keys.ctrl &= ~(CRESTORE);});
+        lInput.register(71, function(ind)  {if(ind) keys.ctrl |= CFORWARD; else keys.ctrl &= ~(CFORWARD);});
+        lInput.register(72, function(ind)  {if(ind) keys.ctrl |= CHELP; else keys.ctrl &= ~(CHELP);});
+        lInput.register(191, function(ind)  {if(ind) keys.ctrl |= CHELP; else keys.ctrl &= ~(CHELP);});
+    
+        // Use them
+        lInput.usekeys();
+    
+        this.keys = keys;
+        this.okctrl = 0;
+    
+        this.record = null;
+    
+        this.success = false;
+        this.isdead = false;
+        this.seefinished = false;
+        this.flowerstands = [];
+    
+        this.achievements = {
+            dkey: 0
+        };
+        this.stateobjs = [];
+        this.pickups = [];
+        this.animates = [];
+    
+        this.prngd = new LPRNGD(Math.random() * 10000);
+        this.prng = new LPRNG(1000 + g_LevelNum);
+    
+        this.timer = 0;
+    
+        this.minx = -1000;
+        this.minz = -1000;
+        this.maxx = 1000;
+        this.maxz = 1000;
+    
+        this.kronky = [];
+        this.numkronky = 1;
+        this.playkronky = 0;
+    
+        this.kswap = false;     // When restoring - swap kronky and player
+    
+        this.gamedata = null;
+        this.isincommand = false;
+        this.isinforward = false;
+        this.doingforward = false;
+        this.ishelp = false;
+        this.flowers = [];
+        this.state = new State();
+        this.state.save(this);
+    }
 
-    restorelight: function()
+    restorelight()
     {
         // Hard code for now
         this.ambientLight =  vec3.fromValues(0.3, 0.3, 0.3);
         this.directionalLightColor = vec3.fromValues(1.0, 1.0, 1.0);
-    },
+    }
 
-    save: function()
+    save()
     {
-        return {
+        let out = {
             okctrl: this.okctrl,
             record: this.record,
             sucess: this.success,
@@ -2169,11 +2218,13 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
             numkronky: this.numkronky,
             playkronky: this.playkronky,
             player: this.player.save(),
-            state: this.state,
+            state: this.state.copy(),
         }
-    },
+        console.log(out);
+        return out;
+    }
 
-    restore: function(saved)
+    restore(saved)
     {
         this.okctrl = saved.okctrl;
         this.record = saved.record;
@@ -2191,9 +2242,9 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
             g_record.innerText = "R";
         else
             g_record.innerText = "";
-    },
+    }
 
-    walls: function(xf, zf, xt, zt, ys)
+    walls(xf, zf, xt, zt, ys)
     {
         this.minx = (xf * 30) - 15;
         this.minz = (zf * 30) - 15;
@@ -2215,14 +2266,14 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
                 new Sky(i * 30, (ys * 30) + 15, j * 30, 0);
             }
         }
-    },
+    }
 
-    nextwall: function()
+    nextwall()
     {
         return this.prng.next(9);
-    },
+    }
         
-    lLoop: function(delta)
+    lLoop(delta)
     {
 
         // Celebrate if neccessary
@@ -2238,7 +2289,7 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
                 } 
                 if(this.ishelp) return true;
                 if((nkctrl & CSAVE) != 0) {
-                    sounds.csave.play();
+                    g_assets.csave.play();
                     this.gamedata = this.savegame();
                     this.lMessage("Position saved", "yellow");
                  }
@@ -2246,14 +2297,14 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
                     if(!this.gamedata) {
                         this.lMessage("No position data saved");
                     } else {
-                        sounds.crestore.play();
+                        g_assets.crestore.play();
                         this.restoregame(this.gamedata);
                         this.lMessage("Position restored", "yellow");
                     }
                 }
         
                 if((nkctrl & CRESET) != 0) {
-                    sounds.flush.play();
+                    g_assets.flush1.play();
                     this.isdead = true;
                     this.seefinished = true;
                     this.timer = 2;
@@ -2273,13 +2324,17 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         if((nkctrl & CFORWARD) != 0) {
             if((!this.seefinished)) {
                 if(!this.isinforward) {
-                    sounds.ticktock.play();
+                    g_assets.ticktock.start();
                     this.isinforward = true;
                     g_forward.innerText = " F ";
                 }
                 if((!this.doingforward)) {
                     this.doingforward = true;
-                    for(var i = 0; i < 5; i++) {
+                    if(lScene.playkronky == 0)
+                        var ti = 20;
+                    else
+                        var ti = 5;
+                    for(var i = 0; i < ti; i++) {
                         this.lLoop(delta);
                         if(this.seefinished) break;
                     }
@@ -2289,7 +2344,7 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
             }
         }  else {
             if(this.isinforward) {
-                sounds.ticktock.stop();
+                g_assets.ticktock.pause();
                 this.isinforward = false;
                 g_forward.innerText = "";
             }
@@ -2351,12 +2406,10 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         for(var i = 0; i < dlen; i++) {
             dobjs[i].animate(delta);
         }
-
         return true;
+    }
 
-    },
-
-    findpickup: function(x, y, z, ry)
+    findpickup(x, y, z, ry)
     {
         var ma = mat4.create();
         var mb = mat4.create();
@@ -2409,53 +2462,26 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         }
         return curthing;
         // HERE
-    },
+    }
 
-
-    savestate: function()
+    savestate()
     {
-        var dobjs = this.stateobjs;
-        var dlen = dobjs.length;
-        var things = [];
+        let state = new State();
+        state.save(this);
+        return state;
+    }
 
-        for(var i = 0;  i < dlen; i++)
-        {
-            var obj = dobjs[i];
-            things.push([obj, obj.save()]);
-        }
-
-        var achievements = {};
-        for(var key in lScene.achievements) {
-            achievements[key] = lScene.achievements[key];
-        }
-        return {
-            things: things,
-            achievements: achievements,
-        };
-    },
-
-    restorestate: function(state)
+    restorestate(state)
     {
-        var things = state.things;
-        var achievements = state.achievements;
-        var slen = things.length;
-        for(var i = 0;  i < slen; i++)
-        {
-            var sta = things[i];
-            sta[0].restore(sta[1]);
-        }
+        state.restore(this);
         var sobs = this.pickups;
         var slen = sobs.length;
         for(var i = 0; i < slen; i++) {
             sobs[i].obj.procpos();
         }
-        lScene.achievements = {};
-        for(var key in achievements) {
-            lScene.achievements[key] = achievements[key];
-        }
-    },
+    }
 
-    restoregame: function(state)
+    restoregame(state)
     {
         var sobs = this.pickups;
         var slen = sobs.length;
@@ -2465,22 +2491,23 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         }
         this.restorestate(state);
         this.restore(state.scene);
-    },
+    }
 
-    savegame: function()
+    savegame()
     {
         var gamedata = this.savestate();
         gamedata.scene = this.save();
         return gamedata;
-    },
+    }
 
-    achieve: function(key, ind)
+    achieve(key, ind)
     {
         if(!(key in this.achievements)) this.achievements[key] = 0;
         this.achievements[key] += ind;
         this.do_achieve();
-    },
-    celebrate: function(delta)
+    }
+
+    celebrate(delta)
     {
         lCamera.rotateFlatHere(-LR90, lCamera.ry);
         lCamera.moveFlat(0, delta * 30, 0);
@@ -2488,9 +2515,9 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
             return false;
         else
             return true;
-    },
+    }
 
-    havedied: function(delta)
+    havedied(delta)
     {
         this.timer -= delta;
         if(this.timer <= 0) {
@@ -2505,20 +2532,20 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         this.ambientLight =  vec3.fromValues(amb * 2, amb / 1.5, amb / 1.5);
         this.directionalLightColor = vec3.fromValues(dir * 2, dir / 1.5, dir / 1.5);
         return true;
-    },
+    }
 
-    stopsounds: function()
+    stopsounds()
     {
-        sounds.ticktock.stop();
-        sounds.shuffle.stop();
-        sounds.rumble.stop();
-        sounds.door.stop();
-        sounds.cagefly.stop();
-        sounds.zip.stop();
-        sounds.ratchet.stop();
-        sounds.rocket.stop();
-    },
-});
+        g_assets.ticktock.stop();
+        g_assets.shuffle.stop();
+        g_assets.rumble.stop();
+        g_assets.door.stop();
+        g_assets.cagefly.stop();
+        g_assets.zip.stop();
+        g_assets.ratchet.stop();
+        g_assets.rocket.stop();
+    }
+}
 
 function skyStructure()
 {
@@ -2527,26 +2554,30 @@ function skyStructure()
     return stru;
 }
 
-function Sky(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Sky, this);
-    lScene.lPlace(this.obj, lFromXYZ(x, y, z));
-    this.obj.procpos();
+class Sky {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Sky, this);
+        lScene.lPlace(this.obj, lFromXYZ(x, y, z));
+        this.obj.procpos();
+    }
 }
     
 
 function dunkStructure()
 {
-    var stru = new LStructureDef(ShaderShade, {texture: SLICK});
+    var stru = new LStructureDef(ShaderShade, {texture: g_assets.slick});
     stru.addBlock({size: [15, 0.01, 15], hold: [LI_FRONT, LI_BACK, LI_LEFT, LI_RIGHT, LI_BOTTOM]});
     return stru;
 }
 
-function Dunk(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Dunk, this);
-    lScene.lPlace(this.obj, lFromXYZ(x, y, z));
-    this.obj.procpos();
+class Dunk {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Dunk, this);
+        lScene.lPlace(this.obj, lFromXYZ(x, y, z));
+        this.obj.procpos();
+    }
 }
     
 
@@ -2575,21 +2606,23 @@ function wallStructures()
 
     var ostrus = [];
     for(var i = 0; i < 9; i ++) {
-        var stru = new LStructureDef(ShaderShade, {texture: WALLADS, collision: LSTATIC});
+        var stru = new LStructureDef(ShaderShade, {texture: g_assets.wallads, collision: LSTATIC});
         stru.addBlock({texturecontrols: [wads[i], wads[i], null, null, null, null], size: [15, 15, .01]});
         ostrus.push(stru);
     }
     return ostrus;
 }
 
-function Wall(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Wall[lScene.nextwall()], this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.iscage = false;
-    this.isfloor = false;
-    this.iswire = false;
+class Wall {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Wall[lScene.nextwall()], this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.iscage = false;
+        this.isfloor = false;
+        this.iswire = false;
+    }
 }
 
 
@@ -2606,18 +2639,20 @@ function glassPartitionStructure()
     return [mstr, pstr];
 }
 
-function GlassPartition(x, y, z, ry)
-{
-
-    this.obj = new LWObject(structs.GlassPartition[0], this);
-    this.pobj = new LWObject(structs.GlassPartition[1], this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.lPlace(this.pobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.pobj.procpos();
-    this.iscage = false;
-    this.isfloor = false;
-    this.iswire = false;
+class GlassPartition {
+    constructor(x, y, z, ry)
+    {
+    
+        this.obj = new LWObject(structs.GlassPartition[0], this);
+        this.pobj = new LWObject(structs.GlassPartition[1], this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.lPlace(this.pobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.pobj.procpos();
+        this.iscage = false;
+        this.isfloor = false;
+        this.iswire = false;
+    }
 }
 
 function postStructure()
@@ -2630,19 +2665,21 @@ function postStructure()
     return pstr;
 }
 
-function Post(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Post, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.iscage = false;
-    this.isfloor = false;
-    this.iswire = false;
+class Post {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Post, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.iscage = false;
+        this.isfloor = false;
+        this.iswire = false;
+    }
 }
 
 function exitStructure()
 {
-    var mstructure = new LStructureDef(ShaderSimple, {texture: KEXIT, collision: LSTATIC});
+    var mstructure = new LStructureDef(ShaderSimple, {texture: g_assets.kexit, collision: LSTATIC});
 
     var tinside = new LTextureControl([512, 512], [0, 0], [256, 512]);
     var toutside = new LTextureControl([512, 512], [256, 0], [256, 512]);
@@ -2677,56 +2714,55 @@ function exitStructure()
 }
 
 
-function Exit(x, y, z, ry)
-{
-    var obj = new LWObject(structs.Exit[0], this);
+class Exit {
+    constructor(x, y, z, ry)
+    {
+        var obj = new LWObject(structs.Exit[0], this);
+    
+        // var lgrp = new LObject(structs.Exit[1], this);
+        // var rgrp = new LObject(structs.Exit[1], this);
+    
+        var lodoor = new LObject(structs.Exit[1], this);
+        var rodoor = new LObject(structs.Exit[1], this);
+        var lidoor = new LObject(structs.Exit[1], this);
+        var ridoor = new LObject(structs.Exit[1], this);
+    
+        obj.addChild(lodoor, lFromXYZPYR(-1, -0.5, -1, 0, 0, 0));
+        obj.addChild(rodoor, lFromXYZPYR(1, -0.5, -1, 0, LR180, 0));
+    
+        lodoor.addChild(lidoor, lFromXYZPYR(.5, 0, 0, 0, 0, 0));
+        rodoor.addChild(ridoor, lFromXYZPYR(.5, 0, 0, 0, 0, 0));
+    
+    
+        lScene.lPlace(obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+    
+        // Need to add some virtuals
+        // One hell of a cheat, obj.draw() gets the workposition
+        // so getScenePos works
+        obj.procpos();
+        this.obj = obj;
+        this.isopen = false;
+        this.isopening = false;
+        this.hasopened = 0;
+        this.lodoor = lodoor;
+        this.rodoor = rodoor;
+        this.lidoor = lidoor;
+        this.ridoor = ridoor;
+    
+        this.isfloor = false;
+        this.iswire = false;
+        this.istravel = false;
+        this.iscage = false;
+    
+        lScene.stateobjs.push(this);
+        lScene.animates.push(this);
+    
+    }
 
-    // var lgrp = new LObject(structs.Exit[1], this);
-    // var rgrp = new LObject(structs.Exit[1], this);
-
-    var lodoor = new LObject(structs.Exit[1], this);
-    var rodoor = new LObject(structs.Exit[1], this);
-    var lidoor = new LObject(structs.Exit[1], this);
-    var ridoor = new LObject(structs.Exit[1], this);
-
-    obj.addChild(lodoor, lFromXYZPYR(-1, -0.5, -1, 0, 0, 0));
-    obj.addChild(rodoor, lFromXYZPYR(1, -0.5, -1, 0, LR180, 0));
-
-    lodoor.addChild(lidoor, lFromXYZPYR(.5, 0, 0, 0, 0, 0));
-    rodoor.addChild(ridoor, lFromXYZPYR(.5, 0, 0, 0, 0, 0));
-
-
-    lScene.lPlace(obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-
-    // Need to add some virtuals
-    // One hell of a cheat, obj.draw() gets the workposition
-    // so getScenePos works
-    obj.procpos();
-    this.obj = obj;
-    this.isopen = false;
-    this.isopening = false;
-    this.hasopened = 0;
-    this.lodoor = lodoor;
-    this.rodoor = rodoor;
-    this.lidoor = lidoor;
-    this.ridoor = ridoor;
-
-    this.isfloor = false;
-    this.iswire = false;
-    this.istravel = false;
-    this.iscage = false;
-
-    lScene.stateobjs.push(this);
-    lScene.animates.push(this);
-
-}
-
-Exit.prototype = {
-    constructor: Exit,
-    open: function()
+    open()
     {
         if(!this.isopening)
-            sounds.door.play();
+            g_assets.door.start();
         if(this.isopen) return;
         this.isopen = true;
         this.isopening = true;
@@ -2735,23 +2771,25 @@ Exit.prototype = {
         this._vopen(true);
 
         return this;
-    },
+    }
 
-    _vopen: function(ind)
+    _vopen(ind)
     {
         this.lodoor.ignore = ind;
         this.lidoor.ignore = ind;
         this.rodoor.ignore = ind;
         this.ridoor.ignore = ind;
 
-    },
-    save: function()
+    }
+
+    save()
     {
         return {isopen: this.isopen, isopening: this.isopening, hasopened: this.hasopened};
-    },
-    restore: function(state)
+    }
+
+    restore(state)
     {
-        if(this.isopening) sounds.door.pause();
+        if(this.isopening) g_assets.door.pause();
         this.isopen = state.isopen;
         this.isopening = state.isopening;
         this.hasopened = state.hasopened;
@@ -2762,9 +2800,10 @@ Exit.prototype = {
         this.lodoor.procpos();
         this.rodoor.procpos();
         this._vopen(this.isopen);
-        if(this.isopening) sounds.door.play();
-    },
-    animate: function(delta)
+        if(this.isopening) g_assets.door.start();
+    }
+
+    animate(delta)
     {
         // Opens in 1 second
         if(!this.isopening) return;
@@ -2773,7 +2812,7 @@ Exit.prototype = {
         if(this.hasopened >= 1) {
             this.hasopened = 1;
             this.isopening = false;
-            sounds.door.pause();
+            g_assets.door.pause();
             
         }
         this.lodoor.rotateHere(0, -this.hasopened * LR90 * 0.95, 0);
@@ -2806,26 +2845,26 @@ function flowerStructure()
     return [gdef, stru];
 }
 
-function Flower(x, y, z, ry)
-{
-    BaseThing.call(this, structs.Flower, false, x, y, z, ry);
-    lScene.stateobjs.push(this);
-    this.isstanding = false;        // Stop shadow
-    this.istravel = false;
-    lScene.flowers.push(this);
-}
+class Flower extends BaseThing {
+    constructor(x, y, z, ry)
+    {
+        super(structs.Flower, false, x, y, z, ry);
+        lScene.stateobjs.push(this);
+        this.isstanding = false;        // Stop shadow
+        this.istravel = false;
+        lScene.flowers.push(this);
+    }
 
-Flower.prototype = Object.assign(Object.create(BaseThing.prototype), {
-    constructor: Flower,
-    chuck: function(person)
+    chuck(person)
     {
         if(person instanceof Player) {
             lScene.lMessage("The flower is delicate. Throwing it breaks it.");
         }
-        sounds.smash.play();
+        g_assets.smash.play();
         this.end();
-    },
-    animate: function(delta)
+    }
+
+    animate(delta)
     {
         if(!this.islive) return;
         // if(this.iscarried) return;
@@ -2833,8 +2872,9 @@ Flower.prototype = Object.assign(Object.create(BaseThing.prototype), {
         if(this.standrot < 0) this.standrot += LR360
         this.aobj.rotateHere(0, this.standrot, 0);
         this.aobj.procpos();
-    },
-    fits: function(xobj)
+    }
+
+    fits(xobj)
     {
         if(xobj instanceof Exit) {
             var ve = vec4.fromValues(0, 0, 0, 1);
@@ -2851,15 +2891,16 @@ Flower.prototype = Object.assign(Object.create(BaseThing.prototype), {
                     lScene.lMessage("Well - Kronky did it actually", "lightgreen");
                 else
                     lScene.lMessage("Success!", "lightgreen");
-                sounds.gong.play();
-                sounds.whoosh.play();
+                g_assets.gong.play();
+                g_assets.whoosh.play();
             }
             return false;
         } else {
             return false;
         }
-    },
-    drophere: function(pobj, x, y, z, ry)
+    }
+
+    drophere(pobj, x, y, z, ry)
     {
         // Flower stands are done manually
         if(this.iscarried) {
@@ -2905,22 +2946,23 @@ Flower.prototype = Object.assign(Object.create(BaseThing.prototype), {
         }
         lScene.lMessage("Can only place the flower on a flower stand");
         return false
-    },
+    }
 
-    place: function(x, y, z, ry)
+    place(x, y, z, ry)
     {
         this.islive = true;
         this.isstanding = false;
         this.obj.mkvisible(true);
         this.obj.moveHere(x, y, z);
         this.obj.procpos();
-    },
-    pickup: function(pobj)
+    }
+
+    pickup(pobj)
     {
         // if(this.iscarried) 
             // pobj.carrying = null;
         this.iscarried = pobj;
-        sounds.pickupflower.play();
+        g_assets.pickupflower.play();
         if(pobj instanceof Player) {
             this.aobj.moveHere(0, -0.3, 0.20);
         } else if(pobj instanceof Kronky) {
@@ -2930,17 +2972,20 @@ Flower.prototype = Object.assign(Object.create(BaseThing.prototype), {
             pobj.rtarm.rotateHere(LR90 * .55, LR90 * .9, 0);
             pobj.rbarm.rotateHere( LR90 * 0.45, 0, 0);
         }
-    },
-    resetpickup: function(pobj)
+    }
+
+    resetpickup(pobj)
     {
         this.iscarried = null;
-    },
-    respawn: function()
+    }
+
+    respawn()
     {
         var obj = new Flower(0, 0, 0, 0);
         return obj;
-    },
-    kronkycarry: function(kronky)
+    }
+
+    kronkycarry(kronky)
     {
         var obj = this.obj;
         var crobj = kronky.obj;
@@ -2958,9 +3003,9 @@ Flower.prototype = Object.assign(Object.create(BaseThing.prototype), {
         // obj.rotate(kronky.rx, 0, 0);
         // this.aobj.rotateHere(0, 0, 0);
         this.obj.procpos();
-    },
+    }
 
-    playercarry: function(person)
+    playercarry(person)
     {
         var obj = this.obj;
 
@@ -2979,22 +3024,14 @@ Flower.prototype = Object.assign(Object.create(BaseThing.prototype), {
         obj.rotateFlat(lCamera.rx, 0, 0);
         // this.aobj.rotateHere(0, 0, 0);
         this.obj.procpos();
-    },
-});
+    }
+}
 
 function liftStructure()
 {
 
     var gdef = new LGroupDef();
     var stru = new LStructureDef(ShaderLight, {color: [0.4, 1.0, 1.0, 0.5], collision: LSTATIC});
-    // stru.addCylinder({position: lFromXYZPYR(-.35, -1, -.35, LR90, 0, 0), radius: .05, depth: 1.5, corners: null, segments: 6});
-    // stru.addCylinder({position: lFromXYZPYR(.35, -1, -.35, LR90, 0, 0), radius: .05, depth: 1.5, corners: null, segments: 6});
-    // stru.addCylinder({position: lFromXYZPYR(-.35, -1, .35, LR90, 0, 0), radius: .05, depth: 1.5, corners: null, segments: 6});
-    // stru.addCylinder({position: lFromXYZPYR(.35, -1, .35, LR90, 0, 0), radius: .05, depth: 1.5, corners: null, segments: 6});
-    // stru.addCylinder({position: lFromXYZPYR(0, -1, .5, LR90, 0, 0), radius: .05, depth: 1.5, corners: null, segments: 6});
-    // stru.addCylinder({position: lFromXYZPYR(0, -1, -.5, LR90, 0, 0), radius: .05, depth: 1.5, corners: null, segments: 6});
-    // stru.addCylinder({position: lFromXYZPYR(.5, -1, 0, LR90, 0, 0), radius: .05, depth: 1.5, corners: null, segments: 6});
-    // stru.addCylinder({position: lFromXYZPYR(-.5, -1, 0, LR90, 0, 0), radius: .05, depth: 1.5, corners: null, segments: 6});
     stru.addCylinder({position: lFromXYZPYR(0, -2.4, 0, LR90, 0, 0), radius: 0.55, depth: 0.01, corners: null});
 
     var ma = [
@@ -3027,22 +3064,21 @@ function liftStructure()
     return [gdef, stru];
 }
 
-function Lift(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Lift[0], this);
-    this.iobj = new LObject(structs.Lift[1], this);
-    this.obj.addChild(this.iobj, mat4.create());
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.animates.push(this);
-    this.obj.procpos();
-    this.istravel = true;
-    this.iscage = false;
-    this.lightheight = lScene.prngd.next(1.0);
-}
+class Lift {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Lift[0], this);
+        this.iobj = new LObject(structs.Lift[1], this);
+        this.obj.addChild(this.iobj, mat4.create());
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.animates.push(this);
+        this.obj.procpos();
+        this.istravel = true;
+        this.iscage = false;
+        this.lightheight = lScene.prngd.next(1.0);
+    }
 
-Lift.prototype = {
-    constructor: Lift,
-    animate: function(delta) {
+    animate(delta) {
         this.iobj.rotate(0, delta * 3, 0);
         this.iobj.procpos();
         this.lightheight += delta * .3;
@@ -3079,33 +3115,31 @@ function dodgyBridge2Structure()
     return [stra, strp];
 }
 
-function DodgyBridgeBase(struc, x, y, z, ry)
-{
-    this.obj = new LWObject(struc[0], this);
-    this.mobj = new LWObject(struc[1], this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.lPlace(this.mobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.istravel = false;
-    this.islive = true;
-    this.isfloor = true;
-    this.iswire = false;
-    this.candrop = false;
-    this.destroy = 0;
-    this.obj.procpos();
-    this.mobj.procpos();
-    this.iscage = false;
-    this.numon = 0;
-    this.isdestroying = false;
+class DodgyBridgeBase {
+    constructor(struc, x, y, z, ry)
+    {
+        this.obj = new LWObject(struc[0], this);
+        this.mobj = new LWObject(struc[1], this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.lPlace(this.mobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.istravel = false;
+        this.islive = true;
+        this.isfloor = true;
+        this.iswire = false;
+        this.candrop = false;
+        this.destroy = 0;
+        this.obj.procpos();
+        this.mobj.procpos();
+        this.iscage = false;
+        this.numon = 0;
+        this.isdestroying = false;
+    
+        lScene.animates.push(this);
+        lScene.stateobjs.push(this);
+        this.lightheight = lScene.prngd.next(1.0);
+    }
 
-    lScene.animates.push(this);
-    lScene.stateobjs.push(this);
-    this.lightheight = lScene.prngd.next(1.0);
-}
-
-DodgyBridgeBase.prototype = {
-    constructor: DodgyBridgeBase,
-
-    save: function()
+    save()
     {
         var obj = this.obj;
         return {
@@ -3117,9 +3151,9 @@ DodgyBridgeBase.prototype = {
             numon: this.numon,
             isdestroying: this.isdestroying,
         };
-    },
+    }
 
-    restore: function(saved)
+    restore(saved)
     {
         var obj = this.obj;
         obj.x = saved.x;
@@ -3127,26 +3161,26 @@ DodgyBridgeBase.prototype = {
         obj.z = saved.z;
         obj.isvisible = saved.isvisible;
 
-        if(this.isdestroying) sounds.rumble.pause();
+        if(this.isdestroying) g_assets.rumble.pause();
 
         this.destroy = saved.destroy;
         this.numon = saved.numon;
         this.isdestroying = saved.isdestroying;
         if(obj.isvisible) obj.procpos();
-        if(this.isdestroying) sounds.rumble.play();
+        if(this.isdestroying) g_assets.rumble.start();
         
-    },
+    }
 
-    onthis: function()
+    onthis()
     {
         this.numon += 1;
         if(!this.isdestroying) {
             this.isdestroying = true;
-            sounds.rumble.play();
+            g_assets.rumble.start();
         }
-    },
+    }
 
-    animate: function(delta)
+    animate(delta)
     {
         // TODO with some optimisation
         // Needs to crash if > 1 on bridge
@@ -3163,38 +3197,35 @@ DodgyBridgeBase.prototype = {
                 this.obj.isvisible = false;
                 this.isdestroying = false;
                 this.destroy = 0;
-                sounds.rumble.pause();
-                sounds.smash.play();
+                g_assets.rumble.pause();
+                g_assets.smash.play();
             }
         }
         this.numon = 0;
         this.lightheight += delta * .3;
         if(this.lightheight > 1) this.lightheight -= 1;
-    },
+    }
 }
 
-function DodgyBridge(x, y, z, ry)
-{
-    DodgyBridgeBase.call(this, structs.DodgyBridge, x, y, z, ry);
-    this.desfact = 1;
-    this.broken = 6;
-    this.shake = 0.03;
+class DodgyBridge extends DodgyBridgeBase {
+    constructor(x, y, z, ry)
+    {
+        super(structs.DodgyBridge, x, y, z, ry);
+        this.desfact = 1;
+        this.broken = 6;
+        this.shake = 0.03;
+    }
 }
 
-DodgyBridge.prototype = Object.assign(Object.create(DodgyBridgeBase.prototype), {
-    constructor: DodgyBridge,
-});
-
-function DodgyBridge2(x, y, z, ry)
-{
-    DodgyBridgeBase.call(this, structs.DodgyBridge2, x, y, z, ry);
-    this.desfact = 0.5;
-    this.broken = 5.5;
-    this.shake = 0.02;
+class DodgyBridge2 extends DodgyBridgeBase {
+    constructor(x, y, z, ry)
+    {
+        super(structs.DodgyBridge2, x, y, z, ry);
+        this.desfact = 0.5;
+        this.broken = 5.5;
+        this.shake = 0.02;
+    }
 }
-DodgyBridge2.prototype = Object.assign(Object.create(DodgyBridgeBase.prototype), {
-    constructor: DodgyBridge2,
-});
 
 function cageStructure()
 {
@@ -3255,52 +3286,50 @@ function cageStructure()
     return [stru, stp];
 }
 
-function Cage(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Cage[0], this);
-    var pill = new LObject(structs.Cage[1], this);
+class Cage {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Cage[0], this);
+        var pill = new LObject(structs.Cage[1], this);
+    
+        this.obj.addChild(pill, mat4.create());
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.isfloor = false;
+        this.iswire = false;
+        this.candrop = false;
+        this.iscage = true;
+    
+    
+        this.ry = 0;
+        this.carries = [];
+        this.distance = 0;
+        this.backdist = 0;
+        this.flying = false;
+        this.falling = false;
+        this.vvel = 0;
+        this.shotby = null;
+        this.shooting = null;
+        this.fact = 1;
+        this.persons = [];
+        this.carlen = 0;
+        this.perlen = 0;
+        this.matr = mat4.create();
+    
+        // Temporary stuff
+        // Initialised here for performance
+        this.scoll = new LVirtObject(this, 0, 0, 0, 0);
+        this.vec = vec3.create();
+    
+        this.pccol = new LVirtObject(this, 0, 0, 0, 0.2);
+        this.pccol.ignore = true;
+    
+        lScene.animates.push(this);
+        lScene.stateobjs.push(this);
+        this.lightheight = lScene.prngd.next(1.0);
+    }
 
-    this.obj.addChild(pill, mat4.create());
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.isfloor = false;
-    this.iswire = false;
-    this.candrop = false;
-    this.iscage = true;
-
-
-    this.ry = 0;
-    this.carries = [];
-    this.distance = 0;
-    this.backdist = 0;
-    this.flying = false;
-    this.falling = false;
-    this.vvel = 0;
-    this.shotby = null;
-    this.shooting = null;
-    this.fact = 1;
-    this.persons = [];
-    this.carlen = 0;
-    this.perlen = 0;
-    this.matr = mat4.create();
-
-    // Temporary stuff
-    // Initialised here for performance
-    this.scoll = new LVirtObject(this, 0, 0, 0, 0);
-    this.vec = vec3.create();
-
-    this.pccol = new LVirtObject(this, 0, 0, 0, 0.2);
-    this.pccol.ignore = true;
-
-    lScene.animates.push(this);
-    lScene.stateobjs.push(this);
-    this.lightheight = lScene.prngd.next(1.0);
-}
-
-Cage.prototype = {
-    constructor: Cage,
-
-    ishit: function(person, matr, ry, diag)
+    ishit(person, matr, ry, diag)
     {
         if(this.flying) return;
         var obj = this.obj;
@@ -3334,6 +3363,12 @@ Cage.prototype = {
 
         var tooclose = false;
 
+        /*
+         * Having "iscarried" stuff as a miss, though that can go wrong
+         * on diagnols if person outside hit area, and carried object is in
+         * But I will risk that
+         */
+
         function _sees(cob)
         {
             var thing = cob.control;
@@ -3361,8 +3396,10 @@ Cage.prototype = {
                 function _seed(cob)
                 {
                     if(!cob.control.isfloor) {
-                        if(cob.x < xf || cob.x > xt || cob.z < zf || cob.z > zt) {
-                            tooclose = true;
+                        if(!cob.control.iscarried) {
+                            if(cob.x < xf || cob.x > xt || cob.z < zf || cob.z > zt) {
+                                tooclose = true;
+                            }
                         }
                     }
                 }
@@ -3459,12 +3496,12 @@ Cage.prototype = {
         this.distance = tdist * fact;
         this.flying = true;
         this.shooting = person;
-        sounds.cagefly.play();
+        g_assets.cagefly.start();
         return true;
 
-    },
+    }
 
-    travel: function(person, delta, x, z, rx, ry)
+    travel(person, delta, x, z, rx, ry)
     {
         
         if(rx == 0 && ry == 0) return;
@@ -3495,9 +3532,9 @@ Cage.prototype = {
             person.obj.rotateFlat(rx, ry);
             person.obj.procpos();
         }
-    },
+    }
 
-    animate: function(delta)
+    animate(delta)
     {
         this.lightheight += delta * .3;
         if(this.lightheight > 1) this.lightheight -= 1;
@@ -3527,7 +3564,7 @@ Cage.prototype = {
                     this.empty();
                     this.obj.mkvisible(false);
                     this.islive = false;
-                    sounds.splash.play();
+                    g_assets.splash.play();
                 }
             }
         } else {
@@ -3600,30 +3637,30 @@ Cage.prototype = {
                 this.backdist = wdist + (2 * this.fact);    // Bounce back
                 this.falling = true;
                 if(wire)
-                    sounds.thud.play();
+                    g_assets.thud.play();
                 else
-                    sounds.twang.play();
+                    g_assets.twang.play();
             } else if(hitfloor) {
                 if(this.distance == 0) {
-                    sounds.landing.play();
+                    g_assets.landing.play();
                     this.empty();
                 }
             }
         }
-    },
+    }
 
-    empty: function()
+    empty()
     {
         this.flying = false;
-        sounds.cagefly.pause();
+        g_assets.cagefly.pause();
         for(var i = 0; i < this.perlen; i++) {
             this.persons[i].travelling = null;
         }
         this.shotby.hashit = null;
         this.shotby = null;
-    },
+    }
 
-    moveall: function(x, y, z)
+    moveall(x, y, z)
     {
         this.obj.moveAbs(x, y, z);
         this.obj.procpos();
@@ -3632,9 +3669,9 @@ Cage.prototype = {
             aobj.moveAbs(x, y, z);
             aobj.procpos();
         }
-    },
+    }
 
-    save: function()
+    save()
     {
         var persons = [];
         for(var i = 0; i < this.perlen; i++) persons.push(this.persons[i]);
@@ -3658,10 +3695,11 @@ Cage.prototype = {
             perlen: this.perlen,
             matr: mat4.clone(this.matr),
         };
-    },
-    restore: function(saved)
+    }
+
+    restore(saved)
     {
-        if(this.flying) sounds.cagefly.pause();
+        if(this.flying) g_assets.cagefly.pause();
         this.obj.restore(saved.obj);
 
         var persons = [];
@@ -3684,11 +3722,9 @@ Cage.prototype = {
         this.carlen = saved.carlen;
         this.perlen = saved.perlen;
         this.matr = mat4.clone(saved.matr);
-        if(this.flying) sounds.cagefly.play();
+        if(this.flying) g_assets.cagefly.start();
     }
 }
-
-
 
 function pushMeStructure()
 {
@@ -3707,33 +3743,33 @@ function pushMeStructure()
     return [gdef, structure];
 }
 
-function PushMe(x, y, z, ry)
-{
-    BaseThing.call(this, structs.PushMe, true, x, y, z, ry);
-    lScene.stateobjs.push(this);
-    this.bcoll = new LVirtObject(this, 0, 0, 0, 0.2);
+class PushMe extends BaseThing {
+    constructor(x, y, z, ry)
+    {
+        super(structs.PushMe, true, x, y, z, ry);
+        lScene.stateobjs.push(this);
+        this.bcoll = new LVirtObject(this, 0, 0, 0, 0.2);
 
-    this.hashit = null;
-}
+        this.hashit = null;
+    }
 
-PushMe.prototype = Object.assign(Object.create(BaseThing.prototype), {
-    constructor: PushMe,
-    vsave: function(ret)
+    vsave(ret)
     {
         ret.hashit = this.hashit;
-    },
-    vrestore: function(saved)
+    }
+
+    vrestore(saved)
     {
         this.hashit = saved.hashit;
-    },
+    }
 
-    respawn: function()
+    respawn()
     {
         var obj = new PushMe(0, 0, 0, 0);
         return obj;
-    },
+    }
 
-    fire: function(person)
+    fire(person)
     {
         if(this.hashit) return;
         var bcoll = this.bcoll;
@@ -3780,7 +3816,7 @@ PushMe.prototype = Object.assign(Object.create(BaseThing.prototype), {
         if(!hitcage) {
             if(person instanceof Player)
                 lScene.lMessage("Missed all cages");
-            sounds.click.play();
+            g_assets.click.play();
             return;
         }
 
@@ -3823,7 +3859,7 @@ PushMe.prototype = Object.assign(Object.create(BaseThing.prototype), {
         if(hit) {
             if(person instanceof Player)
                 lScene.lMessage("Cannot push cage in this direction");
-            sounds.clunk.play();
+            g_assets.clunk.play();
             return;
         }
 
@@ -3832,15 +3868,15 @@ PushMe.prototype = Object.assign(Object.create(BaseThing.prototype), {
         if(!hitcage.ishit(person, mb, ry, diag)) {
             if(person instanceof Player)
                 lScene.lMessage("Object too close to cage");
-            sounds.clunk.play();
+            g_assets.clunk.play();
             return;
         }
         
         hitcage.shotby = this;
         this.hashit = hitcage;
-        sounds.pushme.play();
+        g_assets.pushme.play();
     }
-});
+}
     
     
 
@@ -3861,52 +3897,53 @@ function zip11Structure()
     return [stru, strc];
 }
 
-function ZipBase(x, y, z, ry)
-{
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.lPlace(this.cobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.pickups.push(this);
-    this.obj.procpos();
+class ZipBase {
+    constructor() { }
+    postinit(x, y, z, ry)
+    {
 
-    this.ry = ry;
-    this.canpickup = true;
-    this.cobj.mkvisible(false);
-    this.iscage = false;
-    this.lightheight = lScene.prngd.next(1.0);
-
-    this.statestatic = true;
-
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.lPlace(this.cobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.pickups.push(this);
+        this.obj.procpos();
     
-
-    var mb = mat4.create();
-    mat4.fromYRotation(mb, ry);
-    var ma = mat4.create();
-
-    mat4.fromTranslation(ma, vec3.fromValues(0, -this.vertical, -this.horizontal));
-    mat4.multiply(ma, mb, ma);
-    var ve = vec3.create();
-    mat4.getTranslation(ve, ma);
-
-    this.endx = x + ve[0];
-    this.endy = y + ve[1];
-    this.endz = z + ve[2];
-
-    mat4.fromTranslation(ma, vec3.fromValues(0, -this.vertical, 1-this.horizontal));
-    mat4.multiply(ma, mb, ma);
-    mat4.getTranslation(ve, ma);
-
-    this.penx = x + ve[0];
-    this.peny = y + ve[1];
-    this.penz = z + ve[2];
-
-
-    lScene.animates.push(this);
+        this.ry = ry;
+        this.canpickup = true;
+        this.cobj.mkvisible(false);
+        this.iscage = false;
+        this.lightheight = lScene.prngd.next(1.0);
     
-}
+        this.statestatic = true;
+    
+        
+    
+        var mb = mat4.create();
+        mat4.fromYRotation(mb, ry);
+        var ma = mat4.create();
+    
+        mat4.fromTranslation(ma, vec3.fromValues(0, -this.vertical, -this.horizontal));
+        mat4.multiply(ma, mb, ma);
+        var ve = vec3.create();
+        mat4.getTranslation(ve, ma);
+    
+        this.endx = x + ve[0];
+        this.endy = y + ve[1];
+        this.endz = z + ve[2];
+    
+        mat4.fromTranslation(ma, vec3.fromValues(0, -this.vertical, 1-this.horizontal));
+        mat4.multiply(ma, mb, ma);
+        mat4.getTranslation(ve, ma);
+    
+        this.penx = x + ve[0];
+        this.peny = y + ve[1];
+        this.penz = z + ve[2];
+    
+    
+        lScene.animates.push(this);
+        
+    }
 
-ZipBase.prototype = {
-    constructor: ZipBase,
-    pickup: function(person)
+    pickup(person)
     {
         person.travelling = this;
         person.zipdist = 0;
@@ -3918,10 +3955,11 @@ ZipBase.prototype = {
         person.zipstart(this);
         person.displayzip(this);
         pobj.procpos();
-        sounds.zip.play();
+        g_assets.zip.start();
 
-    },
-    travel: function(person, delta, x, z, rx, ry)
+    }
+
+    travel(person, delta, x, z, rx, ry)
     {
 
         delta = delta * 10;
@@ -3938,7 +3976,7 @@ ZipBase.prototype = {
             person.zipdist = 0;
             person.zipend(this);
             person.displaydrop();
-            sounds.zip.pause();
+            g_assets.zip.pause();
 
             person.obj.ignore = true;
 
@@ -3954,37 +3992,34 @@ ZipBase.prototype = {
             person.zipgo(this);
         }
         obj.procpos();
-    }, 
+    }
 
-    animate: function(delta)
+    animate(delta)
     {
         this.lightheight += delta * .3;
         if(this.lightheight > 1) this.lightheight -= 1;
-    },
+    }
 
-    fire: function(person) {},
-    chuck: function(person) {},
-    playercarry: function(person) {},
-    kronkycarry: function(person) {},
-    
-
+    fire(person) {}
+    chuck(person) {}
+    playercarry(person) {}
+    kronkycarry(person) {}
 }
 
-function Zip11(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Zip11[0], this);
-    this.cobj = new LWObject(structs.Zip11[1], this);
-    this.horizontal = 11;
-    this.vertical = 5;
-    this.distance = 12;
+class Zip11 extends ZipBase {
+    constructor(x, y, z, ry)
+    {
+        super();
 
-    ZipBase.call(this, x, y, z, ry);
-    
+        this.obj = new LWObject(structs.Zip11[0], this);
+        this.cobj = new LWObject(structs.Zip11[1], this);
+        this.horizontal = 11;
+        this.vertical = 5;
+        this.distance = 12;
+
+        this.postinit(x, y, z, ry);
+    }
 }
-
-Zip11.prototype = Object.assign(Object.create(ZipBase.prototype), {
-    prototype: Zip11,
-});
 
 function zip21Structure()
 {
@@ -4002,22 +4037,20 @@ function zip21Structure()
     return [stru, strc];
 }
 
-function Zip21(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Zip21[0], this);
-    this.cobj = new LWObject(structs.Zip21[1], this);
-    this.horizontal = 21;
-    this.vertical = 5;
-    this.distance = 21.7156;
+class Zip21 extends ZipBase {
+    constructor(x, y, z, ry)
+    {
+        super();
 
+        this.obj = new LWObject(structs.Zip21[0], this);
+        this.cobj = new LWObject(structs.Zip21[1], this);
+        this.horizontal = 21;
+        this.vertical = 5;
+        this.distance = 21.7156;
 
-    ZipBase.call(this, x, y, z, ry);
-    
+        this.postinit(x, y, z, ry);
+    }
 }
-
-Zip21.prototype = Object.assign(Object.create(ZipBase.prototype), {
-    prototype: Zip21,
-});
 
 function flowerStandStructure()
 {
@@ -4035,37 +4068,37 @@ function flowerStandStructure()
     return stru;
 }
 
-function FlowerStand(x, y, z, ry, nostand)
-{
-    // If nostand, then not a "Flower Stand" as such
-    this.obj = new LWObject(structs.FlowerStand, this);
-    lScene.flowerstands.push(this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.istravel = false;
-    this.lightheight = lScene.prngd.next(1.0);
-    lScene.animates.push(this);
-}
+class FlowerStand {
+    constructor(x, y, z, ry, nostand)
+    {
+        // If nostand, then not a "Flower Stand" as such
+        this.obj = new LWObject(structs.FlowerStand, this);
+        lScene.flowerstands.push(this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.istravel = false;
+        this.lightheight = lScene.prngd.next(1.0);
+        lScene.animates.push(this);
+    }
 
-FlowerStand.prototype = {
-    constructor: FlowerStand,
-    place: function(x, y, z, ry)
+    place(x, y, z, ry)
     {
         this.obj.moveHere(x, y, z);
         this.obj.procpos();
-    },
-    animate: function(delta)
+    }
+
+    animate(delta)
     {
         this.lightheight += delta * .3;
         if(this.lightheight > 1) this.lightheight -= 1;
-    },
-    notastand: function()
+    }
+
+    notastand()
     {
         lScene.flowerstands.pop();
         return this;
     }
-
-};
+}
 
 function shadowStruct()
 {
@@ -4100,14 +4133,16 @@ function glassStructure()
     return [mstr, pstr];
 }
 
-function Glass(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Glass[0], this);
-    this.pobj = new LWObject(structs.Glass[1], this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.lPlace(this.pobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.pobj.procpos();
+class Glass {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Glass[0], this);
+        this.pobj = new LWObject(structs.Glass[1], this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.lPlace(this.pobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.pobj.procpos();
+    }
 }
 
 function doorStructure()
@@ -4148,50 +4183,49 @@ function doorStructure()
     return [mstr, pstr, dmstr, dpstr];
 }
 
-function UnderDoor(control, x, y, z, ry)
-{
-    // Have a look to see range of things under the door
-    var mb = mat4.create();
-    var ma = mat4.create();
-    var vl = vec3.create();
-    var vr = vec3.create();
-
-    mat4.fromYRotation(mb, ry);
-    mat4.fromTranslation(ma, vec3.fromValues(-1, 0, 0));
-    mat4.multiply(ma, mb, ma);
-    mat4.getTranslation(vl, ma);
-   
-    mat4.fromTranslation(ma, vec3.fromValues(1, 0, 0));
-    mat4.multiply(ma, mb, ma);
-    mat4.getTranslation(vr, ma);
-
-    vl[0] += x;
-    vl[1] += y;
-    vl[2] += z;
-    vr[0] += x;
-    vr[1] += y;
-    vr[2] += z;
-
-    var t;
-
-    for(var i = 0; i < 3; i++) {
-        if(vl[i] > vr[i]) {
-            t = vl[i];
-            vl[i] = vr[i];
-            vr[i] = t;
+class UnderDoor {
+    constructor(control, x, y, z, ry)
+    {
+        // Have a look to see range of things under the door
+        var mb = mat4.create();
+        var ma = mat4.create();
+        var vl = vec3.create();
+        var vr = vec3.create();
+    
+        mat4.fromYRotation(mb, ry);
+        mat4.fromTranslation(ma, vec3.fromValues(-1, 0, 0));
+        mat4.multiply(ma, mb, ma);
+        mat4.getTranslation(vl, ma);
+       
+        mat4.fromTranslation(ma, vec3.fromValues(1, 0, 0));
+        mat4.multiply(ma, mb, ma);
+        mat4.getTranslation(vr, ma);
+    
+        vl[0] += x;
+        vl[1] += y;
+        vl[2] += z;
+        vr[0] += x;
+        vr[1] += y;
+        vr[2] += z;
+    
+        var t;
+    
+        for(var i = 0; i < 3; i++) {
+            if(vl[i] > vr[i]) {
+                t = vl[i];
+                vl[i] = vr[i];
+                vr[i] = t;
+            }
+            vl[i] -= 0.1;
+            vr[i] += 0.1;
         }
-        vl[i] -= 0.1;
-        vr[i] += 0.1;
+        this.control = control;
+        this.funder = vl;
+        this.tunder = vr;
+        this.coll = new LVirtObject(this, x, y, z, 1.2);
     }
-    this.control = control;
-    this.funder = vl;
-    this.tunder = vr;
-    this.coll = new LVirtObject(this, x, y, z, 1.2);
-}
 
-UnderDoor.prototype = {
-    constructor: UnderDoor,
-    seecrunch: function()
+    seecrunch()
     {
         var cobs = {}
 
@@ -4222,75 +4256,71 @@ UnderDoor.prototype = {
                         cb.carrying.end();
                     }
                     cb.die();
-                    sounds.smash.play();
+                    g_assets.smash.play();
                 } else if(cb.obj.isvisible) {
                     cb.end();
-                    sounds.smash.play();
+                    g_assets.smash.play();
                 }
             }
         }
     }
 }
            
-function Door(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Door[0], this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.hobj = new LWObject(structs.Door[1], this);
-    lScene.lPlace(this.hobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.hobj.procpos();
+class Door {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Door[0], this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.hobj = new LWObject(structs.Door[1], this);
+        lScene.lPlace(this.hobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.hobj.procpos();
+    
+        this.ldoor = new LObject(structs.Door[2], this);
+        this.obj.addChild(this.ldoor, lFromXYZ(-0.5, 0, 0));
+        var pills = new LObject(structs.Door[3], this);
+        this.ldoor.addChild(pills, mat4.create());
+    
+        this.rdoor = new LObject(structs.Door[2], this);
+        this.obj.addChild(this.rdoor, lFromXYZ(0.5, 0, 0));
+        pills = new LObject(structs.Door[3], this);
+        this.rdoor.addChild(pills, mat4.create());
+    
+        this.obj.procpos();
+    
+        this.isopen = false;
+        this.opening = false;
+        this.closing = false;
+    
+        this.hasopened = 0;
+        this.iscage = false;
+    
+        lScene.animates.push(this);
+        lScene.stateobjs.push(this);
+    
+        this.under = new UnderDoor(this, x, y, z, ry);
+    }
 
-    this.ldoor = new LObject(structs.Door[2], this);
-    this.obj.addChild(this.ldoor, lFromXYZ(-0.5, 0, 0));
-    var pills = new LObject(structs.Door[3], this);
-    this.ldoor.addChild(pills, mat4.create());
-
-    this.rdoor = new LObject(structs.Door[2], this);
-    this.obj.addChild(this.rdoor, lFromXYZ(0.5, 0, 0));
-    pills = new LObject(structs.Door[3], this);
-    this.rdoor.addChild(pills, mat4.create());
-
-    this.obj.procpos();
-
-    this.isopen = false;
-    this.opening = false;
-    this.closing = false;
-
-    this.hasopened = 0;
-    this.iscage = false;
-
-    lScene.animates.push(this);
-    lScene.stateobjs.push(this);
-
-    this.under = new UnderDoor(this, x, y, z, ry);
-
-
-}
-
-Door.prototype = {
-    constructor: Door,
-
-    open: function()
+    open()
     {
         if(this.opening || this.isopen) return;
         if(!this.closing)
-            sounds.door.play();
+            g_assets.door.start();
         this.opening = true;
         this.closing = false;
         return this;
-    },
+    }
 
-    close: function()
+    close()
     {
         if(this.closing || (!this.isopen)) return;
         if(!this.opening)
-            sounds.door.play();
+            g_assets.door.start();
         this.closing = true;
         this.opening = false;
         return this;
-    },
+    }
 
-    animate: function(delta)
+    animate(delta)
     {
         if (this.opening) {
             this.hasopened += delta;
@@ -4299,7 +4329,7 @@ Door.prototype = {
                 if(this.hasopened >= 1) {
                     this.hasopened = 1;
                     this.opening = false;
-                    sounds.door.pause();
+                    g_assets.door.pause();
                 }
             }
             this.dispdoors();
@@ -4314,32 +4344,32 @@ Door.prototype = {
                 if(this.hasopened <= 0) {
                     this.hasopened = 0;
                     this.closing = false;
-                    sounds.door.pause();
-                    sounds.bump.play();
+                    g_assets.door.pause();
+                    g_assets.bump.play();
                 } 
             }
             this.dispdoors();
         }
-    },
+    }
 
-    setopen: function(ind)
+    setopen(ind)
     {
         this.ldoor.ignore = ind;
         this.rdoor.ignore = ind;
         this.isopen = ind;
         
-    },
+    }
 
-    dispdoors: function()
+    dispdoors()
     {
         var amt = this.hasopened;
         this.ldoor.moveHere(-amt, 0, 0);
         this.rdoor.moveHere(amt, 0, 0);
         this.ldoor.procpos();
         this.rdoor.procpos();
-    },
+    }
 
-    save: function()
+    save()
     {
         return {
             isopen: this.isopen,
@@ -4347,10 +4377,11 @@ Door.prototype = {
             closing: this.closing,
             hasopened: this.hasopened
         };
-    },
-    restore: function(saved)
+    }
+
+    restore(saved)
     {
-        if(this.opening || this.closing) sounds.door.pause();
+        if(this.opening || this.closing) g_assets.door.pause();
         var cnt = 0;
         this.isopen = saved.isopen;
         this.opening = saved.opening;
@@ -4358,8 +4389,8 @@ Door.prototype = {
         this.hasopened = saved.hasopened;
         this.setopen(this.isopen);
         this.dispdoors();
-        if(this.opening || this.closing) sounds.door.play();
-    },
+        if(this.opening || this.closing) g_assets.door.start();
+    }
 }
 
 function portcullisStructure()
@@ -4439,76 +4470,75 @@ function portcullisStructure()
     return [mstr, pstr, dpstr, dbstr];
 }
 
-function Portcullis(x, y, z, ry)
-{
-    var pills = null;
+class Portcullis {
+    constructor(x, y, z, ry)
+    {
+        var pills = null;
+    
+        this.obj = new LWObject(structs.Portcullis[0], this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.hobj = new LWObject(structs.Portcullis[1], this);
+        lScene.lPlace(this.hobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.hobj.procpos();
+    
+        this.ltdoor = new LObject(structs.Portcullis[2], this);
+        this.obj.addChild(this.ltdoor, lFromXYZ(-0.5, 1, 0));
+    
+        this.lbdoor = new LObject(structs.Portcullis[3], this);
+        this.ltdoor.addChild(this.lbdoor, lFromXYZ(0, -1.5, 0));
+    
+        this.rtdoor = new LObject(structs.Portcullis[2], this);
+        this.obj.addChild(this.rtdoor, lFromXYZ(0.5, 1, 0));
+    
+        this.rbdoor = new LObject(structs.Portcullis[3], this);
+        this.rtdoor.addChild(this.rbdoor, lFromXYZ(0, -1.5, 0));
+    
+    
+        this.obj.procpos();
+    
+        this.isopen = false;
+        this.opening = false;
+        this.closing = false;
+    
+        this.hasopened = 0;
+        this.iscage = false;
+    
+        this.achievekey = "portcullis";
+    
+        lScene.animates.push(this);
+        lScene.stateobjs.push(this);
+    
+        this.under = new UnderDoor(this, x, y, z, ry);
+    }
 
-    this.obj = new LWObject(structs.Portcullis[0], this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.hobj = new LWObject(structs.Portcullis[1], this);
-    lScene.lPlace(this.hobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.hobj.procpos();
-
-    this.ltdoor = new LObject(structs.Portcullis[2], this);
-    this.obj.addChild(this.ltdoor, lFromXYZ(-0.5, 1, 0));
-
-    this.lbdoor = new LObject(structs.Portcullis[3], this);
-    this.ltdoor.addChild(this.lbdoor, lFromXYZ(0, -1.5, 0));
-
-    this.rtdoor = new LObject(structs.Portcullis[2], this);
-    this.obj.addChild(this.rtdoor, lFromXYZ(0.5, 1, 0));
-
-    this.rbdoor = new LObject(structs.Portcullis[3], this);
-    this.rtdoor.addChild(this.rbdoor, lFromXYZ(0, -1.5, 0));
-
-
-    this.obj.procpos();
-
-    this.isopen = false;
-    this.opening = false;
-    this.closing = false;
-
-    this.hasopened = 0;
-    this.iscage = false;
-
-    this.achievekey = "portcullis";
-
-    lScene.animates.push(this);
-    lScene.stateobjs.push(this);
-
-    this.under = new UnderDoor(this, x, y, z, ry);
-}
-
-Portcullis.prototype = {
-    constructor: Portcullis,
-
-    setachieve: function(key)
+    setachieve(key)
     {
         this.achievekey = key;
         return this;
-    }, 
-    open: function()
+    }
+ 
+    open()
     {
         if(this.opening || this.isopen) return;
         if(!this.closing)
-            sounds.ratchet.play();
+            g_assets.ratchet.start();
         this.opening = true;
         this.closing = false;
         return this;
-    },
+    }
 
-    close: function()
+    close()
     {
         if(this.closing || (!this.isopen)) return;
         if(!this.opening)
-            sounds.ratchet.play();
+            g_assets.ratchet.start();
         this.closing = true;
         this.opening = false;
         // if(this.isopen) lScene.achieve(this.achievekey, -1);
         return this;
-    },
+    }
 
-    animate: function(delta)
+    animate(delta)
     {
         if (this.opening) {
             this.hasopened += delta;
@@ -4517,7 +4547,7 @@ Portcullis.prototype = {
                 if(this.hasopened >= 1.0) {
                     this.hasopened = 1.0;
                     this.opening = false;
-                    sounds.ratchet.pause();
+                    g_assets.ratchet.pause();
                 }
             }
             this.dispdoors();
@@ -4533,23 +4563,23 @@ Portcullis.prototype = {
                 if(this.hasopened <= 0) {
                     this.hasopened = 0;
                     this.closing = false;
-                    sounds.ratchet.pause();
-                    sounds.bump.play();
+                    g_assets.ratchet.pause();
+                    g_assets.bump.play();
                 } 
             }
             this.dispdoors();
         }
-    },
+    }
 
-    setopen: function(ind)
+    setopen(ind)
     {
         this.ltdoor.ignore = ind;
         this.rtdoor.ignore = ind;
         this.isopen = ind;
         
-    },
+    }
 
-    dispdoors: function()
+    dispdoors()
     {
         var amt = this.hasopened * LR90 * 0.95;
         this.ltdoor.rotateHere(0, 0, -amt);
@@ -4558,9 +4588,9 @@ Portcullis.prototype = {
         this.rbdoor.rotateHere(0, 0, -amt);
         this.ltdoor.procpos();
         this.rtdoor.procpos();
-    },
+    }
 
-    save: function()
+    save()
     {
         return {
             isopen: this.isopen,
@@ -4568,10 +4598,11 @@ Portcullis.prototype = {
             closing: this.closing,
             hasopened: this.hasopened
         };
-    },
-    restore: function(saved)
+    }
+
+    restore(saved)
     {
-        if(this.opening || this.closing) sounds.ratchet.pause();
+        if(this.opening || this.closing) g_assets.ratchet.pause();
         var cnt = 0;
         this.isopen = saved.isopen;
         this.opening = saved.opening;
@@ -4579,8 +4610,8 @@ Portcullis.prototype = {
         this.hasopened = saved.hasopened;
         this.setopen(this.isopen);
         this.dispdoors();
-        if(this.opening || this.closing) sounds.ratchet.play();
-    },
+        if(this.opening || this.closing) g_assets.ratchet.start();
+    }
 }
 
 
@@ -4595,72 +4626,69 @@ function ropeStructure()
     return [pstr, rfstr, rostr];
 }
 
-function Rope(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Rope[0], this);
-    this.fobj = new LWObject(structs.Rope[1], this);
-    this.oobj = new LWObject(structs.Rope[2], this);
+class Rope {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Rope[0], this);
+        this.fobj = new LWObject(structs.Rope[1], this);
+        this.oobj = new LWObject(structs.Rope[2], this);
+    
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.lPlace(this.fobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.lPlace(this.oobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+    
+        this.oobj.mkvisible(false);
+        this.obj.procpos();
+        this.fobj.procpos();
+        this.oobj.procpos();
+    
+        this.coll = new LVirtObject(this, 0, 0, 0, 0.3);
+    
+        this.lightheight = lScene.prngd.next(1.0);
+        this.canpickup = true;
+    
+        this.emess = false;
+    
+        this.port = null;
+    
+        lScene.pickups.push(this);
+        lScene.animates.push(this);
+        lScene.stateobjs.push(this);
+    
+        this.statestatic = true;
+    }
 
-
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.lPlace(this.fobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.lPlace(this.oobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-
-    this.oobj.mkvisible(false);
-    this.obj.procpos();
-    this.fobj.procpos();
-    this.oobj.procpos();
-
-    this.coll = new LVirtObject(this, 0, 0, 0, 0.3);
-
-    this.lightheight = lScene.prngd.next(1.0);
-    this.canpickup = true;
-
-    this.emess = false;
-
-    this.port = null;
-
-    lScene.pickups.push(this);
-    lScene.animates.push(this);
-    lScene.stateobjs.push(this);
-
-    this.statestatic = true;
-}
-
-Rope.prototype = {
-    constructor: Rope,
-
-    setPort: function(port)
+    setPort(port)
     {
         this.port = port;
         return this;
-    },
+    }
 
-    save: function()
+    save()
     {
         return {
             iscarried: this.iscarried,
             oobj: this.oobj.isvisible,
             fobj: this.fobj.isvisible,
         }
-    },
+    }
 
-    restore: function(saved)
+    restore(saved)
     {
         this.iscarried = saved.iscarried;
         this.oobj.mkvisible(saved.oobj);
         this.fobj.mkvisible(saved.fobj);
         this.fobj.procpos();
         this.oobj.procpos();
-    },
+    }
 
-    animate: function(delta)
+    animate(delta)
     {
         this.lightheight += delta * .3;
         if(this.lightheight > 1) this.lightheight -= 1;
-    },
+    }
 
-    pickup: function(person)
+    pickup(person)
     {
         if(this.iscarried) return;
         var pobj = person.obj;
@@ -4712,9 +4740,9 @@ Rope.prototype = {
 
         this.port.open();
         // displayrope();
-    },
+    }
 
-    travel: function(person, delta, x, z, rx, ry)
+    travel(person, delta, x, z, rx, ry)
     {
         if(this.iscarried instanceof Player) {
             if(x != 0 || z != 0 || rx != 0 || ry != 0) {
@@ -4726,9 +4754,9 @@ Rope.prototype = {
                 this.emess = false;
             }
         }
-    },
+    }
 
-    drophere: function(person, x, y, z, ry)
+    drophere(person, x, y, z, ry)
     {
         if(person) {
             person.travelling = null;
@@ -4740,62 +4768,62 @@ Rope.prototype = {
         this.fobj.mkvisible(true);
         this.port.close();
         return true;
-    },
+    }
 
-    end: function()
+    end()
     {
         // This will only happen if carrying and PLAY
         this.drophere(this.iscarried, 0, 0, 0, 0);
-    },
-    respawn: function()
+    }
+
+    respawn()
     {
         // Respawn also only happens on "PLAY", so....
         this.end();
         return null;
-    },
+    }
 
-    playercarry: function () {},
-    kronkycarry: function () {},
+    playercarry() {}
+    kronkycarry() {}
 
-    fire: function() {},
-    chuck: function() {},
-    fits: function(cobj) {return false;}
+    fire() {}
+    chuck() {}
+    fits(cobj) {return false;}
 }
        
-function BaseKeyHole(struct, x, y, z, ry)
-{
-    this.aobj = new LWObject(struct[0], this);
-    this.bobj = new LWObject(struct[1], this);
-    this.oobj = new LWObject(struct[2], this);
-    this.nobj = new LWObject(struct[3], this);
-
-    this.nobj.mkvisible(false);
-
-    this.ison = false;
+class BaseKeyHole {
+    constructor(struct, x, y, z, ry)
+    {
+        this.aobj = new LWObject(struct[0], this);
+        this.bobj = new LWObject(struct[1], this);
+        this.oobj = new LWObject(struct[2], this);
+        this.nobj = new LWObject(struct[3], this);
     
-    this.isfloor = false;
-    this.iswire = false;
-
-    this.ry = 0;
-    lScene.stateobjs.push(this);
-    this.place(x, y, z, ry);
-    this.istravel = false;
-    this.achievekey = "dkey";
-    this.iscage = false;
-    this.lightheight = lScene.prngd.next(1.0);
-    lScene.animates.push(this);
+        this.nobj.mkvisible(false);
     
-}
-BaseKeyHole.prototype = {
-    constructor: BaseKeyHole,
+        this.ison = false;
+        
+        this.isfloor = false;
+        this.iswire = false;
+    
+        this.ry = 0;
+        lScene.stateobjs.push(this);
+        this.place(x, y, z, ry);
+        this.istravel = false;
+        this.achievekey = "dkey";
+        this.iscage = false;
+        this.lightheight = lScene.prngd.next(1.0);
+        lScene.animates.push(this);
+        
+    }
 
-    animate: function(delta)
+    animate(delta)
     {
         this.lightheight += delta * .3;
         if(this.lightheight > 1) this.lightheight -= 1;
-    },
+    }
 
-    place: function(x, y, z, ry)
+    place(x, y, z, ry)
     {
         var pos = lFromXYZPYR(x, y, z, 0, ry, 0);
         lScene.lPlace(this.aobj, pos);
@@ -4803,14 +4831,15 @@ BaseKeyHole.prototype = {
         lScene.lPlace(this.oobj, pos);
         lScene.lPlace(this.nobj, pos);
         this.ry = ry;
-    },
+    }
 
-    setachieve: function(key)
+    setachieve(key)
     {
         this.achievekey = key;
         return this;
-    }, 
-    switchon: function()
+    }
+ 
+    switchon()
     {
         if(this.ison) return;
         this.nobj.mkvisible(true);
@@ -4818,8 +4847,9 @@ BaseKeyHole.prototype = {
         this.nobj.procpos();
         this.ison = true;
         lScene.achieve(this.achievekey, 1);
-    },
-    switchoff: function()
+    }
+
+    switchoff()
     {
         if(!this.ison) return;
         this.nobj.mkvisible(false);
@@ -4827,13 +4857,14 @@ BaseKeyHole.prototype = {
         this.oobj.procpos();
         this.ison = false;
         lScene.achieve(this.achievekey, -1);
-    },
+    }
 
-    save: function()
+    save()
     {
         return {ison: this.ison};
-    },
-    restore: function(state)
+    }
+
+    restore(state)
     {
         if(this.ison != state.ison) {
             this.ison = state.ison;
@@ -4929,6 +4960,7 @@ function dKeyHoleStructure()
     bstructure.addBezierPatch({position: dpos, coords: mb, ysegments: 1, texturecontrol: blue});
     bstructure.addBezierPatch({position: dpos, coords: mc, xsegments: 1, texturecontrol: blue});
     bstructure.addBezierPatch({position: dpos, coords: md, xsegments: 1, texturecontrol: blue});
+
     bstructure.addTrianglePatch({position: dpos, coords: [[-0.25, 0.27], [-0.27, 0.27], [-0.27, 0.25]], texturecontrol: blue});
     bstructure.addTrianglePatch({position: dpos, coords: [[-0.27, -0.25], [-0.27, -0.27], [-0.25, -0.27]], texturecontrol: blue});
     bstructure.addTrianglePatch({position: dpos, coords: [[.25, -0.27], [.27, -0.27], [.27, -0.25]], texturecontrol: blue});
@@ -4954,15 +4986,13 @@ function dKeyHoleStructure()
     return [astructure, bstructure, offstruct, onstruct];
 }
 
-function DKeyHole(x, y, z, ry)
-{
-    BaseKeyHole.call(this, structs.DKeyHole, x, y, z, ry);
-    this.achievekey = "dkey";
+class DKeyHole extends BaseKeyHole {
+    constructor(x, y, z, ry)
+    {
+        super(structs.DKeyHole, x, y, z, ry);
+        this.achievekey = "dkey";
+    }
 }
-
-DKeyHole.prototype = Object.assign(Object.create(BaseKeyHole.prototype), {
-    constructor: DKeyHole,
-});
 
 function xKeyHoleStructure()
 {
@@ -4991,37 +5021,6 @@ function xKeyHoleStructure()
         [[0.091, -0.0407,  0], [0.27, -.13,  0]],
         [[0.0807, -0.0607, 0], [0.27, -0.250, 0]],
         ];
-
-
-
-
-/*
-    const oa = [
-        [[-0.271, 0.271, 0], [-0.1754, 0.3675, 0], [0.0, 0.4926, 0], [0.1754, 0.3675, 0], [0.271, 0.271, 0]],
-        [[-0.271, 0.27, 0], [-.13, 0.27, 0], [0, 0.27, 0], [.13, 0.27, 0], [0.271, 0.27, 0]]
-        ];
-
-    const ob = [
-        [[-0.271, -0.27, 0], [-.13, -0.27, 0], [0, -0.27, 0], [.13, -0.27, 0], [0.271, -0.27, 0]],
-        [[-0.271, -0.271, 0], [-0.1754, -0.3675, 0], [0.0, -0.4926, 0], [0.1754, -0.3675, 0], [0.271, 0-.271, 0]]
-        ];
-
-    const oc = [
-               [[-0.271, 0.271, 0],   [-0.27, 0.271, 0]],
-               [[-0.3675, 0.1754, 0], [-0.27, .13, 0]],
-               [[-0.4926, 0.0, 0],    [-0.27, 0, 0]], 
-               [[-0.3675, -0.1754, 0], [-0.27, -.13, 0]],
-               [[-0.271, -0.271, 0],   [-0.27, -0.271, 0]]
-               ];
-
-    const od = [
-                [[0.27, 0.271, 0], [0.271, 0.271, 0]],
-                [[0.27, .13, 0],   [0.3675, 0.1754, 0]],
-                [[0.27, 0, 0],    [0.4926, 0.0, 0]],
-                [[0.27, -.13, 0],  [0.3675, -0.1754, 0]],
-                [[0.27, -0.271, 0], [0.271, -0.271, 0]],
-               ];
-    */
 
     var red = new LTextureControl([2, 1], [0, 0], [0, 0]);
     var grey = new LTextureControl([2, 1], [1, 0], [0, 0]);
@@ -5075,15 +5074,13 @@ function xKeyHoleStructure()
     return [astructure, bstructure, offstruct, onstruct];
 }
 
-function XKeyHole(x, y, z, ry)
-{
-    BaseKeyHole.call(this, structs.XKeyHole, x, y, z, ry);
-    this.achievekey = "xkey";
+class XKeyHole extends BaseKeyHole {
+    constructor(x, y, z, ry)
+    {
+        super(structs.XKeyHole, x, y, z, ry);
+        this.achievekey = "xkey";
+    }
 }
-
-XKeyHole.prototype = Object.assign(Object.create(BaseKeyHole.prototype), {
-    constructor: XKeyHole,
-});
 
 function rocketStructure()
 {
@@ -5161,55 +5158,52 @@ function rocketStructure()
     cone.addTriangle({position: _wpos(dfor8,  0, 1 + clen, -LR90, 0, 0), depth: .005, coords: coords, ahold: [LI_SIDE + 2]});
 
     return [gdef, cone];
-
 }
 
 
-function Rocket(x, y, z, ry)
-{
-    BaseThing.call(this, structs.Rocket, true, x, y, z, ry);
-    this.hole = null;
-    this.achievekey = "rocket";
-    lScene.stateobjs.push(this);
+class Rocket extends BaseThing {
+    constructor(x, y, z, ry)
+    {
+        super(structs.Rocket, true, x, y, z, ry);
+        this.hole = null;
+        this.achievekey = "rocket";
+        lScene.stateobjs.push(this);
+    
+        this.isfired = null;
+        this.istravel = false;
+    }
 
-    this.isfired = null;
-    this.istravel = false;
-}
-
-Rocket.prototype = Object.assign(Object.create(BaseThing.prototype), {
-    constructor: Rocket,
-
-    respawn: function()
+    respawn()
     {
         var obj = new Rocket(0, 0, 0, 0);
         return obj;
-    },
+    }
 
-    fire: function(person)
+    fire(person)
     {
         if(!this.isfired) {
             this.isfired = person;
             person.ride = this;
             person.vvel = 0;
-            sounds.rocket.play();
+            g_assets.rocket.start();
         }
-    },
+    }
 
-    end: function()
+    end()
     {
         this.stop(null);
         this._baseend();
-    },
+    }
 
-    stop: function(person)
+    stop(person)
     {
         if(person)
             person.ride = null;
         this.isfired = null;
-        sounds.rocket.pause();
-    },
+        g_assets.rocket.pause();
+    }
 
-    riding: function(person, delta)
+    riding(person, delta)
     {
         var donemessage = false;
         var stats = person.ridecoll(delta * -20);
@@ -5219,13 +5213,13 @@ Rocket.prototype = Object.assign(Object.create(BaseThing.prototype), {
             // Hit something - 1
             person.ridemove(delta * 20);
             this.stop(person);
-            sounds.hit.play();
+            g_assets.hit.play();
 
             // Hit the flower - tell them as nuch
             if(stats.hitflower) {
                 // Smash
                 stats.hitflower.end();
-                sounds.smash.play();
+                g_assets.smash.play();
                 lScene.lMessage("The flower is delicate: You ust rocketed into it and smashed it.");
                 donemessage = true;
             }
@@ -5245,7 +5239,7 @@ Rocket.prototype = Object.assign(Object.create(BaseThing.prototype), {
                 }
             }
             if(hitflower && (!donemessage)) {
-                sounds.smash.play();
+                g_assets.smash.play();
                 lScene.lMessage("iThe flower is delicate: Crashing a rocket near it destroys it");
                 donemessage = true;
             }
@@ -5254,39 +5248,47 @@ Rocket.prototype = Object.assign(Object.create(BaseThing.prototype), {
                     lScene.lMessage("Rocketing into another flying rocket destroys both of them", "yellow");
                 stats.hitrocket.stop(stats.hitrocket.isfired);
                 stats.hitrocket.end();
-                sounds.smash.play();
+                g_assets.smash.play();
                 this.end();
             }
         }
-    },
-});
-
-function BaseKey(struct, x, y, z, ry)
-{
-    BaseThing.call(this, struct, true, x, y, z, ry);
-    this.hole = null;
-    lScene.stateobjs.push(this);
-    this.istravel = false;
+    }
+    vsave(ret)
+    {
+        ret.isfired = this.isfired;
+        ret.istravel = this.istravel;
+    }
+    vrestore(saved)
+    {
+        this.isfired = saved.isfired;
+        this.istravel = this.istravel;
+    }
 }
 
-BaseKey.prototype = Object.assign(Object.create(BaseThing.prototype), {
-    constructor: BaseKey,
+class BaseKey extends BaseThing {
+    constructor(struct, x, y, z, ry)
+    {
+        super(struct, true, x, y, z, ry);
+        this.hole = null;
+        lScene.stateobjs.push(this);
+        this.istravel = false;
+    }
 
-    vsave: function(ret)
+    vsave(ret)
     {
         ret.hole = this.hole;
-    },
+    }
 
-    vrestore: function(saved)
+    vrestore(saved)
     {
         if(this.obj.isvisible) {
             if(saved.hole) {
                 this.inlock(saved.hole);
             }
         }
-    },
+    }
 
-    inlock: function(lock)
+    inlock(lock)
     {
         this.obj.rotateFlatHere(0, lock.ry, 0);
         this.obj.moveHere(lock.aobj.x, lock.aobj.y, lock.aobj.z);
@@ -5306,8 +5308,9 @@ BaseKey.prototype = Object.assign(Object.create(BaseThing.prototype), {
         this.hole = lock;
         this.canpickup = false;
 
-    },
-    fits: function(cobj)
+    }
+
+    fits(cobj)
     {
         if(this.fitsin(cobj)) {
             if(cobj.ison) return false;
@@ -5317,13 +5320,13 @@ BaseKey.prototype = Object.assign(Object.create(BaseThing.prototype), {
 
             if(dry >= LR90 * 3.5  || dry <= LR90 / 2) {
                 this.inlock(cobj);
-                sounds.unlock.play();
+                g_assets.unlock.play();
                 return true;
             }
         }
         return false;
-    },
-});
+    }
+}
 
 function dKeyStructure()
 {
@@ -5338,23 +5341,22 @@ function dKeyStructure()
     return [gdef, structure];
 }
 
-function DKey(x, y, z, ry)
-{
-    BaseKey.call(this, structs.DKey, x, y, z, ry);
-}
+class DKey extends BaseKey {
+    constructor(x, y, z, ry)
+    {
+        super(structs.DKey, x, y, z, ry);
+    }
 
-DKey.prototype = Object.assign(Object.create(BaseKey.prototype), {
-    constructor: DKey,
-
-    respawn: function()
+    respawn()
     {
         return new DKey(0, 0, 0, 0);
-    },
+    }
 
-    fitsin: function(what) {
+    fitsin(what)
+    {
         return what instanceof DKeyHole;
     }
-});
+}
 
 function xKeyStructure()
 {
@@ -5369,27 +5371,25 @@ function xKeyStructure()
     return [gdef, structure];
 }
 
-function XKey(x, y, z, ry)
-{
-    BaseKey.call(this, structs.XKey, x, y, z, ry);
-}
+class XKey extends BaseKey {
+    constructor(x, y, z, ry)
+    {
+        super(structs.XKey, x, y, z, ry);
+    }
 
-XKey.prototype = Object.assign(Object.create(BaseKey.prototype), {
-    constructor: XKey,
-
-    respawn: function()
+    respawn()
     {
         return new XKey(0, 0, 0, 0);
-    },
+    }
 
-    fitsin: function(what) {
+    fitsin(what)
+    {
         return what instanceof XKeyHole;
-    },
-});
+    }
+}
 
 
 const structs = {};
-
 
 function pillarStructure()
 {
@@ -5410,24 +5410,28 @@ function pedestalStructure()
     return stand;
 }
 
-function Pillar(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Pillar, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.isfloor = false;
-    this.iswire = false;
-    this.iscage = false;
+class Pillar {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Pillar, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.isfloor = false;
+        this.iswire = false;
+        this.iscage = false;
+    }
 }
     
-function Pedestal(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Pedestal, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.isfloor = false;
-    this.iswire = false;
-    this.iscage = false;
+class Pedestal {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Pedestal, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.isfloor = false;
+        this.iswire = false;
+        this.iscage = false;
+    }
 }
     
 function floorPillarStructure()
@@ -5453,29 +5457,33 @@ function floorPedestalStructure()
     return stand;
 }
 
-function _FloorPillar(x, y, z, ry)
-{
-    this.obj = new LWObject(structs._FloorPillar, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.isfloor = false;
-    this.iswire = false;
-    this.iscage = false;
+class _FloorPillar {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs._FloorPillar, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.isfloor = false;
+        this.iswire = false;
+        this.iscage = false;
+    }
 }
     
-function _FloorPedestal(x, y, z, ry)
-{
-    this.obj = new LWObject(structs._FloorPedestal, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.isfloor = false;
-    this.iswire = false;
-    this.iscage = false;
+class _FloorPedestal {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs._FloorPedestal, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.isfloor = false;
+        this.iswire = false;
+        this.iscage = false;
+    }
 }
     
 function floorStructure()
 {
-    var floor = new LStructureDef(ShaderSimple, {texture: KFLOOR, collision: LSTATIC, shininess: 5});
+    var floor = new LStructureDef(ShaderSimple, {texture: g_assets.kfloor, collision: LSTATIC, shininess: 5});
     var ttop = new LTextureControl([512, 512], [0, 0], [512, 512]);
     var tbot = new LTextureControl([512, 512], [0, 512], [512, -512]);
     var tleft = new LTextureControl([512, 512], [10, 0], [0, 512]);
@@ -5492,35 +5500,39 @@ function floorStructure()
     return floor;
 }
 
-function Floor(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Floor, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    new _FloorPillar(x, y, z, ry);
-    this.isfloor = true;
-    this.istravel = false;
-    this.candrop = true;
-    this.iscage = false;
-    this.iswire = false;
+class Floor {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Floor, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        new _FloorPillar(x, y, z, ry);
+        this.isfloor = true;
+        this.istravel = false;
+        this.candrop = true;
+        this.iscage = false;
+        this.iswire = false;
+    }
 }
 
-function PFloor(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Floor, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    new _FloorPedestal(x, y, z, ry);
-    this.isfloor = true;
-    this.istravel = false;
-    this.candrop = true;
-    this.iscage = false;
-    this.iswire = false;
+class PFloor {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Floor, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        new _FloorPedestal(x, y, z, ry);
+        this.isfloor = true;
+        this.istravel = false;
+        this.candrop = true;
+        this.iscage = false;
+        this.iswire = false;
+    }
 }
 
 function rFloorStructure()
 {
-    var floor = new LStructureDef(ShaderSimple, {texture: KRFLOOR, collision: LSTATIC, shininess: 5});
+    var floor = new LStructureDef(ShaderSimple, {texture: g_assets.krfloor, collision: LSTATIC, shininess: 5});
     var ttop = new LTextureControl([512, 512], [0, 0], [512, 512]);
     var tbot = new LTextureControl([512, 512], [0, 512], [512, -512]);
     var tleft = new LTextureControl([512, 512], [10, 0], [0, 512]);
@@ -5537,33 +5549,35 @@ function rFloorStructure()
     return floor;
 }
 
-function RFloor(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.RFloor, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    new _FloorPillar(x, y, z, ry);
-    this.isfloor = true;
-    this.iswire = false;
-    this.istravel = false;
-    this.candrop = false;
-    this.iscage = false;
+class RFloor {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.RFloor, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        new _FloorPillar(x, y, z, ry);
+        this.isfloor = true;
+        this.iswire = false;
+        this.istravel = false;
+        this.candrop = false;
+        this.iscage = false;
+    }
 }
 
-function RPFloor(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.RFloor, this);
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    new _FloorPedestal(x, y, z, ry);
-    this.isfloor = true;
-    this.iswire = false;
-    this.istravel = false;
-    this.candrop = false;
-    this.iscage = false;
+class RPFloor {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.RFloor, this);
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        new _FloorPedestal(x, y, z, ry);
+        this.isfloor = true;
+        this.iswire = false;
+        this.istravel = false;
+        this.candrop = false;
+        this.iscage = false;
+    }
 }
-
-
 
 function wireStructure()
 {
@@ -5580,21 +5594,22 @@ function wireStructure()
     return [pstru, wstru];
 }
 
-
-function Wire(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.Wire[0], this);
-    this.wobj = new LWObject(structs.Wire[1], new WireLine(this));
-
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.lPlace(this.wobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.wobj.procpos();
-
-    this.isfloor = false;
-    this.iscage = false;
-    this.istravel = false;
-    this.iswire = false;
+class Wire {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.Wire[0], this);
+        this.wobj = new LWObject(structs.Wire[1], new WireLine(this));
+    
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.lPlace(this.wobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.wobj.procpos();
+    
+        this.isfloor = false;
+        this.iscage = false;
+        this.istravel = false;
+        this.iswire = false;
+    }
 }
 
 function wireqStructure()
@@ -5613,29 +5628,33 @@ function wireqStructure()
 }
 
 
-function WireQ(x, y, z, ry)
-{
-    this.obj = new LWObject(structs.WireQ[0], this);
-    this.wobj = new LWObject(structs.WireQ[1], new WireLine(this));
-
-    lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    lScene.lPlace(this.wobj, lFromXYZPYR(x, y, z, 0, ry, 0));
-    this.obj.procpos();
-    this.wobj.procpos();
-
-    this.isfloor = false;
-    this.iscage = false;
-    this.istravel = false;
-    this.iswire = false;
+class WireQ {
+    constructor(x, y, z, ry)
+    {
+        this.obj = new LWObject(structs.WireQ[0], this);
+        this.wobj = new LWObject(structs.WireQ[1], new WireLine(this));
+    
+        lScene.lPlace(this.obj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        lScene.lPlace(this.wobj, lFromXYZPYR(x, y, z, 0, ry, 0));
+        this.obj.procpos();
+        this.wobj.procpos();
+    
+        this.isfloor = false;
+        this.iscage = false;
+        this.istravel = false;
+        this.iswire = false;
+    }
 }
 
-function WireLine(par)
-{
-    this.isfloor = false;
-    this.iscage = false;
-    this.istravel = false;
-    this.iswire = true;
-    this.parent = par;
+class WireLine {
+    constructor(par)
+    {
+        this.isfloor = false;
+        this.iscage = false;
+        this.istravel = false;
+        this.iswire = true;
+        this.parent = par;
+    }
 }
 
 var g_record;
@@ -5645,8 +5664,6 @@ var g_forward;
 
 function playgame()
 {
-
-    
     lInit();
     // lClear();
 
@@ -5814,4 +5831,17 @@ function dispback()
     document.getElementById("mgame").style.display = "none";
     document.getElementById("introcontent").innerHTML = "";
 }
+
+
+window.g_loadassets = g_loadassets;
+window.e_playlevel = e_playlevel;
+window.dispintro = dispintro;
+window.dispback = dispback;
+window.fplaylevel = fplaylevel;
+
+// Export for klevels
+
+export { EKronky, Wall, GlassPartition, Post, Exit, Flower, Lift, DodgyBridge, DodgyBridge2, Cage, PushMe,
+Zip11, Zip21, FlowerStand, Glass, Door, Portcullis, Rope, DKeyHole, XKeyHole, Rocket, DKey, XKey, Pillar, Pedestal,
+Floor, PFloor, RFloor, RPFloor, Wire, WireQ};
 

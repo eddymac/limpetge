@@ -1,5 +1,17 @@
 "use strict";
 
+import {LAssets, LImage, LAudios, LAudioLoop, LBase, LCamera, LObject, LIObject, LWObject, LStaticGroup, LGroupDef,
+    LStructureDef, LTextureControl, LVirtObject, LGroup, LStructure, LKey, lInput, lInText, LObjImport, LComponent,
+    lInit, lClear, lStructureSetup, lTextureColor, lTextureColorAll, lTextureList, lLoadTexture, lReloadTexture, lLoadTColor,
+    lReloadTColor, lLoadTColors, lReloadTColors, lLoadTCanvas, lReloadTCanvas, lInitShaderProgram, lElement, lAddButton, lCanvasResize,
+    lFromXYZR, lFromXYZ, lFromXYZPYR, lExtendarray, lGetPosition, lAntiClock, lCoalesce, lIndArray,
+    LPRNG, LPRNGD, LCANVAS_ID, LR90, LR180, LR270, LR360, LI_FRONT, LI_BACK, LI_SIDE, LI_TOP, LI_RIGHT, LI_BOTTOM, LI_LEFT, LSTATIC,
+    LDYNAMIC, LNONE, LBUT_WIDTH, LBUT_HEIGHT, LMESTIME, LASSET_THREADS, LASSET_RETRIES, LOBJFILE_SMOOTH, LTMP_MAT4A, LTMP_MAT4B,
+    LTMP_MAT4C, LTMP_QUATA, LTMP_QUATB, LTMP_QUATC, LTMP_VEC3A, LTMP_VEC3B, LTMP_VEC3C, lSScene, LTEXCTL_STATIC,
+    LTEXCTL_STATIC_LIST, lGl, lCamera, lScene, lDoDown, lDoUp, lShader_objects, mat4, vec3, vec4, quat} from "../../libs/limpetge.js";
+
+import {ShaderSimple, ShaderSolid} from "./shader_squish.js";
+
 var g_structures = {};
 
 function wallStructure()
@@ -55,25 +67,21 @@ function wallStructure()
     return struct;
 }
 
+class Scene extends LBase {
+    constructor(args)
+    {
+        super(args);
 
+        // Set up the keys
+        this.kForward = lInput.press(87);   // Key W
+        this.kBack = lInput.press(83);      // key S
+        this.kRight = lInput.press(190);      // key  > or .
+        this.kLeft = lInput.press(188);      // key  < or ,
 
-function Scene(args)
-{
-    LBase.call(this, args);
+        lInput.usekeys();
+    }
 
-    // Set up the keys
-    this.kForward = lInput.press(87);   // Key W
-    this.kBack = lInput.press(83);      // key S
-    this.kRight = lInput.press(190);      // key  > or .
-    this.kLeft = lInput.press(188);      // key  < or ,
-
-    lInput.usekeys();
-}
-
-Scene.prototype = Object.assign(Object.create(LBase.prototype), {
-    constructor: Scene,
-
-    lLoop: function(delta)
+    lLoop(delta)
     {
         var x = 0;
         var z = 0;
@@ -105,13 +113,15 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         }
         // Continue game
         return true;
-    },
-});
+    }
+}
         
-function Wall()
-{
-    this.obj = new LWObject(g_structures.Wall, this);
-    lScene.lPlace(this.obj, mat4.create());
+class Wall {
+    constructor()
+    {
+        this.obj = new LWObject(g_structures.Wall, this);
+        lScene.lPlace(this.obj, mat4.create());
+    }
 }
 
 function g_playgame()
@@ -143,5 +153,10 @@ function g_playlevel()
     lScene.lMessage("");
 
     lScene.lMain();
-
 }
+
+/*
+So that the "onload" attribute of the body element can see this
+ */
+
+window.g_playgame = g_playgame;

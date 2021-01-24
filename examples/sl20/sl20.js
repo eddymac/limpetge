@@ -1,5 +1,19 @@
 "use strict";
 
+import {LAssets, LImage, LAudios, LAudioLoop, LBase, LCamera, LObject, LIObject, LWObject, LStaticGroup, LGroupDef,
+    LStructureDef, LTextureControl, LVirtObject, LGroup, LStructure, LKey, lInput, lInText, LObjImport, LComponent,
+    lInit, lClear, lStructureSetup, lTextureColor, lTextureColorAll, lTextureList, lLoadTexture, lReloadTexture, lLoadTColor,
+    lReloadTColor, lLoadTColors, lReloadTColors, lLoadTCanvas, lReloadTCanvas, lInitShaderProgram, lElement, lAddButton, lCanvasResize,
+    lFromXYZR, lFromXYZ, lFromXYZPYR, lExtendarray, lGetPosition, lAntiClock, lCoalesce, lIndArray,
+    LPRNG, LPRNGD, LCANVAS_ID, LR90, LR180, LR270, LR360, LI_FRONT, LI_BACK, LI_SIDE, LI_TOP, LI_RIGHT, LI_BOTTOM, LI_LEFT, LSTATIC,
+    LDYNAMIC, LNONE, LBUT_WIDTH, LBUT_HEIGHT, LMESTIME, LASSET_THREADS, LASSET_RETRIES, LOBJFILE_SMOOTH, LTMP_MAT4A, LTMP_MAT4B,
+    LTMP_MAT4C, LTMP_QUATA, LTMP_QUATB, LTMP_QUATC, LTMP_VEC3A, LTMP_VEC3B, LTMP_VEC3C, lSScene, LTEXCTL_STATIC,
+    LTEXCTL_STATIC_LIST, lGl, lCamera, lScene, lDoDown, lDoUp, lShader_objects, mat4, vec3, vec4, quat} from "../../libs/limpetge.js";
+
+import {Maze, XP, XN, YP, YN, ZP, ZN, WALLS, SL20, PRESL20, USED, STARTUSED, ENDUSED, DEADEND} from "./maze.js";
+
+import {ShaderSelf, ShaderStrand, ShaderSelfTrans} from "./shader_sl20.js";
+
 const BASEDIR = "sl20/";
 
 var maze = null;    // Current maze
@@ -36,17 +50,20 @@ var g_shotrand = 60;
 var g_lastfired = 0.5;
 var g_howfast = 2.0
 
-var g_assets = {
-    injured: BASEDIR + "sounds/injured.wav",
-    sbang: BASEDIR + "sounds/sbang.wav",
-    fire: BASEDIR + "sounds/fire.wav",
-    slurp: BASEDIR + "sounds/slurp.wav",
-    scrape: BASEDIR + "sounds/scrape.wav",
-    endbang: BASEDIR + "sounds/endbang.wav",
-    flush: BASEDIR + "sounds/flush.wav",
-}
+const g_assets_obj = new LAssets({
+    injured: {url: BASEDIR + "sounds/injured.wav", number: 5},
+    sbang: {url: BASEDIR + "sounds/sbang.wav", number: 5},
+    fire: {url: BASEDIR + "sounds/fire.wav", number: 5},
+    slurp: {url: BASEDIR + "sounds/slurp.wav", number: 5},
+    scrape: {url: BASEDIR + "sounds/scrape.wav", loop: true},
+    endbang: {url: BASEDIR + "sounds/endbang.wav", number: 1},
+    flush: {url: BASEDIR + "sounds/flush.wav", number: 1},
+    wallads: BASEDIR + "wallads.jpg",
+    floorceil: BASEDIR + "floorceil.jpg",
+    sl20: BASEDIR + "sl20.jpg",
+});
 
-var sounds = null;
+const g_assets = g_assets_obj.assets;
 
 // Utility function - hashcode
 // Shamelessly copied from the web, uses the Java
@@ -63,90 +80,86 @@ function hashCode(str)
     return hash;
 }
 
-function Fuels(num)
-{
-    this.fuelDef = new LStructureDef(ShaderSelfTrans, {color: [1.0, 1.0, 0.5, 0.4], collision: LDYNAMIC});
-    this.fuelDef.addSphere({position: mat4.create(), radius: 2.0});
-    this.fuels = [];
-    this.total = num;
-    this.idx = 0;
-    for(var i = 0; i < num; i++)
-        this.fuels.push(new Fuel(this.fuelDef));
-}
+class Fuels {
+    constructor(num)
+    {
+        this.fuelDef = new LStructureDef(ShaderSelfTrans, {color: [1.0, 1.0, 0.5, 0.4], collision: LDYNAMIC});
+        this.fuelDef.addSphere({position: mat4.create(), radius: 2.0});
+        this.fuels = [];
+        this.total = num;
+        this.idx = 0;
+        for(var i = 0; i < num; i++)
+            this.fuels.push(new Fuel(this.fuelDef));
+    }
 
-Fuels.prototype = {
-    constructor: Fuels,
-    create: function(x, y, z)
+    create(x, y, z)
     {
         this.fuels[this.idx].birth(x, y, z);
         this.idx++;
         if(this.idx >= this.total) this.idx = 0;
-    },
+    }
 }
 
-function Fuel(fueldef)
-{
-    const obj = new LObject(fueldef, this);
-    this.obj = obj;
-    obj.distance = 2;
-    obj.mkvisible(false);
-    lScene.lAddChild(obj, mat4.create());
-}
+class Fuel {
+    constructor(fueldef)
+    {
+        const obj = new LObject(fueldef, this);
+        this.obj = obj;
+        obj.distance = 2;
+        obj.mkvisible(false);
+        lScene.lAddChild(obj, mat4.create());
+    }
 
-Fuel.prototype = {
-    constructor: Fuel,
-    birth: function(x, y, z)
+    birth(x, y, z)
     {
         this.obj.moveHere(x, y, z);
         this.obj.mkvisible(true);
         this.obj.procpos();
         lScene.lCMove(this.obj);
-    },
-    die: function()
+    }
+    die()
     {
         this.obj.mkvisible(false);
-    },
-    slurp: function()
+    }
+    slurp()
     {
         this.die();
-        sounds.slurp.play();
+        g_assets.slurp.play();
         lScene.life += 2;
     }
 }
 
 
-function Strand(control)
-{
-    this.obj = new LGroup({}, control);
+class Strand {
+    constructor(control)
+    {
+        this.obj = new LGroup({}, control);
+        
+        var intop = new LStructure(ShaderStrand, {color: [g_prng.next(5)/30, g_prng.next(5)/10, g_prng.next(5)/30, 1.0], wcolor: [0.5 + g_prng.next(5)/10, g_prng.next(5)/10, g_prng.next(5)/10, 1.0]}, control);
+        intop.structure.addCylinder({position: lFromXYZPYR(0.0, 1.0, 0.0, LR90, 0.0, 0.0), depth: 1.0, radius: 0.1, segments: 8, hold: [LI_FRONT, LI_BACK]});
+        var outop = new LStructure(ShaderStrand, {color: [g_prng.next(5)/30, g_prng.next(5)/10, g_prng.next(5)/30, 1.0], wcolor: [0.5 + g_prng.next(5)/10, g_prng.next(5)/10, g_prng.next(5)/10, 1.0]}, control);
+        outop.structure.addCylinder({position: lFromXYZPYR(0.0, 1.0, 0.0, LR90, 0.0, 0.0), depth: 1.0, radius: 0.1, segments: 8, hold: [LI_FRONT, LI_BACK]});
+        intop.addChild(outop, lFromXYZ(0.0, 2.0, 0.0));
+        this.obj.addChild(intop, mat4.create());
     
-    var intop = new LStructure(ShaderStrand, {color: [g_prng.next(5)/30, g_prng.next(5)/10, g_prng.next(5)/30, 1.0], wcolor: [0.5 + g_prng.next(5)/10, g_prng.next(5)/10, g_prng.next(5)/10, 1.0]}, control);
-    intop.structure.addCylinder({position: lFromXYZPYR(0.0, 1.0, 0.0, LR90, 0.0, 0.0), depth: 1.0, radius: 0.1, segments: 8, hold: [LI_FRONT, LI_BACK]});
-    var outop = new LStructure(ShaderStrand, {color: [g_prng.next(5)/30, g_prng.next(5)/10, g_prng.next(5)/30, 1.0], wcolor: [0.5 + g_prng.next(5)/10, g_prng.next(5)/10, g_prng.next(5)/10, 1.0]}, control);
-    outop.structure.addCylinder({position: lFromXYZPYR(0.0, 1.0, 0.0, LR90, 0.0, 0.0), depth: 1.0, radius: 0.1, segments: 8, hold: [LI_FRONT, LI_BACK]});
-    intop.addChild(outop, lFromXYZ(0.0, 2.0, 0.0));
-    this.obj.addChild(intop, mat4.create());
+        var inbot = new LStructure(ShaderStrand, {color: [g_prng.next(5)/30, g_prng.next(5)/10, g_prng.next(5)/30, 1.0], wcolor: [0.5 + g_prng.next(5)/10, g_prng.next(5)/10, g_prng.next(5)/10, 1.0]}, control);
+        inbot.structure.addCylinder({position: lFromXYZPYR(0.0, 1.0, 0.0, LR90, 0.0, 0.0), depth: 1.0, radius: 0.1, segments: 8, hold: [LI_FRONT, LI_BACK]});
+        var oubot = new LStructure(ShaderStrand, {color: [g_prng.next(5)/30, g_prng.next(5)/10, g_prng.next(5)/30, 1.0], wcolor: [0.5 + g_prng.next(5)/10, g_prng.next(5)/10, g_prng.next(5)/10, 1.0]}, control);
+        oubot.structure.addCylinder({position: lFromXYZPYR(0.0, 1.0, 0.0, LR90, 0.0, 0.0), depth: 1.0, radius: 0.1, segments: 8, hold: [LI_FRONT, LI_BACK]});
+        inbot.addChild(oubot, lFromXYZ(0.0, 2.0, 0.0));
+        this.obj.addChild(inbot, lFromXYZPYR(0.0, 0.0, 0.0, LR180, 0.0, 0.0));
+    
+        this.objs = [
+            [intop, 0, 3 + g_prng.next(4), 1],
+            [outop, 0, 4 + g_prng.next(4), 2],
+            [inbot, 0, 3 + g_prng.next(4), 2],
+            [oubot, 0, 4 + g_prng.next(4), 1],
+        ];
+    
+        this.yrot = 0.5 + (g_prng.next(8) / 16);
+    }
 
-    var inbot = new LStructure(ShaderStrand, {color: [g_prng.next(5)/30, g_prng.next(5)/10, g_prng.next(5)/30, 1.0], wcolor: [0.5 + g_prng.next(5)/10, g_prng.next(5)/10, g_prng.next(5)/10, 1.0]}, control);
-    inbot.structure.addCylinder({position: lFromXYZPYR(0.0, 1.0, 0.0, LR90, 0.0, 0.0), depth: 1.0, radius: 0.1, segments: 8, hold: [LI_FRONT, LI_BACK]});
-    var oubot = new LStructure(ShaderStrand, {color: [g_prng.next(5)/30, g_prng.next(5)/10, g_prng.next(5)/30, 1.0], wcolor: [0.5 + g_prng.next(5)/10, g_prng.next(5)/10, g_prng.next(5)/10, 1.0]}, control);
-    oubot.structure.addCylinder({position: lFromXYZPYR(0.0, 1.0, 0.0, LR90, 0.0, 0.0), depth: 1.0, radius: 0.1, segments: 8, hold: [LI_FRONT, LI_BACK]});
-    inbot.addChild(oubot, lFromXYZ(0.0, 2.0, 0.0));
-    this.obj.addChild(inbot, lFromXYZPYR(0.0, 0.0, 0.0, LR180, 0.0, 0.0));
-
-    this.objs = [
-        [intop, 0, 3 + g_prng.next(4), 1],
-        [outop, 0, 4 + g_prng.next(4), 2],
-        [inbot, 0, 3 + g_prng.next(4), 2],
-        [oubot, 0, 4 + g_prng.next(4), 1],
-    ];
-
-    this.yrot = 0.5 + (g_prng.next(8) / 16);
-}
-
-
-Strand.prototype = {
-    constructor: Strand,
-    move: function(delta)
+    move(delta)
     {
         this.obj.rotate(0.0, delta * this.yrot, 0.0);
 
@@ -170,7 +183,7 @@ Strand.prototype = {
                 obj.rotate(0.0, 0.0, ln[1])
         }
         this.obj.procpos();
-    },
+    }
 }
 
 /* The walls */
@@ -178,41 +191,39 @@ const RSWALLP = [XP, YP, ZP, ZN, YN, XN];
 /* The directions */
 const RSDIR = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0], [-1, 0, 0]];
 
-function RStrand(idx)
-{
-    // Remote strand - goes places
+class RStrand {
+    constructor(idx)
+    {
+        // Remote strand - goes places
+    
+        this.strand = new Strand(this);
+        this.obj = new LGroup({collision: LDYNAMIC}, this);
+        this.obj.descr = "RSTRAND";
+        this.obj.addChild(this.strand.obj, mat4.create());
+        this.obj.mkvisible(false);
+        this.obj.dynamic = true;
+        this.obj.distance = 2;
+        this.active = false;
+        this.direction = 0;      // Where am I going?
+        this.cell = null;
+        this.targetcell = null;     // Cell where I am going
+        this.inout = 0;      // -1 exiting 0 center 1 entering
+        this.targetpath = [];          // A list of cells to target
+    
+        this.id = g_prng.next(1000);
+        this.idx = idx;
+    
+        this.life = 100;
+    
+        this.alttexture = lLoadTColor([1.0, 0.0, 0.0, 1.0]);
+    
+        this.olddist = 20;      // Bang if we are going away from beetle
+        this.oldsame = false;   // Were we in the same cell?
 
-    this.strand = new Strand(this);
-    this.obj = new LGroup({collision: LDYNAMIC}, this);
-    this.obj.descr = "RSTRAND";
-    this.obj.addChild(this.strand.obj, mat4.create());
-    this.obj.mkvisible(false);
-    this.obj.dynamic = true;
-    this.obj.distance = 2;
-    this.active = false;
-    this.direction = 0;      // Where am I going?
-    this.cell = null;
-    this.targetcell = null;     // Cell where I am going
-    this.inout = 0;      // -1 exiting 0 center 1 entering
-    this.targetpath = [];          // A list of cells to target
+        lScene.lAddChild(this.obj, mat4.create());
+    }
 
-    this.id = g_prng.next(1000);
-    this.idx = idx;
-
-    this.life = 100;
-
-    this.alttexture = lLoadTColor([1.0, 0.0, 0.0, 1.0]);
-
-    this.olddist = 20;      // Bang if we are going away from beetle
-    this.oldsame = false;   // Were we in the same cell?
-
-
-    lScene.lAddChild(this.obj, mat4.create());
-}
-
-RStrand.prototype = {
-    constructor: RStrand,
-    birth: function(home)
+    birth(home)
     {
         var obj = this.obj;
         const cell = [0, 0, 0];
@@ -237,9 +248,9 @@ RStrand.prototype = {
         this.life = 100;
         this.olddist = 20;      // Bang if we are going away from beetle
         this.oldsame = false;   // Were we in the same cell?
-    },
+    }
 
-    beenshot: function()
+    beenshot()
     {
        this.life -= (g_shotbase + g_prng.next(g_shotrand));
        if(this.life <= 0)
@@ -247,18 +258,18 @@ RStrand.prototype = {
            lScene.fuels.create(this.obj.x, this.obj.y, this.obj.z);
            this.die();
        }
-    },
+    }
 
-    die: function()
+    die()
     {
         this.active = false;
     	this.targetpath = [];   // Otherwise we perhaps can walk through walls
         this.obj.mkvisible(false);
         this.birth(true);
 
-    },
+    }
 
-    shootbeam: function()
+    shootbeam()
     {
         // Shoots a beam and creates a line of "targets"
         // To go for
@@ -277,7 +288,7 @@ RStrand.prototype = {
         var distance = Math.hypot(dx, dy, dz);
 
         if(distance < 4.8) {
-            sounds.injured.play();
+            g_assets.injured.play();
             lScene.life -= 5;
             lScene.mkhurt();
             return true;       // We are here! - Kaboom
@@ -320,7 +331,7 @@ RStrand.prototype = {
 
         if(this.oldsame) {              // We were in the same cell
             if(distance <= this.olddist) { // But we are going away
-                sounds.injured.play();      // Bang
+                g_assets.injured.play();      // Bang
                 lScene.life  -= 5 - (this.olddist / 5);
                 lScene.mkhurt();
                 return true;       // We are here (in corner), strand in center of cell - Kaboom
@@ -369,11 +380,10 @@ RStrand.prototype = {
             this.direction = 5 - this.direction;
             this.inout = 1;
         }   // else Going to center anyway
-    },
+    }
 
-    move: function(delta, move)
+    move(delta, move)
     {
-
         this.strand.move(delta);
         var obj = this.obj;
 
@@ -486,48 +496,48 @@ RStrand.prototype = {
     }
 }
 
-function OSL20()
-{
-    this.obj = new LGroup({collision: LDYNAMIC}, this);
-    this.obj.distance = 4;
-    this.mstrands = [];
-    this.life = 100;
-
-    for(var i = 0; i < 32; i++) {
-        const strand = new Strand(this);
-        this.mstrands.push(strand);
-        this.obj.addChild(strand.obj, mat4.create());
+class OSL20 {
+    constructor()
+    {
+        this.obj = new LGroup({collision: LDYNAMIC}, this);
+        this.obj.distance = 4;
+        this.mstrands = [];
+        this.life = 100;
+    
+        for(var i = 0; i < 32; i++) {
+            const strand = new Strand(this);
+            this.mstrands.push(strand);
+            this.obj.addChild(strand.obj, mat4.create());
+        }
+    
+        const ring = new LStructure(ShaderSelf, {texture: g_assets.sl20}, this);
+        ring.structure.addCylinder({position: lFromXYZPYR(0, 0, 0, -LR90, 0, 0), radius: 0.3, depth: 0.3, hold: [LI_FRONT, LI_BACK]});
+        this.obj.addChild(ring, mat4.create());
+        this.ring = ring;
+    
+        this.ex = (maze.endhere[0] * 10) + 5;
+        this.ey = (maze.endhere[1] * 10) + 5;
+        this.ez = (maze.endhere[2] * 10) + 5;
+    
+        this.shotbase = 11 -  g_atlevel;
+        if(this.shotbase < 0) this.shotbase = 0;
+        this.shotrand  = 3 + (10 - this.shotbase)
     }
 
-    const ring = new LStructure(ShaderSelf, {texture: BASEDIR + "sl20.jpg"}, this);
-    ring.structure.addCylinder({position: lFromXYZPYR(0, 0, 0, -LR90, 0, 0), radius: 0.3, depth: 0.3, hold: [LI_FRONT, LI_BACK]});
-    this.obj.addChild(ring, mat4.create());
-    this.ring = ring;
-
-    this.ex = (maze.endhere[0] * 10) + 5;
-    this.ey = (maze.endhere[1] * 10) + 5;
-    this.ez = (maze.endhere[2] * 10) + 5;
-
-    this.shotbase = 11 -  g_atlevel;
-    if(this.shotbase < 0) this.shotbase = 0;
-    this.shotrand  = 3 + (10 - this.shotbase)
-}
-
-OSL20.prototype = {
-    constructor: OSL20,
-    move: function(delta)
+    move(delta)
     {
         if(Math.floor(lCamera.x/10) == maze.endhere[0] && Math.floor(lCamera.y/10) == maze.endhere[1] && Math.floor(lCamera.z/10) == maze.endhere[2]) {
             lScene.life -= 10 * delta;
-            sounds.injured.play();
+            g_assets.injured.play();
         }
         for(var i = 0; i < 32; i++) this.mstrands[i].move(delta);
         this.ring.rotate(0, -delta/1.5, 0);
         this.obj.procpos();
-    },
-    beenshot: function()
+    }
+
+    beenshot()
     {
-        sounds.sbang.play();
+        g_assets.sbang.play();
         this.life -= this.shotbase + g_prng.next(this.shotrand);
         if(this.life < 0)
         {
@@ -536,42 +546,39 @@ OSL20.prototype = {
             document.getElementById("tmessage").innerText = "*** WIN ***";
             lScene.runme = false;
             lScene.oboom = new Boom();
-            sounds.endbang.play();
+            g_assets.endbang.play();
             return false;
         }
         else
             return true;
-    },
+    }
 }
 
-function Bullet(bulletDef)
-{
-    const obj = new LObject(bulletDef, null);
-    obj.mkvisible(false);
-
-    this.obj = obj;
-    lScene.lAddChild(obj, mat4.create());
-
-    this.fired = false;
-    this.position = mat4.create();
-    this.life = 0;
-
-    // Always ignore this
-    this.obj.ignore = true;
-    this.obj.descr = "BULLET";
+class Bullet {
+    constructor(bulletDef)
+    {
+        const obj = new LObject(bulletDef, null);
+        obj.mkvisible(false);
     
-}
+        this.obj = obj;
+        lScene.lAddChild(obj, mat4.create());
+    
+        this.fired = false;
+        this.position = mat4.create();
+        this.life = 0;
+    
+        // Always ignore this
+        this.obj.ignore = true;
+        this.obj.descr = "BULLET";
+    }
 
-Bullet.prototype = {
-    constructor: Bullet,
-
-    fire: function()
+    fire()
     {
         if(this.fired) return;
 
         lScene.life -= 0.1;
 
-        sounds.fire.play();
+        g_assets.fire.play();
 
         this.obj.moveHere(lCamera.x, lCamera.y, lCamera.z);
 
@@ -581,9 +588,9 @@ Bullet.prototype = {
         this.obj.procpos();
         this.obj.warp();
         this.life = 2.5;
-    },
+    }
 
-    move: function(delta)
+    move(delta)
     {
         this.obj.move(0, 0, -delta * 20);
         this.obj.procpos();
@@ -607,7 +614,7 @@ Bullet.prototype = {
             quat.identity(this.obj.quat);
             if(out.control) {
                 if(out.control.beenshot) {
-                    sounds.sbang.play();
+                    g_assets.sbang.play();
                     out.control.beenshot();
                 }
             }
@@ -626,46 +633,45 @@ Bullet.prototype = {
     }
 }
         
-function Scene(args)
-{
-    LBase.call(this, args);
-    this.runme = true;
-    this.life = 100;
-    this.bescape = false;
-    this.hurt = 0.0;
+class Scene extends LBase {
+    constructor(args)
+    {
+        super(args);
+        this.runme = true;
+        this.life = 100;
+        this.bescape = false;
+        this.hurt = 0.0;
+    
+        this.ambientLight =  vec3.fromValues(0.3, 0.3, 0.3);
+        this.directionalLightColor = vec3.fromValues(1.0, 1.0, 1.0);
+    
+        var keys = {
+            pitch_down: false,
+            pitch_up: false,
+            roll_anti: false,
+            roll_clock: false,
+            fire: false,
+            go_forward: true,
+        };
+    
+    
+        // Register keys as functions for performance
+        lInput.register(83, function(ind) {keys.pitch_down = ind;});
+        lInput.register(88, function(ind) {keys.pitch_up = ind;});
+        lInput.register(188, function(ind) {keys.roll_anti = ind;});
+        lInput.register(190, function(ind) {keys.roll_clock = ind;});
+        lInput.register(32, function(ind) {if(ind) keys.go_forward = true;});
+        lInput.register(191, function(ind) {if(ind) keys.go_forward = false;});
+        lInput.register(27, function(ind) {if(ind) lScene.doescape()});
+        lInput.register(65, function(ind) {if(ind) keys.fire = true;});
+    
+        // Use them
+        lInput.usekeys();
+    
+        this.keys = keys;
+    }
 
-    this.ambientLight =  vec3.fromValues(0.3, 0.3, 0.3);
-    this.directionalLightColor = vec3.fromValues(1.0, 1.0, 1.0);
-
-    var keys = {
-        pitch_down: false,
-        pitch_up: false,
-        roll_anti: false,
-        roll_clock: false,
-        fire: false,
-        go_forward: true,
-    };
-
-
-    // Register keys as functions for performance
-    lInput.register(83, function(ind) {keys.pitch_down = ind;});
-    lInput.register(88, function(ind) {keys.pitch_up = ind;});
-    lInput.register(188, function(ind) {keys.roll_anti = ind;});
-    lInput.register(190, function(ind) {keys.roll_clock = ind;});
-    lInput.register(32, function(ind) {if(ind) keys.go_forward = true;});
-    lInput.register(191, function(ind) {if(ind) keys.go_forward = false;});
-    lInput.register(27, function(ind) {if(ind) lScene.doescape()});
-    lInput.register(65, function(ind) {if(ind) keys.fire = true;});
-
-    // Use them
-    lInput.usekeys();
-
-    this.keys = keys;
-}
-
-Scene.prototype = Object.assign(Object.create(LBase.prototype), {
-    constructor: Scene,
-    lLoop: function(delta)
+    lLoop(delta)
     {
         if(!this.runme) {
             if(this.bescape) return false;     // Finish it NOW
@@ -727,7 +733,7 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
                 lCamera.move(-x, -y, -z);
                 tlife += 1;
                 if(!this.hit) {
-                    sounds.scrape.play();
+                    g_assets.scrape.start();
                     this.hit = true;
                 }
             } else {
@@ -736,14 +742,14 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
                 }
                 else if (lout.control instanceof RStrand)
                 {
-                    sounds.injured.play();
+                    g_assets.injured.play();
                     this.life -= 5;
                     this.mkhurt();
                     lout.control.die();
                 }
            }
         } else if (this.hit) {
-            sounds.scrape.pause();
+            g_assets.scrape.pause();
             this.hit = false;
         }
 
@@ -796,7 +802,7 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         if(this.life < 0) {
             this.win = false;
             document.getElementById("tmessage").innerText = "--- LOSE ----";
-            sounds.flush.play();
+            g_assets.flush.play();
             this.runme = false;
             this.oflush = new Flush();
             if(g_atlevel > 0) g_atlevel -= 1;
@@ -805,15 +811,15 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         this.tlife.innerText = Math.round(this.life * 100) / 100;
 
         return true;
-    },
+    }
 
-    mkhurt: function()
+    mkhurt()
     {
         this.hurt = 0.3;
         this.ambientLight = this.hurtAmbientLight;
         this.directionalLightColot = this.hurtDirectionalLightColor;
-    },
-    doescape: function()
+    }
+    doescape()
     {
         // Do things to end
         this.bescape = true;
@@ -821,8 +827,8 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         // Makes form invisible
         document.getElementById("mform").style.display = "block";
         document.getElementById("mgame").style.display = "none";
-    },
-});
+    }
+}
 
 
 
@@ -831,7 +837,7 @@ var assets;
 
 function g_loadassets()
 {
-    assets = new LAssets(g_assets);
+    const assets = g_assets_obj;
     function inprogress()
     {
         document.getElementById("loading").innerText = assets.succeeded.toString() + " out of " + assets.total.toString() + "assets loaded";
@@ -847,17 +853,6 @@ function g_loadassets()
 function playgame(mname, mlevel, mobile)
 {
 
-    var ass = assets.data;
-    console.trace();
-    sounds = {
-        injured: new LAudios(ass.injured, 5, "injured"),
-        sbang: new LAudios(ass.sbang, 5, "sbang"),
-        fire: new LAudios(ass.fire, 5, "fire"),
-        slurp: new LAudios(ass.slurp, 5, "slurp"),
-        scrape: new LAudioLoop(ass.scrape),
-        endbang: new LAudios(ass.endbang, 1, "endbang"),
-        flush: new LAudios(ass.flush, 1, "flush"),
-    };
     if(mlevel == "") mlevel = 1;
     if(mname == "") mname = "Labarynth";
     mlevel = parseInt(mlevel) - 1;
@@ -909,7 +904,7 @@ function playloop(iseed)
         lCIncrement: 0.2,
         });
 
-    lScene.lRestart = function() { sounds.scrape.stop(); if(!lScene.bescape) playloop(iseed); };
+    lScene.lRestart = function() {g_assets.scrape.stop(); if(!lScene.bescape) playloop(iseed); };
 
     var size = vec3.fromValues(msize[0], msize[1], msize[2]);
 
@@ -950,8 +945,6 @@ function playloop(iseed)
     lScene.life = 100.0;
     lScene.win = false;
 
-    var wallads = BASEDIR + "wallads.jpg";
-    var floorceil = BASEDIR + "floorceil.jpg";
 
     var imsize = [1024, 1024];
     var third = 341;
@@ -985,9 +978,9 @@ function playloop(iseed)
         return [maze.prng.next(9), maze.prng.next(9), maze.prng.next(9), maze.prng.next(9), maze.prng.next(9), maze.prng.next(9)];
     }
 
-    var xobj = new LStructure(ShaderSelf, {texture: wallads, collision: LSTATIC}, null)
-    var yobj = new LStructure(ShaderSelf, {texture: floorceil, collision: LSTATIC}, null);
-    var zobj = new LStructure(ShaderSelf, {texture: wallads, collision: LSTATIC}, null)
+    var xobj = new LStructure(ShaderSelf, {texture: g_assets.wallads, collision: LSTATIC}, null)
+    var yobj = new LStructure(ShaderSelf, {texture: g_assets.floorceil, collision: LSTATIC}, null);
+    var zobj = new LStructure(ShaderSelf, {texture: g_assets.wallads, collision: LSTATIC}, null)
     lScene.lAddChild(xobj, mat4.create());
     lScene.lAddChild(yobj, mat4.create());
     lScene.lAddChild(zobj, mat4.create());
@@ -1071,13 +1064,13 @@ function playloop(iseed)
     lScene.lMain();
 }
                 
-function Boom()
-{
-    this.time = 10.0;
-}
-Boom.prototype = {
-    constructor: Boom,
-    doboom: function(delta)
+class Boom {
+    constructor()
+    {
+        this.time = 10.0;
+    }
+
+    doboom(delta)
     {
         this.time -= delta;
         if(this.time < 0) return false;
@@ -1091,14 +1084,13 @@ Boom.prototype = {
     }
 }
 
-function Flush()
-{
-    this.time = 5.0;
-}
+class Flush {
+    constructor()
+    {
+        this.time = 5.0;
+    }
 
-Flush.prototype = {
-    constructor: Flush,
-    doflush: function(delta)
+    doflush(delta)
     {
         this.time -= delta;
         if(this.time <= 0) return false;
@@ -1110,4 +1102,7 @@ Flush.prototype = {
         return true;
     }
 }
-    
+
+
+window.g_loadassets = g_loadassets;
+window.playgame = playgame;

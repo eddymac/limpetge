@@ -4,11 +4,16 @@ function do_onload()
 `<html><head><title>Squish - Devloper Tutorial One</title></head>
 <link rel="icon" type="image/png" href="../libs/limpeticon.png"/>
 <link rel="shortcut icon" type="image/png" href="../libs/limpeticon.png"/>
-<script type="text/javascript" src="../libs/gl-matrix.js"></script>
-<script type="text/javascript" src="../libs/limpetge.js"></script>
-<script type="text/javascript" src="squish.js"></script>
-<script type="text/javascript" src="shader_squish.js"></script>
+<script type="module" src="squish/squish.js"></script>
 <style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0px;
+        border: 0;
+        overflow: hidden;
+        display: block;
+    }
     div.top {
         position: absolute;
         top:0;
@@ -88,23 +93,21 @@ function do_onload()
 
     
     document.getElementById("w1").innerText =
-`function Scene(args)
-{
-    LBase.call(this, args);
-
-    // Set up the keys
-    this.kForward = lInput.press(87);   // Key W
-    this.kBack = lInput.press(83);      // key S
-    this.kRight = lInput.press(190);    // key  > or .
-    this.kLeft = lInput.press(188);     // key  < or ,
-
-    lInput.usekeys();
-}
-
-Scene.prototype = Object.assign(Object.create(LBase.prototype), {
-    constructor: Scene,
-
-    lLoop: function(delta)
+`class Scene extends LBase {
+    constructor(args)
+    {
+        super(args);
+    
+        // Set up the keys
+        this.kForward = lInput.press(87);   // Key W
+        this.kBack = lInput.press(83);      // key S
+        this.kRight = lInput.press(190);    // key  > or .
+        this.kLeft = lInput.press(188);     // key  < or ,
+    
+        lInput.usekeys();
+    }
+    
+    lLoop(delta)
     {
         var x = 0;
         var z = 0;
@@ -137,9 +140,6 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
 
         // Continue game
         return true;
-    },
-
+    }
 });`;
-        
-
 }

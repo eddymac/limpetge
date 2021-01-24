@@ -1,5 +1,18 @@
 "use strict";
 
+import {LAssets, LImage, LAudios, LAudioLoop, LBase, LCamera, LObject, LIObject, LWObject, LStaticGroup, LGroupDef,
+    LStructureDef, LTextureControl, LVirtObject, LGroup, LStructure, LKey, lInput, lInText, LObjImport, LComponent,
+    lInit, lClear, lStructureSetup, lTextureColor, lTextureColorAll, lTextureList, lLoadTexture, lReloadTexture, lLoadTColor,
+    lReloadTColor, lLoadTColors, lReloadTColors, lLoadTCanvas, lReloadTCanvas, lInitShaderProgram, lElement, lAddButton, lCanvasResize,
+    lFromXYZR, lFromXYZ, lFromXYZPYR, lExtendarray, lGetPosition, lAntiClock, lCoalesce, lIndArray,
+    LPRNG, LPRNGD, LCANVAS_ID, LR90, LR180, LR270, LR360, LI_FRONT, LI_BACK, LI_SIDE, LI_TOP, LI_RIGHT, LI_BOTTOM, LI_LEFT, LSTATIC,
+    LDYNAMIC, LNONE, LBUT_WIDTH, LBUT_HEIGHT, LMESTIME, LASSET_THREADS, LASSET_RETRIES, LOBJFILE_SMOOTH, LTMP_MAT4A, LTMP_MAT4B,
+    LTMP_MAT4C, LTMP_QUATA, LTMP_QUATB, LTMP_QUATC, LTMP_VEC3A, LTMP_VEC3B, LTMP_VEC3C, lSScene, LTEXCTL_STATIC,
+    LTEXCTL_STATIC_LIST, lGl, lCamera, lScene, lDoDown, lDoUp, lShader_objects, mat4, vec3, vec4, quat} from "../../libs/limpetge.js";
+
+import {ShaderSimple, ShaderSolid} from "./shader_squish.js";
+
+
 var g_prngd = new LPRNGD(Math.random() * 10000);
 var g_prng = new LPRNG(Math.random() * 10000);
 
@@ -177,49 +190,50 @@ function sphereStructure()
 
     var mainstruct = new LGroupDef({collision: LDYNAMIC, distance: 2.0});
     var anglestruct = new LGroupDef();
-    var ballstruct = new LStructureDef(ShaderSimple, {texture: "squish/bsphere.jpg"});
+    var ballstruct = new LStructureDef(ShaderSimple, {texture: "./squish/bsphere.jpg"});
     ballstruct.addSphere({radius: 2.0});
     var shadowstruct = new LStructureDef(ShaderSolid, {color: [0.0, 0.0, 0.0, 0.7]});
     shadowstruct.addCylinder({position: lFromXYZPYR(0, -2.0, 0, LR90, 0, 0), radius: 2.0, depth: 0.002, hold: [LI_FRONT, LI_SIDE]})
     return [mainstruct, anglestruct, ballstruct, shadowstruct];
 }
 
-function Corridor()
-{
-    this.obj = new LWObject(g_structures.Corridor[0], this);
-    this.solids = new LWObject(g_structures.Corridor[1], this);
-    lScene.lPlace(this.obj, mat4.create());
-    lScene.lPlace(this.solids, mat4.create());
+class Corridor {
+    constructor()
+    {
+        this.obj = new LWObject(g_structures.Corridor[0], this);
+        this.solids = new LWObject(g_structures.Corridor[1], this);
+        lScene.lPlace(this.obj, mat4.create());
+        lScene.lPlace(this.solids, mat4.create());
+    }
 }
 
 // Spheres, need at least 200
 
-function Sphere()
-{
-    this.obj = new LWObject(g_structures.Sphere[0], this);
-    this.angle = new LObject(g_structures.Sphere[1], this);
-    this.ball = new LObject(g_structures.Sphere[2], this);
-    this.shadow = new LObject(g_structures.Sphere[3], this);
-    lScene.lPlace(this.obj, mat4.create());
-    this.obj.addChild(this.angle, mat4.create());
-    this.angle.addChild(this.ball, lFromXYZPYR(0, 0, 0, g_prngd.next(Math.PI), g_prngd.next(Math.PI), g_prngd.next(Math.PI)));
-    this.obj.addChild(this.shadow, mat4.create());
+class Sphere {
+    constructor()
+    {
+        this.obj = new LWObject(g_structures.Sphere[0], this);
+        this.angle = new LObject(g_structures.Sphere[1], this);
+        this.ball = new LObject(g_structures.Sphere[2], this);
+        this.shadow = new LObject(g_structures.Sphere[3], this);
+        lScene.lPlace(this.obj, mat4.create());
+        this.obj.addChild(this.angle, mat4.create());
+        this.angle.addChild(this.ball, lFromXYZPYR(0, 0, 0, g_prngd.next(Math.PI), g_prngd.next(Math.PI), g_prngd.next(Math.PI)));
+        this.obj.addChild(this.shadow, mat4.create());
+    
+        this.obj.mkvisible(false);
+    
+        this.velocity = 0;  // To be created in "makesphere"
+    
+        // For celebrating
+        this.endx = g_prngd.next(20) - 10;
+        this.endy = g_prngd.next(20) - 10;
+        this.endz = g_prngd.next(20) - 10;
+    }
 
-    this.obj.mkvisible(false);
-
-    this.velocity = 0;  // To be created in "makesphere"
-
-    // For celebrating
-    this.endx = g_prngd.next(20) - 10;
-    this.endy = g_prngd.next(20) - 10;
-    this.endz = g_prngd.next(20) - 10;
-}
-
-Sphere.prototype = {
-    constructor: Sphere,
 
     // Inistigating a sphere
-    start: function()
+    start()
     {
         this.velocity = 5.0 + g_prngd.next(5.0);    // Set velocity between 5 and 10
 
@@ -262,12 +276,12 @@ Sphere.prototype = {
 
         this.obj.mkvisible(true);
         this.obj.procpos();
-    },
+    }
 
     /*
      * What happens when a sphere moves
      */
-    move: function(delta)
+    move(delta)
     {
 
         if(!this.obj.isvisible) return;
@@ -348,54 +362,52 @@ Sphere.prototype = {
         this.obj.procpos();
 
         if(this.obj.z > 220) this.die();
-    },
+    }
 
-    die: function()
+    die()
     {
         // Just make invisible for this game
 
         this.obj.mkvisible(false);
-    },
-
+    }
 }
 
 
-function Scene(args)
-{
-    LBase.call(this, args);
-
-    this.spheres = [];      // The spheres
-    this.sidx = 0;          // phere index
-
-    this.ishit = false;
-
-    this.nextsphere = 0.0;
-
-    // Set up the keys
-    this.kForward = lInput.press(87);   // Key W
-    this.kBack = lInput.press(83);      // key S
-    this.kRight = lInput.press(190);      // key  > or .
-    this.kLeft = lInput.press(188);      // key  < or ,
-
-    lInput.usekeys();
-
-    this.lRestart = function()
+class Scene extends LBase {
+    constructor(args)
     {
-        if(!this.ishit) {
-            g_level += 1;
-        }
+        super(args);
+    
+        this.spheres = [];      // The spheres
+        this.sidx = 0;          // phere index
+    
+        this.ishit = false;
+    
+        this.nextsphere = 0.0;
+    
+        // Set up the keys
+        this.kForward = lInput.press(87);   // Key W
+        this.kBack = lInput.press(83);      // key S
+        this.kRight = lInput.press(190);      // key  > or .
+        this.kLeft = lInput.press(188);      // key  < or ,
+    
+        lInput.usekeys();
+    
+        this.lRestart = function()
+        {
+            if(!this.ishit) {
+                g_level += 1;
+            }
+    
+            g_playlevel(g_level);
+        };
+    
+        this.endtime = 5.0;
+        this.isend = false;
+    }
 
-        g_playlevel(g_level);
-    };
 
-    this.endtime = 5.0;
-    this.isend = false;
-}
-
-Scene.prototype = Object.assign(Object.create(LBase.prototype), {
-    constructor: Scene,
-
-    lLoop: function(delta)
+    lLoop(delta)
     {
         // Have we ended - do end animations
         if(this.isend)
@@ -460,18 +472,18 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
 
         // Continue game
         return true;
-    },
+    }
 
-    makesphere: function()
+    makesphere()
     {
         // Use the next sphere in list, regardless if it is still live
 
         this.spheres[this.sidx].start();
         this.sidx += 1;
         if(this.sidx >= 200) this.sidx = 0;
-    },
+    }
 
-    celebrate: function()
+    celebrate()
     {
         // Move to space and display all spheres
         this.lMessage("Made it!", "lightgreen");
@@ -486,9 +498,9 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
             sphere.shadow.mkvisible(false);
             sphere.obj.procpos();
         }
-    },
+    }
 
-    celebrating: function(delta)
+    celebrating(delta)
     {
         this.endtime -= delta;
         if(this.endtime <= 0) return false;
@@ -498,9 +510,9 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
             sphere.obj.procpos();
         }
         return true;
-    },
+    }
 
-    die: function()
+    die()
     {
         // First, "solid" shader objects ignore light, so for the correct effect,
         // make the wall structure shadoes invisible
@@ -508,10 +520,10 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         this.lMessage("Squished!");
         this.directionalLightColor = vec3.fromValues(1.0, 0.0, 0.0);
         this.isend = true;
-    },
+    }
         
 
-    dieing: function(delta)
+    dieing(delta)
     {
         this.endtime -= delta;
         if(this.endtime <= 0) return false;
@@ -519,9 +531,9 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
         this.directionalLightColor = vec3.fromValues(this.endtime / 5.0, 0.0, 0.0);
         this.ambientLight = vec3.fromValues(0.3 * this.endtime / 5.0, 0.3 * this.endtime / 5.0, 0.3 * this.endtime / 5.0);
         return true;
-    },
+    }
 
-});
+}
         
 function g_playgame()
 {
@@ -566,4 +578,6 @@ function g_playlevel(level)
 
     lScene.lMain();
 }
+
+window.g_playgame = g_playgame;
 

@@ -4,26 +4,10 @@ ShaderSolid : A "SOLID" shader for "light" objects.
 
 This makes the object look like a simple light source.
 
-
-doInitBuffer(structure)
-    structure.args:
-
-        One of:
-            texture: url string
-            rawrtexture: loaded texture
-            color: vec4 color
-            colors: array of vec4 colors
-
-        As well as the standard arrays
-
-doDraw(buffer, position, control)
-    No argument looked at
-
-
  */
-const ShaderSolid = {
-    key: 4,
-    fragSource: `
+class ShaderSolid {
+    static key = -1;
+    static fragSource = `
         uniform sampler2D uSampler;
 
         varying highp vec2 vCoords;
@@ -31,15 +15,13 @@ const ShaderSolid = {
         void main() {
             gl_FragColor = texture2D(uSampler, vCoords);
         }
-    `,
+    `;
 
-    vertexSource: `
+    static vertexSource = `
         attribute vec4 aVertexPosition;
         attribute vec2 aTextureCoords;
 
-        uniform mat4 uPositionMatrix;   // Position of object relative to lCamera
         uniform mat4 uViewMatrix;       // View of object (above + projection)
-        uniform mat4 uNormalMatrix;     // Normal matrix
 
         varying highp vec2 vCoords;
 
@@ -47,42 +29,37 @@ const ShaderSolid = {
             gl_Position = uViewMatrix * aVertexPosition;
             vCoords = aTextureCoords;
         }
-    `,
+    `;
 
     // This is called on load
-    compile: function()
+    static compile()
     {
         _lShaderId += 1;
-        ShaderSolid.key = _lShaderId;
+        this.key = _lShaderId;
 
-        const prog = lInitShaderProgram(ShaderSolid.vertexSource, ShaderSolid.fragSource);
-        ShaderSolid.shader = prog;
-        ShaderSolid.locations = {
+        const prog = lInitShaderProgram(this.vertexSource, this.fragSource);
+        this.shader = prog;
+        this.locations = {
             // attributes
             aVertexPosition: lGl.getAttribLocation(prog, 'aVertexPosition'),
             aTextureCoords: lGl.getAttribLocation(prog, 'aTextureCoords'),
 
             // uniforms
-            uPositionMatrix: lGl.getUniformLocation(prog, 'uPositionMatrix'),
             uViewMatrix: lGl.getUniformLocation(prog, 'uViewMatrix'),
-            uNormalMatrix: lGl.getUniformLocation(prog, 'uNormalMatrix'),
             uSampler: lGl.getUniformLocation(prog, 'uSampler'),
 
         };
 
         // I cannot think of a reason not to enable them here
         lGl.enableVertexAttribArray(
-            ShaderSolid.locations.aVertexPosition,
+            this.locations.aVertexPosition,
         );
         lGl.enableVertexAttribArray(
-            ShaderSolid.locations.aVertexNormal
+            this.locations.aTextureCoords
         );
-        lGl.enableVertexAttribArray(
-            ShaderSolid.locations.aTextureCoords
-        );
-    },
+    }
 
-    doInitBuffer: function(structure)
+    static doInitBuffer(structure)
     {
 
         const buffer = structure.buffer;
@@ -108,7 +85,7 @@ const ShaderSolid = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -117,18 +94,18 @@ const ShaderSolid = {
         buffer.index = indexBuffer;
         buffer.numentries = structure.numentries;
 
-    },
+    }
 
-    useProgram: function()
+    static useProgram()
     {
-        lGl.useProgram(ShaderSolid.shader);
-    },
+        lGl.useProgram(this.shader);
+    }
 
-    useBuffer: function(buffer)
+    static useBuffer(buffer)
     {
         lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.point);
         lGl.vertexAttribPointer(
-            ShaderSolid.locations.aVertexPosition,
+            this.locations.aVertexPosition,
             3,      // number of components
             lGl.FLOAT,   // Type
             false,      // Normalize
@@ -140,7 +117,7 @@ const ShaderSolid = {
         // Coords
         lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.coords);
         lGl.vertexAttribPointer(
-            ShaderSolid.locations.aTextureCoords,
+            this.locations.aTextureCoords,
             2,          // Number of components
             lGl.FLOAT,   // Type
             false,      // Normalize
@@ -151,23 +128,16 @@ const ShaderSolid = {
         lGl.activeTexture(lGl.TEXTURE0);
         lGl.bindTexture(lGl.TEXTURE_2D, buffer.texture);
 
-        lGl.uniform1i(ShaderSolid.locations.uSampler, 0);
-    },
+        lGl.uniform1i(this.locations.uSampler, 0);
+    }
 
-    doDraw: function(buffer, position, control)
+    static viewMatrix = mat4.create();
+
+    static doDraw(buffer, position, control)
     {
 
-        const ma = mat4.create();
-        mat4.multiply(ma, lCamera.position, position);
-
-        const normalMatrix = mat4.create();
-        mat4.invert(normalMatrix, ma);
-        mat4.transpose(normalMatrix, normalMatrix);
-
-        mat4.multiply(ma, lCamera.currview, position);
-        lGl.uniformMatrix4fv(ShaderSolid.locations.uViewMatrix, false, ma);
-        mat4.multiply(ma, lCamera.position, position);
-        lGl.uniformMatrix4fv(ShaderSolid.locations.uPositionMatrix, false, ma);
+        lGl.uniformMatrix4fv(this.locations.uViewMatrix, false,
+            mat4.multiply(this.viewMatrix, lCamera.currview, position));
 
         lGl.bindBuffer(lGl.ELEMENT_ARRAY_BUFFER, buffer.index);
 
@@ -177,5 +147,5 @@ const ShaderSolid = {
                     lGl.UNSIGNED_SHORT,  // type
                     0                   // Offset
         );
-    },
+    }
 }

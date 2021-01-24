@@ -188,13 +188,7 @@
 <p>This is not a HTML tutorial, but to go through respective parts:</p>
 
 <ul>
-    <li>Four scripts are loaded:
-        <ol>
-            <li>"../libs/gl-matrix.js" - The glMatrix routines from the libs directory.</li>
-            <li>"../libs/limpetge.js" - The LimpetGE library routines and environment.</li>
-            <li>"squish.js" - The game itself, you will be writing this.  Most of the tutorial is involved with this.</li>
-            <li>"shader_squish.js" - The shaders used (one in this case).  You will be assembling this.</li>
-        </ol>
+    <li>The game itself - "squish/squish.js" - is loaded as a javascript module.</li>
     <li>The "BODY" element has an "onload" attribute to play the game once the HTML is loaded.</li>
     <li>A canvas HTML object to run the game in.  This needs an "id" attribute of "limpetge_canvas".  An initial width and height are require but LimpetGE resizes it to fit the screen.
         Also, the "background-color" of this element needs to be black, otherwise transparent renders in the game do not come out right.</li>
@@ -219,11 +213,34 @@
 
 <h3>The main "squish.js" file</h3>
 
+<p> First things first, the top line should read:</p>
+
+<div class="example">"use strict";</div>
+
+<p>If not, you deserve everything you are going to get.</p>
+
+<h4>Importing from the Libraries</h4>
+
+<p>As performance is an issue, it is best to import all names from the library, and the shaders, individually.  At first 
+this looks like a icomplex mess, but it is a simple matter of copy and paste to implement.</p>
+
+<div class="example">import {LAssets, LImage, LAudios, LAudioLoop, LBase, LCamera, LObject, LIObject, LWObject, LStaticGroup, LGroupDef,
+    LStructureDef, LTextureControl, LVirtObject, LGroup, LStructure, LKey, lInput, lInText, LObjImport, LComponent,
+    lInit, lClear, lStructureSetup, lTextureColor, lTextureColorAll, lTextureList, lLoadTexture, lReloadTexture, lLoadTColor,
+    lReloadTColor, lLoadTColors, lReloadTColors, lLoadTCanvas, lReloadTCanvas, lInitShaderProgram, lElement, lAddButton, lCanvasResize,
+    lFromXYZR, lFromXYZ, lFromXYZPYR, lExtendarray, lGetPosition, lAntiClock, lCoalesce, lIndArray,
+    LPRNG, LPRNGD, LCANVAS_ID, LR90, LR180, LR270, LR360, LI_FRONT, LI_BACK, LI_SIDE, LI_TOP, LI_RIGHT, LI_BOTTOM, LI_LEFT, LSTATIC,
+    LDYNAMIC, LNONE, LBUT_WIDTH, LBUT_HEIGHT, LMESTIME, LASSET_THREADS, LASSET_RETRIES, LOBJFILE_SMOOTH, LTMP_MAT4A, LTMP_MAT4B,
+    LTMP_MAT4C, LTMP_QUATA, LTMP_QUATB, LTMP_QUATC, LTMP_VEC3A, LTMP_VEC3B, LTMP_VEC3C, lSScene, LTEXCTL_STATIC,
+    LTEXCTL_STATIC_LIST, lGl, lCamera, lScene, lDoDown, lDoUp, lShader_objects, mat4, vec3, vec4, quat} from "../../libs/limpetge.js";
+
+import {ShaderSimple} from "./shader_squish.js";
+</div>
+
+<h4>The program itselfg...</h4>
+
 <p>Looking at the "Structural Concept" tree above, we will start by the structure classes.  We will not create the instances at this point, just the classses.</p>
 
-<p> First things first, the top line should read:</p>
-<div class="example">"use strict";</div>
-<p>If not, yoiu deserve everything you are going to get.</p>
 
 <h4>Creating the Corridor structure</h4>
 
@@ -301,7 +318,7 @@ This may seem daunting at first, but I will go through it line by line.</p>
     <li>size:  This is a bit of a misnomer, it is in fact half the size.  It is an array that represents the co-ordinates of a corner of the block, the negative value of each represents
         the other corner.  So in the corner, the opposite corners of the block will have the XYZ co-ordinates of (0.1, 2.5, 120) and (-0.1, -2.5, -120), making it 0.2 meters wide, 5.0 meters high and 240 meters long.</li>
     <li>texturecontrols: A block has six surfaces, numbered zero through five.  These are also defined by the global variables LI_FRONT, LI_BACK, LI_TOP, LI_LEFT, LI_BOTTOM, LI_RIGHT respectively.
-        This argument takes an array, each numbered index of this controls what LTetureControl instance controls the look of that surface.  Any ommitted, undefined or null then that surface is not rendered.
+        This argument takes an array, each numbered index of this controls what LTextureControl instance controls the look of that surface.  Any ommitted, undefined or null then that surface is not rendered.
         What this line does is tell LimpetGE to render the right hand side of the block as "brown" (defined above) and not to render the other surfaces.</li>
 </ul>
 
@@ -370,17 +387,19 @@ xxx[LI_RIGHT] = red;
    For now, we will just have one scene.</p>
 <p>To go through the above:</p>
 
-<div class="example">function Scene(args)
-{
-    LBase.call(this, args);
+<div class="example">class Scene extends LBase {
+    constructor(args)
+    {
+        super(args);
 
-    // Set up the keys
-    this.kForward = lInput.press(87);   // Key W
-    this.kBack = lInput.press(83);      // key S
-    this.kRight = lInput.press(190);    // key  &lt; or .
-    this.kLeft = lInput.press(188);     // key  &gt; or ,
+        // Set up the keys
+        this.kForward = lInput.press(87);   // Key W
+        this.kBack = lInput.press(83);      // key S
+        this.kRight = lInput.press(190);    // key  &lt; or .
+        this.kLeft = lInput.press(188);     // key  &gt; or ,
 
-    lInput.usekeys();
+        lInput.usekeys();
+    }
 }
 </div>
 
@@ -392,13 +411,7 @@ xxx[LI_RIGHT] = red;
    returns a "LKey" class instance, which has a property "val" which is the boolean "true" when the key is pressed, or "false" when not.</p>
 <p>The "lInput.usekeys()" method activates this.</p>
 
-<div class="example">Scene.prototype = Object.assign(Object.create(LBase.prototype), {
-    constructor: Scene,
-</div>
-
-<p>How I implement class inheritance in Javascript.</p>
-
-<div class="example">    lLoop: function(delta)
+<div class="example">    lLoop(delta)
     {
         var x = 0;
         var z = 0;
@@ -590,6 +603,15 @@ This should only be called once at the start of everything.</p>
    positions.</p>
 <p>The "lScene.lMain()" function runs the game.</p>
 
+<p>Finally, in order for "g_playgame" to be seen by the "onload" property of the body, it needs to exist on the "window" object....</p>
+<div class="example">
+/*
+So that the "onload" attribute of the body element can see this
+ */
+
+window.g_playgame = g_playgame;
+</div>
+
 <h4>The Shader Interface Program - "shader_squish.js"</h4>
 <p>This uses a standard shader "ShaderSimple".  To implement this:</p>
 <ol>
@@ -597,19 +619,20 @@ This should only be called once at the start of everything.</p>
     <li>Edit the "tutorial/shader_squish.js" file, and paste the "shaders/simple.js" file into it where it says to do so.</li>
     <li>Modify the "lShader_objects" array at the bottom to include "ShaderSimple", so:
     <pre>
-const lShader_objects = [
+lExtendarray(lShader_objects, [
     ShaderSimple
-];
+]);
 </pre></li>
 </ol>
 <p>That should implement the shader proggram, as long as the script is referenced in a "&lt;script... &gt;" tag in the HTML.</p>
 
 <p>Once done you are ready to run the first iteration of this.  <a href="../examples/squish/tut01.js">The full script to date can be viewed here</a>.  It is not a game yet, but you can run something.
-    <a href="../examples/tut01.html" traget="_blank">Here is a link to an HTML page where you can the script</a>.</p>
+    <a href="../examples/tut01.html" traget="_blank">Here is a link to an HTML page where you can run the script</a>.</p>
 
 <p>Continue to <a href="tutorial2.html">Part two of the tutorial</a>.
 
     <hr />
+    <div class="bottom"><a href="https://paypal.me/EdwardMacnaghten"><img src="btn_donateCC_LG.gif" alt="Donate" /></a></div>
 
 </body>
 </html>

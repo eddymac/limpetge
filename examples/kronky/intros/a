@@ -1,9 +1,0 @@
-<table>
-<tr><td class="keyname">W</td><td>Move forward</td></tr>
-<tr><td class="keyname">S</td><td>Move Back</td></tr>
-<tr><td class="keyname">&lt;</td><td>Turn Left</td></tr>
-<tr><td class="keyname">&gt;</td><td>Turn Right</td></tr>
-<tr><td class="keyname">A</td><td>Strafe left</td></tr>
-<tr><td class="keyname">D</td><td>Strafe right</td></tr>
-<tr><td class="keyname">E</td><td>Pick up an object</td></tr>
-</table>

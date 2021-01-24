@@ -182,18 +182,19 @@ var g_prng = new LPRNG(Math.random() * 10000);
 
 <h4> The Sphere Constructor</h4>
 
-<div class="example">function Sphere(color)
-{
-    this.obj = new LWObject(g_structures.Sphere[color], this);
-    this.obj.mkvisible(false);
-    lScene.lPlace(this.obj, mat4.create());
-    this.velocity = 0;  // To be created in "makesphere"
+<div class="example">class Sphere {
+    constructor(color)
+    {
+        this.obj = new LWObject(g_structures.Sphere[color], this);
+        this.obj.mkvisible(false);
+        lScene.lPlace(this.obj, mat4.create());
+        this.velocity = 0;  // To be created in "makesphere"
 
-    // For celebrating
-    this.endx = g_prngd.next(20) - 10;
-    this.endy = g_prngd.next(20) - 10;
-    this.endz = g_prngd.next(20) - 10;
-}
+        // For celebrating
+        this.endx = g_prngd.next(20) - 10;
+        this.endy = g_prngd.next(20) - 10;
+        this.endz = g_prngd.next(20) - 10;
+    }
 </div>
 
 <p>The constructor takes an argument "color", which in this case is an integer between 0 and 3.  This will decide which of the sphere structures will
@@ -205,8 +206,8 @@ var g_prng = new LPRNG(Math.random() * 10000);
     <li>The "control" object of the sphere, which is "this" object.</li>
 </ol>
 
-<p>Next the "obj.mkvisible(false)" function makes the object invisible.  We want spheres to appear where and when the game demands rather than when it is created.  Therefore they are created invisible.</p>
-<p>Needless to sqy, "obj.mkvisible(true)" makes it visible again.</p>
+<p>Next the "obj.mkvisible(false)" function makes the object invisible.  We want spheres to appear where and when the game demands rather than when it is created.  Therefore they are created invisible.
+    When required, the "obj.mkvisible(true)" function call makes it visible again.</p>
 <p>The "lScene.lPlace()" places it in the top level of the game hierarchy.  As it is not visible yet, we use place it at the origin by using the identity transformation matrix ("mat4.create()")</p>
 <p>The velocity of the sphere is stored in the "velocity", and is set when the sphere is to appear.</p>
 <p>On success of the level, the player is treated to a show of the spheres flying in all directions.  The "endx", "endy", and "endz" properties represent the speed this sphere will go in each
@@ -216,7 +217,7 @@ var g_prng = new LPRNG(Math.random() * 10000);
 
 <p>In order for a sphere is to "appear", A "start" method is created:</p>
 
-<div class="example">    start: function()
+<div class="example">    start()
     {
         this.velocity = 5.0 + g_prngd.next(5.0);    // Set velocity between 5 and 10
 
@@ -258,7 +259,7 @@ var g_prng = new LPRNG(Math.random() * 10000);
 </div>
 
 <p>When "starting" or "instigating" the sphere, it first randomly sets the "velocity" property between 5.0 and 10.0</p>
-<p>It then moves the object to the en of the corridor, randomly placing it laterally, so it is not touching the side walls, though a slightly grater chance it is at the edge of the corridor.
+<p>It then moves the object to the end of the corridor, randomly placing it laterally, so it is not touching the side walls, though a slightly grater chance it is at the edge of the corridor.
    This is called by the game objects "obj.moveHere(x, y, z)"
    method.  This, on this object, sets it to the scene co-ordinates (x, y, z).</p>
 <p>Note - it in fact sets it relative to it's initial position relative to it's parent.  For objects placed using the "lScene.lPlace(...)" method
@@ -281,7 +282,7 @@ var g_prng = new LPRNG(Math.random() * 10000);
     </li>
     <li>If there is a collision, then move the sphere another 2.1 meters away and re-perform the test.   If not quit the loop.</li>
     <li>The "obj.moveAbs(x, y, z)" moves an object by the appropriate amount relative to the origin.  It is like "obj.move(...)"
-        except it moves rlative to the origin rather than the object itself.</li>
+        except it moves relative to the origin rather than the object itself.</li>
 </ol>
 <p>The "obj.mkvisible(true)" method makes the thing visible.</p>
 <p>The "obj.procpos()" method processes the position in the hierarchy.  It needs to be called for nay object after it has been moved, but before
@@ -292,7 +293,7 @@ var g_prng = new LPRNG(Math.random() * 10000);
 
 <p>Spheres are dynamic and they move. To control this the "move" method is created, and performed on each sphere on each frame:</p>
 
-<div class="example">    move: function(delta)
+<div class="example">    move(delta)
     {
 
         if(!this.obj.isvisible) return;
@@ -349,14 +350,14 @@ var g_prng = new LPRNG(Math.random() * 10000);
                 hitsphere.velocity = temp;
             }
         }
-    },
+    }
 </div>
 
 <p>The "sphere.move(....)" method takes an argument, "delta".  This is the value passed to the "lScene.lLoop(...)" method for the frame, which is where
    this is called from.</p>
 <p>The fist thing done is to see if the sphere is visible.  The is done by seeing if the "obj.isvisible" property is the boolean "true" (rather than "false" for invisible).
    if it is not, it quits.  Nothing needs to be done</p>
-<p>It then adjusts "delta" so it matches that particular sphere's velocity.  Thi means it will move by that in this method.</p>
+<p>It then adjusts "delta" so it matches that particular sphere's velocity.  This means it will move by that in this method.</p>
 <p>It then moves the sphere up the Z axis, at the appropriate velocity using the "obj.moveAbs(...)" method which we covered in the "sphere.start()" method.</p>
 
 <p>As these are spheres, they roll, so next we rotate the sphere around the X axis by the appropriate amount.  Although you cannot see this for solid colored spheres, you
@@ -412,10 +413,10 @@ var g_prng = new LPRNG(Math.random() * 10000);
 
 <p>The method:</p>
 
-<div class="example">    die: function()
+<div class="example">    die()
     {
         this.obj.mkvisible(false);
-    },
+    }
 </div>
 
 <p>If a sphere reaches the "beginning" of the corridor, it has served it's purpose, and "dies".  This is handled by the "sphere.die()" routine.  All it does
@@ -475,7 +476,7 @@ function g_playlevel()
 <p>As levels are included in the game, the level number needs to be stored somewhere, and it is stored in the "g_level" global variable.  As stated, I like to
 place these near the top of the file. </p>
 
-<p>In the "g_playgame()" function, I need to create and store these in a similar manner to I precoessed the corridor structure.  This
+<p>In the "g_playgame()" function, I need to create and store thos sphere structures in a similar manner to I processed the corridor structure.  This
    is done by executing the function "sphereStructures()" and store the returning structure definition ("LStructureDef" instance), or in this case the array of
    structures, in the global "g_structures" object.</p>
 
@@ -500,37 +501,38 @@ place these near the top of the file. </p>
 
 <p>To include the spheres in the game, additions need to be made the the "Scene" class.  First, additions to the "lScene" constructor: (new code in <span class="new">green bold</span>)</p>
 
-<div class="example">function Scene(args)
-{
-    LBase.call(this, args);
-<span class="new">
-    this.spheres = [];      // The spheres
-    this.sidx = 0;          // phere index
-
-    this.ishit = false;
-
-    this.nextsphere = 0.0;
-</span>
-    // Set up the keys
-    this.kForward = lInput.press(87);   // Key W
-    this.kBack = lInput.press(83);      // key S
-    this.kRight = lInput.press(190);    // key  &gt; or .
-    this.kLeft = lInput.press(188);     // key  &lt; or ,
-
-    lInput.usekeys();
-<span class="new">
-    this.lRestart = function()
+<div class="example">class Scene extends LBase {
+    constructor(args)
     {
-        if(!this.ishit) {
-            g_level += 1;
-        }
+        super(args);
+<span class="new">
+        this.spheres = [];      // The spheres
+        this.sidx = 0;          // Sphere index
 
-        g_playlevel(g_level);
-    };
+        this.ishit = false;
 
-    this.endtime = 5.0;
-    this.isend = false;</span>
-}
+        this.nextsphere = 0.0;
+</span>
+        // Set up the keys
+        this.kForward = lInput.press(87);   // Key W
+        this.kBack = lInput.press(83);      // key S
+        this.kRight = lInput.press(190);    // key  &gt; or .
+        this.kLeft = lInput.press(188);     // key  &lt; or ,
+
+        lInput.usekeys();
+<span class="new">
+        this.lRestart = function()
+        {
+            if(!this.ishit) {
+                g_level += 1;
+            }
+    
+            g_playlevel(g_level);
+        };
+
+        this.endtime = 5.0;
+        this.isend = false;</span>
+    }
 </div>
 
 <p>Going through the <span class="new">new code</span>:</p>
@@ -539,9 +541,9 @@ place these near the top of the file. </p>
 <p>The "lScene.sidx" property holds an index to the above, to decide which is "instigated" next (see below)</p>
 <p>The "lScene.ishit" is set to true if the player gets squished.  Already covered in the "sphere.move(...)" method.</p>
 <p>The "lScene.nextsphere" is the number of seconds (usually less than 1) when the next sphere is instigated.</p>
-<p>The "lScene.lRestart" is a property that holds a function (not a method as it is not on the javascript objects prototype).  
+<p>The "lScene.lRestart" is a property that holds a function (not a method as it is not on the javascript object's constructor/class).  
    It sstores the function that is performed when the game ends by the "lScene.lLoop(...)" method returning boolan "false".
-   The function sets up here dos the following:</p>
+   The function sets up here does the following:</p>
 <ol>
     <li>test to see if the player has been squished</li>
     <li>If not, increase the level.</li>
@@ -554,7 +556,7 @@ place these near the top of the file. </p>
 
 <p>These additions are: </p>
 
-<div class="example">    lLoop: function(delta)
+<div class="example">    lLoop(delta)
     {
 <span class="new">        // Have we ended - do end animations
         if(this.isend)
@@ -621,7 +623,7 @@ place these near the top of the file. </p>
 </span>
         // Continue game
         return true;
-    },
+    }
 </div>
 
 <p>Again, focusing on the <span class="new">new code</span>.</p>
@@ -704,7 +706,7 @@ place these near the top of the file. </p>
 <h3>The "lScene.makesphere()" method</h3>
 
 <p>This handles creation of a new sphere:</p>
-<div class="example"><span class="new">    `makesphere: function()
+<div class="example"><span class="new">    `makesphere()
     {
         // Use the next sphere in list, regardless if it is still live
 
@@ -717,7 +719,7 @@ place these near the top of the file. </p>
 <p>This method simply takes the next "sphere" in the array of spheres, indexes by the "lScene.sidx".  It then makes that "live"
    using the "sphere.start()" method, then increases the "sidx" property, resetting it to zero if it gets to 200.</p>
 <p>This means that if a sphere has a slow velocity, then it may be "restarted" before it reaches the end of the corridor.
-   If that happens the sphere will simply disappear from where it was.  This is relatively rare thogh, and does not
+   If that happens the sphere will simply disappear from where it was.  This is relatively rare though, and does not
    have a big impact on the game, and the code and resource required for that - which would increase cycles between frames -
    makes it non-advantageous to fix.</p>
 
@@ -725,12 +727,12 @@ place these near the top of the file. </p>
 
 <p>The "lScene.die()" method is called when the player is "squished":</p>
 
-<div class="example"><span class="new">   die: function()
+<div class="example"><span class="new">   die()
     {
         this.lMessage("Squished!");
         this.directionalLightColor = vec3.fromValues(1.0, 0.0, 0.0);
         this.isend = true;
-    },
+    }
 </span></div>
 
 <p>The "lScene.lMessage(...) displays a message at the top of the screen.  The arguments for this are:</p>
@@ -749,7 +751,7 @@ place these near the top of the file. </p>
 <p>This is called after the player is squished, and controls the "commiseration" animation.  This consists of everything
    stopping, going red, and dimming to blackness over the next five seconds:</p>
 
-<div class="example"><span class="new">    dieing: function(delta)
+<div class="example"><span class="new">    dieing(delta)
     {
         this.endtime -= delta;
         if(this.endtime &lt;= 0) return false;
@@ -757,7 +759,7 @@ place these near the top of the file. </p>
         this.directionalLightColor = vec3.fromValues(this.endtime / 5.0, 0.0, 0.0);
         this.ambientLight = vec3.fromValues(0.3 * this.endtime / 5.0, 0.3 * this.endtime / 5.0, 0.3 * this.endtime / 5.0);
         return true;
-    },</span>
+    }</span>
 </div>
 
 <p> When called by the "lScene.lLoop(...)" method shown above it is called using "return this.dieing(delta);". In other words,
@@ -775,7 +777,7 @@ place these near the top of the file. </p>
 
 <p>This is called when the player "Makes it" by reaching the end of the corridor:</p>
 
-<div class="example"><span class="new">    celebrate: function()
+<div class="example"><span class="new">    celebrate()
     {
         // Move to space and display all spheres
         this.lMessage("Made it!", "lightgreen");
@@ -789,7 +791,7 @@ place these near the top of the file. </p>
             sphere.obj.mkvisible(true);
             sphere.obj.procpos();
         }
-    },</span>
+    }</span>
 </div>
 
 <p>This method first uses the "lScene.lMessage(...)" method to tell the player of the success, and does so in the "lightgreen"
@@ -810,7 +812,7 @@ place these near the top of the file. </p>
 
 <p>The "celebrating" animation consists of the spheres shooting out in all directions in a kind of sphere "explosion":</p>
 
-<div class="example"><span class="new">    celebrating: function(delta)
+<div class="example"><span class="new">    celebrating(delta)
     {
         this.endtime -= delta;
         if(this.endtime &lt;= 0) return false;
@@ -831,17 +833,17 @@ place these near the top of the file. </p>
 
 <p>The "obj.procpos()" is required to process the position of the sphere prior to rendering.</p>
 
-
 <h4>Conclusion</h4>
 
 <p>That is it.  If you have managed to do all that you have created your first game.</p>
 
-<p><a href="../examples/squish/squish1.js">The full script to date can be viewed here</a>.  It is an elementary game, but still a game!
-    <a href="../examples/squish1.html" target="_blank">Here is a link to an HTML page where you can play it!</a>.</p>
+<p><a href="../examples/squish/tut02.js">The full script to date can be viewed here</a>.  It is an elementary game, but still a game!
+    <a href="../examples/tut02.html" target="_blank">Here is a link to an HTML page where you can play it!</a>.</p>
 
 <p>Continue to <a href="tutorial3.html">Part three of the tutorial</a>.
 
     <hr />
+    <div class="bottom"><a href="https://paypal.me/EdwardMacnaghten"><img src="btn_donateCC_LG.gif" alt="Donate" /></a></div>
 
 </body>
 </html>

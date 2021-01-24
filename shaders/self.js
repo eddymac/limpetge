@@ -29,9 +29,9 @@ doDraw(buffer, position, control)
 
 
  */
-const ShaderSelf = {
-    key: 0,
-    fragSource: `
+class ShaderSelf {
+    static key = -1;
+    static fragSource = `
         uniform highp vec3 uDirectionalLightColor;
         uniform highp vec3 uAmbientLight;
         uniform sampler2D uSampler;
@@ -60,16 +60,19 @@ const ShaderSelf = {
             gl_FragColor = vec4(uAmbientLight * ambw + (directtorch * diffuse * uDirectionalLightColor.rgb * color.rgb) + (directtorch * spec * uDirectionalLightColor), color.a);
 
         }
-    `,
+    `;
 
-    vertexSource: `
+    static vertexSource = `
         attribute vec4 aVertexPosition;
         attribute vec3 aVertexNormal;
         attribute vec2 aTextureCoords;
 
         uniform mat4 uPositionMatrix;   // Position of object relative to lCamera
+
+        // Uncomment following if transforming by non scalar position matrices
+        // uniform mat4 uNormalMatrix;   // Position of normal object
+
         uniform mat4 uViewMatrix;       // View of object (above + projection)
-        uniform mat4 uNormalMatrix;     // Normal matrix
 
         // Following could be constants, but will put them here anyways
         uniform vec3 uDirectionalLightColor;
@@ -83,21 +86,24 @@ const ShaderSelf = {
             gl_Position = uViewMatrix * aVertexPosition;
 
             // Gets the "normal"
-            vNormal = (uNormalMatrix * vec4(aVertexNormal, 1.0)).xyz;
+
+            // Uncomment following if transforming by non scalar position matrices
+            // vNormal = (uNormalMatrix * vec4(aVertexNormal, 0.0)).xyz;
+
             vPosition = (uPositionMatrix * aVertexPosition).xyz;
             vCoords = aTextureCoords;
         }
-    `,
+    `;
 
     // This is called on load
-    compile: function()
+    static compile()
     {
         _lShaderId += 1;
-        ShaderSelf.key = _lShaderId;
+        this.key = _lShaderId;
 
-        const prog = lInitShaderProgram(ShaderSelf.vertexSource, ShaderSelf.fragSource);
-        ShaderSelf.shader = prog;
-        ShaderSelf.locations = {
+        const prog = lInitShaderProgram(this.vertexSource, this.fragSource);
+        this.shader = prog;
+        this.locations = {
             // attributes
             aVertexPosition: lGl.getAttribLocation(prog, 'aVertexPosition'),
             aVertexNormal: lGl.getAttribLocation(prog, 'aVertexNormal'),
@@ -105,8 +111,11 @@ const ShaderSelf = {
 
             // uniforms
             uPositionMatrix: lGl.getUniformLocation(prog, 'uPositionMatrix'),
+
+            // Uncomment following if transforming by non scalar position matrices
+            // uNormalMatrix: lGl.getUniformLocation(prog, 'uNormalMatrix'),
+
             uViewMatrix: lGl.getUniformLocation(prog, 'uViewMatrix'),
-            uNormalMatrix: lGl.getUniformLocation(prog, 'uNormalMatrix'),
             uColor: lGl.getUniformLocation(prog, 'uColor'),
             uSampler: lGl.getUniformLocation(prog, 'uSampler'),
 
@@ -117,17 +126,17 @@ const ShaderSelf = {
 
         // I cannot think of a reason not to enable them here
         lGl.enableVertexAttribArray(
-            ShaderSelf.locations.aVertexPosition,
+            this.locations.aVertexPosition,
         );
         lGl.enableVertexAttribArray(
-            ShaderSelf.locations.aVertexNormal
+            this.locations.aVertexNormal
         );
         lGl.enableVertexAttribArray(
-            ShaderSelf.locations.aTextureCoords
+            this.locations.aTextureCoords
         );
-    },
+    }
 
-    doInitBuffer: function(structure)
+    static doInitBuffer(structure)
     {
 
         const buffer = structure.buffer;
@@ -159,7 +168,7 @@ const ShaderSelf = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -167,19 +176,18 @@ const ShaderSelf = {
         lGl.bufferData(lGl.ELEMENT_ARRAY_BUFFER, new Uint16Array(structure.pointsIndex), lGl.STATIC_DRAW);
         buffer.index = indexBuffer;
         buffer.numentries = structure.numentries;
+    }
 
-    },
-
-    useProgram: function()
+    static useProgram()
     {
-        lGl.useProgram(ShaderSelf.shader);
-    },
+        lGl.useProgram(this.shader);
+    }
 
-    useBuffer: function(buffer)
+    static useBuffer(buffer)
     {
         lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.point);
         lGl.vertexAttribPointer(
-            ShaderSelf.locations.aVertexPosition,
+            this.locations.aVertexPosition,
             3,      // number of components
             lGl.FLOAT,   // Type
             false,      // Normalize
@@ -191,7 +199,7 @@ const ShaderSelf = {
         // Normals
         lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.normal);
         lGl.vertexAttribPointer(
-            ShaderSelf.locations.aVertexNormal,
+            this.locations.aVertexNormal,
             3,          // Number of components
             lGl.FLOAT,   // Type
             false,      // Normalize
@@ -202,7 +210,7 @@ const ShaderSelf = {
         // Coords
         lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.coords);
         lGl.vertexAttribPointer(
-            ShaderSelf.locations.aTextureCoords,
+            this.locations.aTextureCoords,
             2,          // Number of components
             lGl.FLOAT,   // Type
             false,      // Normalize
@@ -212,29 +220,29 @@ const ShaderSelf = {
 
         lGl.activeTexture(lGl.TEXTURE0);
         lGl.bindTexture(lGl.TEXTURE_2D, buffer.texture);
-        lGl.uniform1i(ShaderSelf.locations.uSampler, 0);
-        lGl.uniform3fv(ShaderSelf.locations.uAmbientLight, lScene.ambientLight);
-        lGl.uniform3fv(ShaderSelf.locations.uDirectionalLightColor, lScene.directionalLightColor);
+        lGl.uniform1i(this.locations.uSampler, 0);
+        lGl.uniform3fv(this.locations.uAmbientLight, lScene.ambientLight);
+        lGl.uniform3fv(this.locations.uDirectionalLightColor, lScene.directionalLightColor);
+    }
 
-        var vec = vec3.fromValues(0, 0, 1);
-        // vec3.transformQuat(vec, vec, lCamera.quat);
+    static viewMatrix = mat4.create();
+    static positionMatrix = mat4.create();
 
-    },
+    // Uncomment following if transforming by non scalar position matrices
+    //static normalMatrix = mat4.create();
 
-    doDraw: function(buffer, position, control)
+    static doDraw(buffer, position, control)
     {
-        const ma = mat4.create();
-        mat4.multiply(ma, lCamera.position, position);
+        lGl.uniformMatrix4fv(this.locations.uViewMatrix, false,
+            mat4.multiply(this.viewMatrix, lCamera.currview, position));
 
-        const normalMatrix = mat4.create();
-        mat4.invert(normalMatrix, ma);
-        mat4.transpose(normalMatrix, normalMatrix);
+        lGl.uniformMatrix4fv(this.locations.uPositionMatrix, false,
+            mat4.multiply(this.positionMatrix, lCamera.position, position));
 
-        mat4.multiply(ma, lCamera.currview, position);
-        lGl.uniformMatrix4fv(ShaderSelf.locations.uViewMatrix, false, ma);
-        mat4.multiply(ma, lCamera.position, position);
-        lGl.uniformMatrix4fv(ShaderSelf.locations.uPositionMatrix, false, ma);
-        lGl.uniformMatrix4fv(ShaderSelf.locations.uNormalMatrix, false, normalMatrix); 
+        // Uncomment following 3 lines if transforming by non scalar position matrices
+        // lGl.uniformMatrix4fv(this.locations.uNormalMatrix, false,
+        //      mat4.transpose(this.normalMatrix, 
+        //          mat4.invert(this.normalMatrix, this.positionMatrix)));
 
         lGl.bindBuffer(lGl.ELEMENT_ARRAY_BUFFER, buffer.index);
 
@@ -244,5 +252,5 @@ const ShaderSelf = {
                     lGl.UNSIGNED_SHORT,  // type
                     0                   // Offset
         );
-    },
+    }
 }

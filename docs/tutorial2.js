@@ -1,25 +1,21 @@
-function do_onload()
+fuenction do_onload()
 {
     document.getElementById("ex3").innerText =
-`function Sphere(color)
-{
-    this.obj = new LWObject(g_structures.Sphere[color], this);
-    this.obj.mkvisible(false);
-    lScene.lPlace(this.obj, mat4.create());
-    this.velocity = 0;  // To be created in "makesphere"
+`class Sphere {
+    constructor(color)
+    {
+        this.obj = new LWObject(g_structures.Sphere[color], this);
+        this.obj.mkvisible(false);
+        lScene.lPlace(this.obj, mat4.create());
+        this.velocity = 0;  // To be created in "makesphere"
+    
+        // For celebrating
+        this.endx = g_prngd.next(20) - 10;
+        this.endy = g_prngd.next(20) - 10;
+        this.endz = g_prngd.next(20) - 10;
+    }
 
-    // For celebrating
-    this.endx = g_prngd.next(20) - 10;
-    this.endy = g_prngd.next(20) - 10;
-    this.endz = g_prngd.next(20) - 10;
-}
-
-Sphere.prototype = {
-    constructor: Sphere,
-
-    //Instigating a sphere
-
-    start: function()
+    start()
     {
         this.velocity = 5.0 + g_prngd.next(5.0);    // Set velocity between 5 and 10
 
@@ -56,12 +52,12 @@ Sphere.prototype = {
         // otherwise ray tracing occurs from where it last was!.
         this.obj.mkvisible(true);
         this.obj.procpos();
-    },
+    }
 
     /*
      * What happens when a sphere moves
      */
-    move: function(delta)
+    move(delta)
     {
 
         /*
@@ -128,13 +124,13 @@ Sphere.prototype = {
         this.obj.procpos();
 
         if(this.obj.z > 220) this.die();
-    },
+    }
 
-    die: function()
+    die()
     {
         // Just make invisible for this game
         this.obj.mkvisible(false);
-    },
+    }
 
 }`;
 

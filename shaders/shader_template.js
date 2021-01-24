@@ -4,8 +4,11 @@ shader_template - A template for shaders.
 
  */
 
+import {lExtendarray, lGl, lCamera, lScene, lShader_objects, mat4, vec3, vec4, quat} from "../libs/limpetge.js";
+                                                                                    // Or from wherever it is
+
 // Last shader used
-var _lShaderId = 0;
+let _lShaderId = 0;
 
 /*
 
@@ -14,7 +17,7 @@ Copy the shader files here
 */
 
 
-const lShader_objects = [
+lExtendarray(lShader_objects, [
     /*
     List the shader references here
     for example:
@@ -22,5 +25,16 @@ const lShader_objects = [
 
     // ShaderSimple,
     // ShaderSimpleTrans,
-];
+]);
+
+export {
+    /*
+    List the shader references here as well
+    for example:
+    */
+
+    // ShaderSimple,
+    // ShaderSimpleTrans,
+};
+    
 

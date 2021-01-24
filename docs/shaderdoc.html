@@ -18,17 +18,17 @@
 
 <div style="text-align:center;"><img src="../libs/limpetlogo.png" alt="LimpetGE Logo" /></div>
 <h1>LimpetGE Shader Reference</h1>
-<div>The LimpetGE shader reference manual.  This is not about actually wrining shaders, but how to incorporate them 
+<div>The LimpetGE shader reference manual.  This is not about actually writing shaders, but how to incorporate them 
      into the LimpetGE framework.</div>
 
 <h3>Overview</h3>
-<p>Each "shader" has it's information contained in a constant javascript object.  Each contains the following properties:</pi>
+<p>Each "shader" has it's information contained in a constant javascript object.  Each contains the following properties:</p>
 <table>
-    <tr><td>key</td><td>A unique key number for the shader. It is usually (re)generated when compiling the script.</tr></td>
-    <tr><td>vertexSource</td><td>The Vertex Shader source code</td>
-    <tr><td>fragSource</td><td>The fragment shader source code</td>
+    <tr><td>key</td><td>A unique key number for the shader. It is usually (re)generated when compiling the script.</td></tr>
+    <tr><td>vertexSource</td><td>The Vertex Shader source code</td></tr>
+    <tr><td>fragSource</td><td>The fragment shader source code</td></tr>
     <tr><td>compile()</td><td>Compiles the Fragment and Vertex programs. It also "binds" the shader's uniform and attribute locations, usually
-            into a "sub-object" called "locations" on the shader object.  Called once when initialising the LimpetGE environment (in "lInit()")</td><.tr>
+            into a "sub-object" called "locations" on the shader object.  Called once when initialising the LimpetGE environment (in "lInit()")</td></tr>
     <tr><td>doInitBuffer(structure)</td><td>A function, that has a structure as it's argument.  It assembles the OpenGL buffers from the Points, Normals and Texture coordinates arrays.
                     These are then stored in the "buffer" property (also a Javascript object) on the structue class.  Related information to the buffers are stored there too.  Called for each structure
                     when structures are complete.</td></tr>
@@ -85,7 +85,7 @@
     <tr><td>structure.args</td><td>The "object named arguments" passed to the LStructureDef constructor when created.</td></tr>
     <tr><td>structure.pointsArray</td><td>An array containing the coordinates of the vertices (just the x, y and z, no w).</td></tr>
     <tr><td>structure.normalsArray</td><td>An array containing the corresponding normals for the vertices (x, y and z).</td></tr>
-    <tr><td>structure.textureCoords</td><td>An array of The coordinates in the texture collage supplied (u, v) - values between 0.0 and 1.0.</td></tr>
+    <tr><td>structure.coordsArray</td><td>An array of The coordinates in the texture collage supplied (u, v) - values between 0.0 and 1.0.</td></tr>
     <tr><td>structure.pointsIndex</td><td>An array of the indexes to be used as the controlling OpenGL "drawElements" function.</td></tr>
     <tr><td>structure.numentries</td><td>This is the length of the "pointsIndex" array.</td></tr>
 </table>
@@ -129,14 +129,14 @@
     
 <h3>The doDraw(buffer, position, control) function</h3>
 
-<p>This draws the objecit, the arguments: </p>
+<p>This draws the object, the arguments: </p>
 <table>
     <tr><td>buffer</td><td>The "buffer" property of structure</td></tr>
     <tr><td>position</td><td>The scene transformation position ("mat4") where this object is to be placed.</td></tr>
     <tr><td>control</td><td>An object that is the "control" of the object, as defined when creating the "new LObject(structure, control)" instance.</td></tr>
 </table>
 
-<p>This functions needs to call the OpenGL "drawElements(...)" function (or whatever), and do the "last minute" proparations for that (binding the scene position and the like).</p>
+<p>This functions needs to call the OpenGL "drawElements(...)" function (or whatever), and do the "last minute" preparations for that (binding the scene position and the like).</p>
 
 <p>Again, with dnger to repeating myself, to understand this, it is probably best to look at the shader objects supplied.</p>
 
@@ -147,6 +147,7 @@
 <p>This is a constant global array.  It lists the shader object references in the order they are to be drawn (transparent ones last).</p>
 
     <hr />
+    <div class="bottom"><a href="https://paypal.me/EdwardMacnaghten"><img src="btn_donateCC_LG.gif" alt="Donate" /></a></div>
 
 </body>
 </html>

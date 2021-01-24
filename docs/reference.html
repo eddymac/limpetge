@@ -125,33 +125,33 @@
    so long as the names do not match that.</p>
 <p>Implementing code should look something like....</p>
 <pre>
-function Scene(args)
-{
-    LBase.call(this, args);
+class Scene extends LBase {
+    constructor(args)
+    {
+        super(args);
+    
+        // Then for example, 
+    
+        this.hurt = 0.0;
+        this.ambientLight =  vec3.fromValues(0.3, 0.3, 0.3);
+        this.directionalLightColor = vec3.fromValues(1.0, 1.0, 1.0);
+        this.runme = true;
+        this.life = 100;
+        this.bescape = false;
+        ...
+        ...
+    
+    }
 
-    // Then for example, 
-
-    this.hurt = 0.0;
-    this.ambientLight =  vec3.fromValues(0.3, 0.3, 0.3);
-    this.directionalLightColor = vec3.fromValues(1.0, 1.0, 1.0);
-    this.runme = true;
-    this.life = 100;
-    this.bescape = false;
-    ...
-    ...
-
-}
-
-Scene.prototype = Object.assign(Object.create(LBase.prototype), {
-    constructor: Scene,
     lLoop: function(delta)
     {
         ....
         ....
+    }
     ....
     ....
     ....
-});
+}
 </pre>
 <hr />
 
@@ -181,10 +181,10 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
     <tr><td class="subsect" colspan=3>LObject placement and processing methods.</td></tr>
 
     <tr><td>lScene.lAddChild(object, position)</td><td colspan=2>Adds an object onto the "root" of the object tree.</td></tr>
-    <tr><td></td><td>object</td><td>The "LObject" or "LWObject" instance to add.</td></tr>
+    <tr><td></td><td>object</td><td>The "LObject", "LIObject"  or "LWObject" instance to add.</td></tr>
     <tr><td></td><td>position</td><td>A "mat4" instance.  Where to add it onto the scene.</td></tr>
     <tr><td>lScene.lPlace(object, position)</td><td colspan=2>This performs an "lAddChild" at the origin, then moves the object to "position" supplied.</td></tr>
-    <tr><td></td><td>object</td><td>The "LObject" or "LWObject" instance to add.</td></tr>
+    <tr><td></td><td>object</td><td>The "LObject", "LIObject" or "LWObject" instance to add.</td></tr>
     <tr><td></td><td>position</td><td>A "mat4" instance.  Where to move it to once added.</td></tr>
     <tr><td>lScene.lSetup()</td><td colspan=2>Sets up the scene after all static objects has been added.  Especially sets up the "Static Collision" sparse array.</td></tr>
 
@@ -282,7 +282,7 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
     <tr><td></td><td>callback</td><td>The callback function to perform if a collision occurs, using the object as the argument to the callback.</td></tr>
     <tr><td class="subsect" colspan=3>Object properties.</td></tr>
     <tr><td>lChildren</td><td colspan=2>An array that contains the top-level objects.  Not normally directly accessed by the programmer.</td></tr>
-    <tr><td>lRestart</td><td colspan=2>This property contains a function.  It is not a method as it is not (and should not be) on the "LBase" or "Scene" prototypes.
+    <tr><td>lRestart</td><td colspan=2>This property contains a function.  It is not a method as it is not (and should not be) on the "LBase" or "Scene" class definitions.
                It executes when the game finishes.  The function takes no arguments.</td></tr>
     <tr><td>lCamera</td><td colspan=2">The camera object.  The current camera object is also referenced in the global "lCamera" variable, however
                 this copy is useful if there is more than one "scene" around.</td></tr>
@@ -295,7 +295,7 @@ Scene.prototype = Object.assign(Object.create(LBase.prototype), {
 <p>An instance of the "LCamera" class is created when the "Scene" (derived from "LBase") class is, and a copy of the reference
 is placed in the global "lCamera" variable - as well as the property "lCamera" on the scene object.</p>
 <p>When created, it uses the same "args" argument as when the "LBase" constructor is called.</p>
-<p>This also uses a similar interface to the "LObject"/"LWObject"/"LVirtObject" classes, so the camera can be used as a base for collision detection,
+<p>This also uses a similar interface to the "LObject"/"LWObject"/"LIObject"/"LVirtObject" classes, so the camera can be used as a base for collision detection,
    and/or included in the Dynamic sparse array.</p>
    
 <p>Regarding movements and rotations.  There are in effect two modes...</.>
@@ -465,22 +465,22 @@ var game_object = new LObject(grpdef, whatever);
 
     <tr><td class="subsect" colspan=3>Adding shapes (see separate section of documentation as well)</td></tr>
 
-    <tr><td>structure.addBlock(args)</td><td colspan=2>Adds a block. Valid named arguments are:       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "size".</td></tr>
+    <tr><td>structure.addBlock(args)</td><td colspan=2>Adds a block. Valid named arguments are:       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "size", "insideout".</td></tr>
     <tr><td>structure.addBlockPatch(args)</td><td colspan=2>Adds a block patch, or a rectangle. Valid named arguments are:
-    <tr><td>structure.addCylinder(args)</td><td colspan=2>Adds a cylinder. Valid named arguments are: "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "radius", "segments".</td></tr>
+    <tr><td>structure.addCylinder(args)</td><td colspan=2>Adds a cylinder. Valid named arguments are: "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "radius", "segments, "insideout"".</td></tr>
     <tr><td>structure.addSphere(args)</td><td colspan=2>Adds a sphere. Valid named arguments are:      "position", "texturecontrol", "corners", "collsize", "radius".</td></tr>
     <tr><td>structure.addPolygon(args)</td><td colspan=2>Adds a polygon block. Valid named arguments are:
-                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "coords".</td></tr>
+                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "coords", "insideout".</td></tr>
     <tr><td>structure.addTriangle(args)</td><td colspan=2>Adds a triangle block. Valid named arguments are:
-                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "coords".</td></tr>
+                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "depth", "coords", "insideout".</td></tr>
     <tr><td>structure.addWTriangle(args)</td><td colspan=2>Adds a "wonky triangle" block. Valid named arguments are:
-                                                                                                       "position", "texturecontrol", "texturecontrols", "corners", "collsize", "depth", "coords".</td></tr>
+                                                                                                       "position", "texturecontrol", "texturecontrols", "corners", "collsize", "depth", "coords", "insideout".</td></tr>
     <tr><td>structure.addTrianglePatch(args)</td><td colspan=2>Adds a triangle patch (2D). Valid named arguments are:
                                                                                                        "position", "texturecontrol", "hold", "corners", "collsize", "coords".</td></tr>
     <tr><td>structure.addBezierPatch(args)</td><td colspan=2>Adds a Bezier patch (2D). Valid named arguments are:
                                                                                                        "position", "texturecontrol", "corners", "collsize", "coords", "xsegments", "ysegments".</td></tr>
     <tr><td>structure.addBezierBlock(args)</td><td colspan=2>Adds a triangle block. Valid named arguments are:
-                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "coords", "depth", "xsegments", "ysegments".</td></tr>
+                                                                                                       "position", "texturecontrol", "texturecontrols", "hold", "corners", "collsize", "coords", "depth", "xsegments", "ysegments", "insideout".</td></tr>
     <tr><td>structure.addImport(args)</td><td colspan=2>Adds an imported asset, covered in separate section. Valid named arguments are:
                                                                                                        "position", "texturecontrol", "corners", "collsize".</td></tr>
     <tr><td class="subsect" colspan=3>Corner methods.</td></tr>
@@ -526,6 +526,8 @@ var game_object = new LObject(grpdef, whatever);
     <tr><td>segments</td><td>For "round" type components this is the number of polygons that go around the circumference.  Defaults to something sensible</td></tr>
     <tr><td>xsegments</td><td>For Bezier shapes, the number of polygons that go "left to right" in the matrix provided.</td></tr>
     <tr><td>ysegments</td><td>For Bezier shapes, the number of polygons that go "top to bottom" in the matrix provided.</td></tr>
+    <tr><td>insideout</td><td>LimpetGE employs "gl.CULL_FACE, and normally components cannot be seen from the "inside".  If this is set to the boolean "true" then
+                              this reverses that and it can only be seen from the inside, not the outside.  Originally written for panoramas.</td></tr>
 </table>
 
 <p>The specific "add....(...)" methods. These can be moved/rotated using the "position" argument to an appropriate place on the structure.</p>
@@ -715,8 +717,14 @@ var game_object = new LObject(grpdef, whatever);
 
 <hr />
 <h3>LWObject class</h3>
-<p>This supports the same methods and properties as the LObject class.  In fact, it is derived from it.  However it is optomised so that
+<p>This supports the same methods and properties as the LObject class.  In fact, it is derived from it.  However it is optimised so that
    it can only be added at the top level on lScene using the "lPlace(....)" method.  Things will go wrong if an LWObject instance is used otherwise.</p>
+<hr />
+
+<h3>LIObject class</h3>
+<p>This supports most of the same methods and properties as the LObject class.  In fact, it is derived from it.  However when "mkvisible" or "procpos" is
+   called on the parent (or ancestor), the functionality is not automatically called here.  Therefore those functions need to be called independantly on these
+   objects.
 <hr />
 
 <h3>LVirtObject class</h3>
@@ -1335,6 +1343,7 @@ function do_onload()
 </table>
 
     <hr />
+    <div class="bottom"><a href="https://paypal.me/EdwardMacnaghten"><img src="btn_donateCC_LG.gif" alt="Donate" /></a></div>
 </div>
 
 </body>

@@ -14,13 +14,23 @@ Dealing with point 3 above first.  The lShader_objects is a constant global
 array that contains the shaders used in order they are drawn.  It is
 something like:
 
-const lShader_objects = [
+lExtendarray(lShader_objects, [
     ShaderSimple,
     ShaderShade,
     ShaderSolid,
     ShaderLight,
     ShaderSimpleTrans,
-];
+]);
+
+Also - as this is a module..
+
+export {
+    ShaderSimple,
+    ShaderShade,
+    ShaderSolid,
+    ShaderLight,
+    ShaderSimpleTrans,
+};
 
 Note: the transparent shaders need to be displayed after the solid ones.
 

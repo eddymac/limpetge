@@ -6,17 +6,6 @@ The attempt here is to give something the appearence it is "made of light"
 
 What needs to be passed to it:
 
-doInitBuffer(structure)
-    structure.args:
-
-        One of:
-            texture: url string
-            rawrtexture: loaded texture
-            color: vec4 color
-            colors: array of vec4 colors
-
-        As well as the standard arrays
-
 doDraw(buffer, position, control)
     control.lightheight - A value between 0 and 1, it should increase by
                           (delta * CONSTANT) on each draw, going back to
@@ -24,9 +13,9 @@ doDraw(buffer, position, control)
                           It controls the "rising bands" on these objects.
 */
 
-const ShaderLight = {
-    key: 3,
-    fragSource: `
+class ShaderLight  {
+    static key = -1;
+    static fragSource = `
         uniform sampler2D uSampler;
         uniform highp float uHeight;
         varying highp vec2 vCoords;
@@ -39,15 +28,13 @@ const ShaderLight = {
             gl_FragColor = vec4(fcolor.xyz, abs(fract((vHeight - (uHeight / 4.0)) * 4.0) - 0.5));
             
         }
-    `,
+    `;
 
-    vertexSource: `
+    static vertexSource = `
         attribute vec4 aVertexPosition;
         attribute vec2 aTextureCoords;
 
-        uniform mat4 uPositionMatrix;   // Position of object relative to lCamera
         uniform mat4 uViewMatrix;       // View of object (above + projection)
-        uniform mat4 uNormalMatrix;     // Normal matrix
 
         varying highp vec2 vCoords;
         varying highp float vHeight;
@@ -58,10 +45,10 @@ const ShaderLight = {
 
             vCoords = aTextureCoords;
         }
-    `,
+    `;
 
     // This is called on load
-    compile: function()
+    static compile()
     {
         _lShaderId += 1;
         ShaderLight.key = _lShaderId;
@@ -74,9 +61,7 @@ const ShaderLight = {
             aTextureCoords: lGl.getAttribLocation(prog, 'aTextureCoords'),
 
             // uniforms
-            uPositionMatrix: lGl.getUniformLocation(prog, 'uPositionMatrix'),
             uViewMatrix: lGl.getUniformLocation(prog, 'uViewMatrix'),
-            uNormalMatrix: lGl.getUniformLocation(prog, 'uNormalMatrix'),
             uSampler: lGl.getUniformLocation(prog, 'uSampler'),
             uHeight: lGl.getUniformLocation(prog, 'uHeight'),
 
@@ -86,14 +71,11 @@ const ShaderLight = {
             ShaderLight.locations.aVertexPosition,
         );
         lGl.enableVertexAttribArray(
-            ShaderLight.locations.aVertexNormal
-        );
-        lGl.enableVertexAttribArray(
             ShaderLight.locations.aTextureCoords
         );
-    },
+    }
 
-    doInitBuffer: function(structure)
+    static doInitBuffer(structure)
     {
 
         const buffer = structure.buffer;
@@ -120,7 +102,7 @@ const ShaderLight = {
 
         const coordBuffer = lGl.createBuffer();
         lGl.bindBuffer(lGl.ARRAY_BUFFER, coordBuffer);
-        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.textureCoords), lGl.STATIC_DRAW);
+        lGl.bufferData(lGl.ARRAY_BUFFER, new Float32Array(structure.coordsArray), lGl.STATIC_DRAW);
         buffer.coords = coordBuffer;
 
         const indexBuffer = lGl.createBuffer();
@@ -129,14 +111,14 @@ const ShaderLight = {
         buffer.index = indexBuffer;
         buffer.numentries = structure.numentries;
 
-    },
+    }
 
-    useProgram: function()
+    static useProgram()
     {
         lGl.useProgram(ShaderLight.shader);
-    },
+    }
 
-    useBuffer: function(buffer)
+    static useBuffer(buffer)
     {
         lGl.bindBuffer(lGl.ARRAY_BUFFER, buffer.point);
         lGl.vertexAttribPointer(
@@ -164,21 +146,15 @@ const ShaderLight = {
         lGl.bindTexture(lGl.TEXTURE_2D, buffer.texture);
 
         lGl.uniform1i(ShaderLight.locations.uSampler, 0);
-    },
+    }
 
-    doDraw: function(buffer, position, control)
+    static positionMatrix = mat4.create();
+
+    static doDraw(buffer, position, control)
     {
-        const ma = mat4.create();
-        mat4.multiply(ma, lCamera.position, position);
+        lGl.uniformMatrix4fv(ShaderLight.locations.uViewMatrix, false,
+            mat4.multiply(this.positionMatrix, lCamera.currview, position));
 
-        const normalMatrix = mat4.create();
-        mat4.invert(normalMatrix, ma);
-        mat4.transpose(normalMatrix, normalMatrix);
-
-        mat4.multiply(ma, lCamera.currview, position);
-        lGl.uniformMatrix4fv(ShaderLight.locations.uViewMatrix, false, ma);
-        mat4.multiply(ma, lCamera.position, position);
-        lGl.uniformMatrix4fv(ShaderLight.locations.uPositionMatrix, false, ma);
         lGl.uniform1f(ShaderLight.locations.uHeight, control.lightheight);
 
         lGl.bindBuffer(lGl.ELEMENT_ARRAY_BUFFER, buffer.index);
@@ -189,5 +165,5 @@ const ShaderLight = {
                     lGl.UNSIGNED_SHORT,  // type
                     0                   // Offset
         );
-    },
+    }
 }
